@@ -76,9 +76,12 @@ class ClientController extends Controller
     // ── EXPORTAR PDF ──────────────────────────────────────────
     public function exportPdf()
     {
-        $clients = Client::with(['contacts' => fn($q) => $q->where('es_principal', true)])
+        $clients = Client::with(['contacts' => function($q) {
+                $q->orderBy('es_principal', 'desc')->orderBy('created_at');
+            }])
             ->withCount('contacts')
-            ->orderBy('name_client')->get();
+            ->orderBy('name_client')
+            ->get();
 
         $pdf = Pdf::loadView('admin.clients.export-pdf', compact('clients'))
             ->setPaper('a4', 'landscape');

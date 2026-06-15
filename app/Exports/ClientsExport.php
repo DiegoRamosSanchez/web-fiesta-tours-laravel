@@ -16,13 +16,21 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize, WithTitle, WithEvents
 {
-    // Colores Fiesta Tours
-    const NAVY  = '0B1F3A'; // Azul marino
-    const GOLD  = 'C9A84C'; // Dorado
-    const GOLD2 = 'E8C97A'; // Dorado claro
-    const ROW_ALT = 'F8F5EE'; // Fondo alterno cálido
+    const NAVY  = '0B1F3A';
+    const GOLD  = 'C9A84C';
+    const GOLD2 = 'E8C97A';
+    const ROW_ALT = 'F8F5EE';
 
     private int $totalRows;
+    private int $maxContacts; // Máximo número de contactos por cliente
+
+    public function __construct()
+    {
+        // Calcular el máximo de contactos que tiene un cliente
+        $this->maxContacts = Client::withCount('contacts')
+            ->get()
+            ->max('contacts_count') ?? 1;
+    }
 
     public function title(): string
     {
@@ -31,34 +39,67 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
 
     public function collection()
     {
-        $clients = Client::with(['contacts' => fn($q) => $q->where('es_principal', true)])
+        $clients = Client::with(['contacts' => function($q) {
+                $q->orderBy('es_principal', 'desc')->orderBy('created_at');
+            }])
             ->withCount('contacts')
             ->orderBy('name_client')
             ->get();
 
         $this->totalRows = $clients->count();
 
-        return $clients->map(fn($c) => [
-            '#'                  => $c->id_client,
-            'Agencia / Cliente'  => $c->name_client,
-            'Contacto Principal' => $c->contacts->first()
-                ? trim($c->contacts->first()->name . ' ' . $c->contacts->first()->last_names)
-                : '—',
-            'Cargo'              => $c->contacts->first()?->qualification ?? '—',
-            'Email'              => $c->contacts->first()?->email ?? '—',
-            'Teléfono Principal' => $c->contacts->first()?->first_phone ?? '—',
-            'Teléfono Secundario'=> $c->contacts->first()?->second_phone ?? '—',
-            'Total Contactos'    => $c->contacts_count,
-            'Estado'             => 'Activo',
-            'Fecha Registro'     => $c->created_at->format('d/m/Y'),
-        ]);
+        return $clients->map(function($client) {
+            $row = [
+                'id' => $client->id_client,
+                'agencia' => $client->name_client,
+                'estado' => 'Activo',
+                'fecha_registro' => $client->created_at->format('d/m/Y'),
+                'total_contactos' => $client->contacts_count,
+            ];
+
+            // Agregar cada contacto en columnas
+            foreach ($client->contacts as $idx => $contact) {
+                $colPrefix = $idx + 1;
+                $row["contacto_{$colPrefix}_nombre"] = trim($contact->name . ' ' . ($contact->last_names ?? ''));
+                $row["contacto_{$colPrefix}_cargo"] = $contact->qualification ?? '—';
+                $row["contacto_{$colPrefix}_email"] = $contact->email ?? '—';
+                $row["contacto_{$colPrefix}_telefono"] = $contact->first_phone ?? '—';
+                $row["contacto_{$colPrefix}_telefono2"] = $contact->second_phone ?? '—';
+            }
+
+            // Rellenar columnas vacías para los que tienen menos contactos
+            for ($i = $client->contacts_count + 1; $i <= $this->maxContacts; $i++) {
+                $row["contacto_{$i}_nombre"] = '—';
+                $row["contacto_{$i}_cargo"] = '—';
+                $row["contacto_{$i}_email"] = '—';
+                $row["contacto_{$i}_telefono"] = '—';
+                $row["contacto_{$i}_telefono2"] = '—';
+            }
+
+            return $row;
+        });
     }
 
     public function headings(): array
     {
-        return ['#', 'Agencia / Cliente', 'Contacto Principal', 'Cargo',
-                'Email', 'Teléfono Principal', 'Teléfono Secundario',
-                'Total Contactos', 'Estado', 'Fecha Registro'];
+        $headings = [
+            'ID',
+            'Agencia / Cliente',
+            'Estado',
+            'Fecha Registro',
+            'Total Contactos',
+        ];
+
+        // Generar encabezados dinámicos para cada contacto
+        for ($i = 1; $i <= $this->maxContacts; $i++) {
+            $headings[] = "Contacto {$i}";
+            $headings[] = "Cargo {$i}";
+            $headings[] = "Email {$i}";
+            $headings[] = "Teléfono {$i}";
+            $headings[] = "Teléfono 2 {$i}";
+        }
+
+        return $headings;
     }
 
     public function styles(Worksheet $sheet): array
@@ -71,211 +112,119 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                $lastRow = $this->totalRows + 4; // título(1) + subtítulo(2) + encabezado(3) + datos
 
-                // ── Insertar 3 filas arriba para el bloque de título ──
+                // Calcular columnas totales
+                $totalColumns = 5 + ($this->maxContacts * 5); // 5 fijas + 5 por cada contacto
+                $lastColumn = $this->getColumnLetter($totalColumns);
+
+                $lastRow = $this->totalRows + 4;
+
+                // Insertar 3 filas arriba para el título
                 $sheet->insertNewRowBefore(1, 3);
 
-                // ── FILA 1: Franja dorada superior ──
-                $sheet->mergeCells('A1:J1');
+                // FILA 1: Franja dorada
+                $sheet->mergeCells("A1:{$lastColumn}1");
                 $sheet->setCellValue('A1', '');
                 $sheet->getRowDimension(1)->setRowHeight(6);
-                $sheet->getStyle('A1:J1')->getFill()
+                $sheet->getStyle("A1:{$lastColumn}1")->getFill()
                     ->setFillType(Fill::FILL_SOLID)
                     ->getStartColor()->setRGB(self::GOLD);
 
-                // ── FILA 2: Título principal ──
-                $sheet->mergeCells('A2:J2');
+                // FILA 2: Título
+                $sheet->mergeCells("A2:{$lastColumn}2");
                 $sheet->setCellValue('A2', 'FIESTA TOURS PERU  ·  Listado de Clientes');
                 $sheet->getRowDimension(2)->setRowHeight(28);
                 $sheet->getStyle('A2')->applyFromArray([
-                    'font' => [
-                        'bold'  => true,
-                        'size'  => 14,
-                        'color' => ['argb' => 'FF' . self::GOLD],
-                        'name'  => 'Arial',
-                    ],
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => 'FF' . self::NAVY],
-                    ],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_LEFT,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                        'indent'     => 2,
-                    ],
+                    'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => 'FF' . self::GOLD], 'name' => 'Arial'],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF' . self::NAVY]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER, 'indent' => 2],
                 ]);
 
-                // ── FILA 3: Subtítulo / metadata ──
-                $sheet->mergeCells('A3:J3');
+                // FILA 3: Subtítulo
+                $sheet->mergeCells("A3:{$lastColumn}3");
                 $sheet->setCellValue('A3', 'Generado: ' . now()->format('d/m/Y H:i') . ' hrs  ·  Documento confidencial  ·  Uso interno  ·  www.fiestatoursperu.com');
                 $sheet->getRowDimension(3)->setRowHeight(16);
                 $sheet->getStyle('A3')->applyFromArray([
-                    'font' => [
-                        'italic' => true,
-                        'size'   => 8,
-                        'color'  => ['argb' => 'FF94A3B8'],
-                        'name'   => 'Arial',
-                    ],
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => 'FF' . self::NAVY],
-                    ],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_LEFT,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                        'indent'     => 2,
-                    ],
+                    'font' => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FF94A3B8'], 'name' => 'Arial'],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF' . self::NAVY]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER, 'indent' => 2],
                 ]);
 
-                // ── FILA 4: Encabezados de tabla ──
+                // FILA 4: Encabezados de tabla
                 $headerRow = 4;
                 $sheet->getRowDimension($headerRow)->setRowHeight(20);
-                $sheet->getStyle("A{$headerRow}:J{$headerRow}")->applyFromArray([
-                    'font' => [
-                        'bold'  => true,
-                        'size'  => 9,
-                        'color' => ['argb' => 'FF' . self::GOLD],
-                        'name'  => 'Arial',
-                    ],
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => 'FF' . self::NAVY],
-                    ],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                    ],
-                    'borders' => [
-                        'bottom' => [
-                            'borderStyle' => Border::BORDER_MEDIUM,
-                            'color'       => ['argb' => 'FF' . self::GOLD],
-                        ],
-                    ],
+                $sheet->getStyle("A{$headerRow}:{$lastColumn}{$headerRow}")->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FF' . self::GOLD], 'name' => 'Arial'],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF' . self::NAVY]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'borders' => ['bottom' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF' . self::GOLD]]],
                 ]);
 
-                // ── FILAS DE DATOS: alternado ──
+                // Datos
                 $dataStart = $headerRow + 1;
-                $dataEnd   = $dataStart + $this->totalRows - 1;
+                $dataEnd = $dataStart + $this->totalRows - 1;
 
                 for ($row = $dataStart; $row <= $dataEnd; $row++) {
                     $sheet->getRowDimension($row)->setRowHeight(16);
                     $isEven = ($row - $dataStart) % 2 === 0;
                     $bgColor = $isEven ? 'FFFFFFFF' : 'FF' . self::ROW_ALT;
 
-                    $sheet->getStyle("A{$row}:J{$row}")->applyFromArray([
+                    $sheet->getStyle("A{$row}:{$lastColumn}{$row}")->applyFromArray([
                         'font' => ['size' => 9, 'name' => 'Arial'],
-                        'fill' => [
-                            'fillType'   => Fill::FILL_SOLID,
-                            'startColor' => ['argb' => $bgColor],
-                        ],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bgColor]],
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
-                        'borders'   => [
-                            'bottom' => [
-                                'borderStyle' => Border::BORDER_THIN,
-                                'color'       => ['argb' => 'FFE2E8F0'],
-                            ],
-                        ],
+                        'borders' => ['bottom' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFE2E8F0']]],
                     ]);
 
-                    // ID centrado y gris
-                    $sheet->getStyle("A{$row}")->applyFromArray([
-                        'font'      => ['color' => ['argb' => 'FF94A3B8'], 'bold' => true, 'size' => 8],
-                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                    ]);
-
-                    // Nombre agencia bold
-                    $sheet->getStyle("B{$row}")->getFont()->setBold(true)->setSize(9);
-                    $sheet->getStyle("B{$row}")->getFont()->getColor()->setRGB(self::NAVY);
-
-                    // Total contactos centrado
-                    $sheet->getStyle("H{$row}")->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-                    // Estado: badge verde
-                    $sheet->getStyle("I{$row}")->applyFromArray([
-                        'font'      => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF166534']],
-                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                    ]);
-
-                    // Fecha centrada
-                    $sheet->getStyle("J{$row}")->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    // Estilo para el nombre de agencia
+                    $sheet->getStyle("B{$row}")->getFont()->setBold(true);
                 }
 
-                // ── LÍNEA DORADA inferior de tabla ──
-                if ($this->totalRows > 0) {
-                    $sheet->getStyle("A{$dataEnd}:J{$dataEnd}")->getBorders()
-                        ->getBottom()->setBorderStyle(Border::BORDER_MEDIUM)
-                        ->getColor()->setRGB(self::GOLD);
-                }
-
-                // ── FILA TOTALES ──
+                // Total de registros
                 $totalsRow = $dataEnd + 1;
-                $sheet->mergeCells("A{$totalsRow}:G{$totalsRow}");
+                $sheet->mergeCells("A{$totalsRow}:D{$totalsRow}");
                 $sheet->setCellValue("A{$totalsRow}", 'TOTAL DE REGISTROS');
-                $sheet->setCellValue("H{$totalsRow}", $this->totalRows);
+                $sheet->setCellValue("E{$totalsRow}", $this->totalRows);
                 $sheet->getRowDimension($totalsRow)->setRowHeight(18);
-                $sheet->getStyle("A{$totalsRow}:J{$totalsRow}")->applyFromArray([
-                    'font' => [
-                        'bold'  => true,
-                        'size'  => 9,
-                        'color' => ['argb' => 'FF' . self::NAVY],
-                    ],
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => 'FFFFF8E7'],
-                    ],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_RIGHT,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                    ],
-                    'borders' => [
-                        'top' => [
-                            'borderStyle' => Border::BORDER_MEDIUM,
-                            'color'       => ['argb' => 'FF' . self::GOLD],
-                        ],
-                    ],
+                $sheet->getStyle("A{$totalsRow}:{$lastColumn}{$totalsRow}")->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FF' . self::NAVY]],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFF8E7']],
+                    'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    'borders' => ['top' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF' . self::GOLD]]],
                 ]);
-                $sheet->getStyle("A{$totalsRow}")->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_LEFT)
-                    ->setIndent(2);
-                $sheet->getStyle("H{$totalsRow}")->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // ── FRANJA DORADA INFERIOR ──
+                // Footer
                 $bottomRow = $totalsRow + 1;
-                $sheet->mergeCells("A{$bottomRow}:J{$bottomRow}");
+                $sheet->mergeCells("A{$bottomRow}:{$lastColumn}{$bottomRow}");
                 $sheet->setCellValue("A{$bottomRow}", 'Fiesta Tours Peru © ' . now()->format('Y') . '  ·  Lima, Perú  ·  Sistema de Gestión Interna');
                 $sheet->getRowDimension($bottomRow)->setRowHeight(14);
                 $sheet->getStyle("A{$bottomRow}")->applyFromArray([
-                    'font' => [
-                        'italic' => true,
-                        'size'   => 8,
-                        'color'  => ['argb' => 'FF' . self::NAVY],
-                    ],
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => 'FF' . self::GOLD2],
-                    ],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                    ],
+                    'font' => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FF' . self::NAVY]],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF' . self::GOLD2]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                 ]);
 
-                // ── Anchos manuales para columnas con contenido fijo ──
+                // Anchos de columna
                 $sheet->getColumnDimension('A')->setWidth(6);
-                $sheet->getColumnDimension('H')->setWidth(14);
-                $sheet->getColumnDimension('I')->setWidth(10);
-                $sheet->getColumnDimension('J')->setWidth(14);
+                $sheet->getColumnDimension('B')->setWidth(25);
+                $sheet->getColumnDimension('C')->setWidth(10);
+                $sheet->getColumnDimension('D')->setWidth(14);
+                $sheet->getColumnDimension('E')->setWidth(12);
 
-                // ── Freeze pane debajo de encabezados ──
+                // Freeze pane
                 $sheet->freezePane("A{$dataStart}");
-
-                // ── Nombre de pestaña ──
-                $event->sheet->getTitle();
             },
         ];
+    }
+
+    private function getColumnLetter($index)
+    {
+        $letter = '';
+        while ($index > 0) {
+            $index--;
+            $letter = chr(65 + ($index % 26)) . $letter;
+            $index = intdiv($index, 26);
+        }
+        return $letter;
     }
 }

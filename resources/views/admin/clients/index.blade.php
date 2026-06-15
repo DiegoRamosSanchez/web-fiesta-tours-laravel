@@ -73,7 +73,7 @@
                             <div style="font-size:11px;color:#94a3b8">{{ $c->contacts_count }} contacto(s)</div>
                         </td>
                         <td style="font-size:13px;color:#374151">
-                            {{ $principal ? trim($principal->name.' '.$principal->last_names) : '---' }}
+                            {{ $principal ? trim($principal->name.' '.$principal->last_names) . ' | ' . $principal->qualification : '---' }}
                         </td>
                         <td style="font-size:12px;color:#64748b">{{ $principal->email ?? '---' }}</td>
                         <td style="font-size:12px;color:#64748b">{{ $principal->first_phone ?? '---' }}</td>
