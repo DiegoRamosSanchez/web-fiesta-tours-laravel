@@ -35,6 +35,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/{client}/editar', [ClientController::class, 'edit'])->name('edit');
         Route::put('/{client}',   [ClientController::class, 'update'])->name('update');
         Route::delete('/{client}',[ClientController::class, 'destroy'])->name('destroy');
+        Route::get('/exportar/pdf',        [ClientController::class, 'exportPdf'])->name('export.pdf');
+        Route::get('/exportar/excel',      [ClientController::class, 'exportExcel'])->name('export.excel');
     });
 
     // ── CONTACTOS (admin y cliente) ──

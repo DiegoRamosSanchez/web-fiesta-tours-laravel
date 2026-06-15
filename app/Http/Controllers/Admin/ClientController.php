@@ -5,6 +5,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Contact;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ClientsExport;
 
 class ClientController extends Controller
 {
@@ -24,12 +27,12 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name_client'              => 'required|string|max:100',
-            'contacts.*.name'          => 'required|string|max:100',
-            'contacts.*.last_names'    => 'nullable|string|max:100',
-            'contacts.*.email'         => 'nullable|email|max:80',
-            'contacts.*.first_phone'   => 'nullable|string|max:20',
-            'contacts.*.second_phone'  => 'nullable|string|max:20',
+            'name_client'             => 'required|string|max:100',
+            'contacts.*.name'         => 'required|string|max:100',
+            'contacts.*.last_names'   => 'nullable|string|max:100',
+            'contacts.*.email'        => 'nullable|email|max:80',
+            'contacts.*.first_phone'  => 'nullable|string|max:20',
+            'contacts.*.second_phone' => 'nullable|string|max:20',
         ]);
 
         $client = Client::create(['name_client' => $request->name_client]);
@@ -58,9 +61,7 @@ class ClientController extends Controller
 
     public function update(Request $request, Client $client)
     {
-        $request->validate([
-            'name_client' => 'required|string|max:100',
-        ]);
+        $request->validate(['name_client' => 'required|string|max:100']);
         $client->update(['name_client' => $request->name_client]);
         return redirect()->route('admin.clients.index')
             ->with('success', 'Cliente actualizado correctamente.');
@@ -70,5 +71,27 @@ class ClientController extends Controller
     {
         $client->delete();
         return back()->with('success', 'Cliente eliminado correctamente.');
+    }
+
+    // ── EXPORTAR PDF ──────────────────────────────────────────
+    public function exportPdf()
+    {
+        $clients = Client::with(['contacts' => fn($q) => $q->where('es_principal', true)])
+            ->withCount('contacts')
+            ->orderBy('name_client')->get();
+
+        $pdf = Pdf::loadView('admin.clients.export-pdf', compact('clients'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('clientes_' . now()->format('Ymd') . '.pdf');
+    }
+
+    // ── EXPORTAR EXCEL ────────────────────────────────────────
+    public function exportExcel()
+    {
+        return Excel::download(
+            new ClientsExport(),
+            'clientes_' . now()->format('Ymd') . '.xlsx'
+        );
     }
 }

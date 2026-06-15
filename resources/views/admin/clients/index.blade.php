@@ -7,9 +7,26 @@
         <div class="page-title">Clientes</div>
         <div class="page-sub">Gestiona todos los clientes registrados</div>
     </div>
-    <button onclick="document.getElementById('modal-crear').classList.remove('hidden')" class="btn btn-primary">
-        <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Cliente
-    </button>
+    <div style="display:flex;gap:.6rem;align-items:center">
+        {{-- Exportar PDF --}}
+        <a href="{{ route('admin.clients.export.pdf') }}"
+           style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
+                  background:#fff;border:1px solid #e2e8f0;border-radius:8px;
+                  font-size:13px;font-weight:600;color:#ef4444;text-decoration:none">
+            <i class="ti ti-file-type-pdf" style="font-size:16px"></i> PDF
+        </a>
+        {{-- Exportar Excel --}}
+        <a href="{{ route('admin.clients.export.excel') }}"
+           style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
+                  background:#fff;border:1px solid #e2e8f0;border-radius:8px;
+                  font-size:13px;font-weight:600;color:#16a34a;text-decoration:none">
+            <i class="ti ti-file-type-xls" style="font-size:16px"></i> Excel
+        </a>
+        {{-- Nuevo cliente --}}
+        <button onclick="document.getElementById('modal-crear').classList.remove('hidden')" class="btn btn-primary">
+            <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Cliente
+        </button>
+    </div>
 </div>
 
 @if(session('success'))
