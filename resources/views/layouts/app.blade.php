@@ -143,12 +143,25 @@
         {{-- GESTIÓN: visible para TODOS (admin y usuario) --}}
         <div class="sb-group">Gestión</div>
         <a href="{{ route('admin.clients.index') }}"
-           class="sb-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
+            class="sb-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
             <i class="ti ti-building"></i> Clientes
         </a>
         <a href="{{ route('admin.contacts.index') }}"
-           class="sb-link {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}">
+            class="sb-link {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}">
             <i class="ti ti-address-book"></i> Contactos
+        </a>
+
+        <a href="{{ route('admin.suppliers.index') }}"
+            class="sb-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}">
+            <i class="ti ti-truck"></i> Proveedores
+        </a>
+        <a href="{{ route('admin.destinations.index') }}"
+            class="sb-link {{ request()->routeIs('admin.destinations.*') ? 'active' : '' }}">
+            <i class="ti ti-map-pin"></i> Destinos
+        </a>
+        <a href="{{ route('admin.categories.index') }}"
+            class="sb-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
+            <i class="ti ti-tag"></i> Categorías
         </a>
 
         {{-- ADMINISTRACIÓN: solo admin --}}

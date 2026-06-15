@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\DestinationController;
+use App\Http\Controllers\Admin\CategorySupplierController;
+use App\Http\Controllers\Admin\SupplierController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('login'));
@@ -42,6 +45,36 @@ Route::middleware('auth')->group(function () {
         Route::get('/{contact}/editar', [ContactController::class, 'edit'])->name('edit');
         Route::put('/{contact}',    [ContactController::class, 'update'])->name('update');
         Route::delete('/{contact}', [ContactController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── DESTINOS ──
+    Route::prefix('destinos')->name('admin.destinations.')->group(function () {
+        Route::get('/',                    [DestinationController::class, 'index'])->name('index');
+        Route::get('/crear',               [DestinationController::class, 'create'])->name('create');
+        Route::post('/',                   [DestinationController::class, 'store'])->name('store');
+        Route::get('/{destination}/editar',[DestinationController::class, 'edit'])->name('edit');
+        Route::put('/{destination}',       [DestinationController::class, 'update'])->name('update');
+        Route::delete('/{destination}',    [DestinationController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── CATEGORÍAS DE PROVEEDORES ──
+    Route::prefix('categorias-proveedores')->name('admin.categories.')->group(function () {
+        Route::get('/',                  [CategorySupplierController::class, 'index'])->name('index');
+        Route::get('/crear',             [CategorySupplierController::class, 'create'])->name('create');
+        Route::post('/',                 [CategorySupplierController::class, 'store'])->name('store');
+        Route::get('/{category}/editar', [CategorySupplierController::class, 'edit'])->name('edit');
+        Route::put('/{category}',        [CategorySupplierController::class, 'update'])->name('update');
+        Route::delete('/{category}',     [CategorySupplierController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── PROVEEDORES ──
+    Route::prefix('proveedores')->name('admin.suppliers.')->group(function () {
+        Route::get('/',                   [SupplierController::class, 'index'])->name('index');
+        Route::get('/crear',              [SupplierController::class, 'create'])->name('create');
+        Route::post('/',                  [SupplierController::class, 'store'])->name('store');
+        Route::get('/{supplier}/editar',  [SupplierController::class, 'edit'])->name('edit');
+        Route::put('/{supplier}',         [SupplierController::class, 'update'])->name('update');
+        Route::delete('/{supplier}',      [SupplierController::class, 'destroy'])->name('destroy');
     });
 
     // ── SOLO ADMIN: gestión de usuarios del sistema ──
