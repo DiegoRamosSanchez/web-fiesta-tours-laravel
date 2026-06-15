@@ -112,7 +112,7 @@
         .avatar-sm { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
         .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
         .badge-admin   { background: #ede9fe; color: #6d28d9; }
-        .badge-cliente { background: #dcfce7; color: #166534; }
+        .badge-usuario { background: #dcfce7; color: #166534; }
         .table-footer { padding: .7rem 1.1rem; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; }
     </style>
     @stack('styles')
@@ -132,13 +132,28 @@
     </div>
 
     <nav class="sb-nav">
+
+        {{-- MENÚ PRINCIPAL --}}
         <div class="sb-group">Menú</div>
         <a href="{{ route('dashboard') }}"
            class="sb-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
             <i class="ti ti-layout-dashboard"></i> Dashboard
         </a>
 
+        {{-- GESTIÓN: visible para TODOS (admin y usuario) --}}
+        <div class="sb-group">Gestión</div>
+        <a href="{{ route('admin.clients.index') }}"
+           class="sb-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
+            <i class="ti ti-building"></i> Clientes
+        </a>
+        <a href="{{ route('admin.contacts.index') }}"
+           class="sb-link {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}">
+            <i class="ti ti-address-book"></i> Contactos
+        </a>
+
+        {{-- ADMINISTRACIÓN: solo admin --}}
         @if(auth()->user()->isAdmin())
+            <div class="sb-group">Administración</div>
             <a href="{{ route('admin.usuarios') }}"
                class="sb-link {{ request()->routeIs('admin.usuarios') ? 'active' : '' }}">
                 <i class="ti ti-users"></i> Usuarios
@@ -155,6 +170,7 @@
             </a>
         @endif
 
+        {{-- GENERAL --}}
         <div class="sb-group">General</div>
         @if(auth()->user()->isAdmin())
             <a href="#" class="sb-link">
@@ -166,10 +182,13 @@
         </a>
         <form action="{{ route('logout') }}" method="POST" style="margin:1px 0">
             @csrf
-            <button type="submit" class="sb-link" style="width:100%;border:none;background:none;text-align:left;cursor:pointer;color:rgba(255,255,255,.55)">
+            <button type="submit" class="sb-link"
+                style="width:100%;border:none;background:none;text-align:left;
+                       cursor:pointer;color:rgba(255,255,255,.55)">
                 <i class="ti ti-logout"></i> Cerrar sesión
             </button>
         </form>
+
     </nav>
 
     <div class="sb-foot">
@@ -224,7 +243,8 @@
                     <div class="dd-sep"></div>
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="dd-item dd-danger" style="width:100%;border:none;background:none;text-align:left;cursor:pointer">
+                        <button type="submit" class="dd-item dd-danger"
+                            style="width:100%;border:none;background:none;text-align:left;cursor:pointer">
                             <i class="ti ti-logout"></i> Cerrar sesión
                         </button>
                     </form>

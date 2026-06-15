@@ -43,7 +43,7 @@
                     </td>
                     <td style="color:#64748b">{{ $u->email }}</td>
                     <td>
-                        <span class="badge {{ $u->isAdmin() ? 'badge-admin' : 'badge-cliente' }}">
+                        <span class="badge {{ $u->isAdmin() ? 'badge-admin' : 'badge-usuario' }}">
                             <i class="ti {{ $u->isAdmin() ? 'ti-shield' : 'ti-user' }}" style="font-size:11px"></i>
                             {{ ucfirst($u->role) }}
                         </span>

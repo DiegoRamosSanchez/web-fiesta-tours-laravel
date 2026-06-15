@@ -175,7 +175,7 @@
 
     {{-- FONDO: imagen completa --}}
     <div class="bg-image">
-        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80"
+        <img src="https://res.cloudinary.com/dlgeap8h0/image/upload/v1781105098/iStock-2210631585_ef4mer.jpg"
              alt="">
     </div>
 
@@ -192,7 +192,7 @@
         {{-- Panel izquierdo --}}
         <div class="left">
             <img class="left-img"
-                 src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=80"
+                 src="https://res.cloudinary.com/dlgeap8h0/image/upload/v1781105098/iStock-2210631585_ef4mer.jpg"
                  alt="Paisaje Fiesta Tours">
             <div class="left-overlay"></div>
 

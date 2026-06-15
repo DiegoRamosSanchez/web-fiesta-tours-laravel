@@ -54,7 +54,7 @@
                 <div class="form-field">
                     <label>Rol *</label>
                     <select name="role">
-                        <option value="cliente" {{ old('role','cliente') == 'cliente' ? 'selected' : '' }}>Cliente</option>
+                        <option value="usuario" {{ old('role','usuario') == 'usuario' ? 'selected' : '' }}>Usuario</option>
                         <option value="admin"   {{ old('role') == 'admin' ? 'selected' : '' }}>Administrador</option>
                     </select>
                 </div>
