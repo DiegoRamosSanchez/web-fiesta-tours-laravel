@@ -175,7 +175,7 @@
 
     {{-- FONDO: imagen completa --}}
     <div class="bg-image">
-        <img src="https://res.cloudinary.com/dlgeap8h0/image/upload/v1781105098/iStock-2210631585_ef4mer.jpg"
+        <img src="https://www.machupicchuexploringperu.com/wp-content/uploads/2023/07/header-slider-machu-picchu-one-day-tour-1920x1080-1-2.jpg"
              alt="">
     </div>
 
@@ -192,7 +192,7 @@
         {{-- Panel izquierdo --}}
         <div class="left">
             <img class="left-img"
-                 src="https://res.cloudinary.com/dlgeap8h0/image/upload/v1781105098/iStock-2210631585_ef4mer.jpg"
+                 src="https://www.machupicchuexploringperu.com/wp-content/uploads/2023/07/banner-camino-inca.jpg"
                  alt="Paisaje Fiesta Tours">
             <div class="left-overlay"></div>
 

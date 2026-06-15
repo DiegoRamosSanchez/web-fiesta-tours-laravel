@@ -402,37 +402,176 @@
 
 @else
 {{-- VISTA USUARIO --}}
-<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:1.5rem">
+
     <div class="stat-card dark">
-        <div class="sc-icon" style="background:rgba(99,102,241,.2)"><i class="ti ti-calendar-event" style="color:#818cf8"></i></div>
-        <div class="sc-label">Mis reservas</div>
-        <div class="sc-value">0</div>
-        <div class="sc-sub">Sin reservas activas</div>
+        <div class="sc-blob" style="background:#6366f1"></div>
+        <div class="sc-icon" style="background:rgba(99,102,241,.2)">
+            <i class="ti ti-building" style="color:#818cf8"></i>
+        </div>
+        <div class="sc-label">Clientes</div>
+        <div class="sc-value">{{ $totalClients }}</div>
+        <div class="sc-sub">Empresas registradas</div>
     </div>
+
     <div class="stat-card">
-        <div class="sc-icon" style="background:#f0fdf4"><i class="ti ti-check" style="color:#10b981"></i></div>
-        <div class="sc-label">Completadas</div>
-        <div class="sc-value">0</div>
-        <div class="sc-sub">Viajes realizados</div>
+        <div class="sc-blob" style="background:#10b981"></div>
+        <div class="sc-icon" style="background:#f0fdf4">
+            <i class="ti ti-address-book" style="color:#10b981"></i>
+        </div>
+        <div class="sc-label">Contactos</div>
+        <div class="sc-value">{{ $totalContacts }}</div>
+        <div class="sc-sub">En total</div>
     </div>
+
+    <div class="stat-card">
+        <div class="sc-blob" style="background:#f59e0b"></div>
+        <div class="sc-icon" style="background:#fffbeb">
+            <i class="ti ti-truck" style="color:#d97706"></i>
+        </div>
+        <div class="sc-label">Proveedores</div>
+        <div class="sc-value">{{ $totalSuppliers }}</div>
+        <div class="sc-sub">Registrados</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="sc-blob" style="background:#6366f1"></div>
+        <div class="sc-icon" style="background:#ede9fe">
+            <i class="ti ti-map-pin" style="color:#6d28d9"></i>
+        </div>
+        <div class="sc-label">Destinos</div>
+        <div class="sc-value">{{ $totalDestinations }}</div>
+        <div class="sc-sub">Disponibles</div>
+    </div>
+
 </div>
-<div class="panel" style="max-width:500px">
-    <div class="panel-head">
-        <div>
-            <div class="panel-title">Mi cuenta</div>
-            <div class="panel-sub">Información personal</div>
+
+{{-- DOS COLUMNAS --}}
+<div class="dash-cols" style="margin-bottom:1rem">
+
+    {{-- Clientes recientes --}}
+    <div class="panel">
+        <div class="panel-head">
+            <div>
+                <div class="panel-title">Clientes recientes</div>
+                <div class="panel-sub">Últimos registrados</div>
+            </div>
+            <a href="{{ route('admin.clients.index') }}" class="btn btn-secondary btn-sm">Ver todos</a>
         </div>
-        <a href="{{ route('perfil.edit') }}" class="btn btn-secondary btn-sm"><i class="ti ti-edit" style="font-size:13px"></i> Editar</a>
-    </div>
-    <div style="padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:.7rem">
-        @foreach([['ti-user','Nombre',$user->name],['ti-mail','Correo',$user->email],['ti-calendar','Miembro desde',$user->created_at->format('d/m/Y')]] as [$ico,$label,$val])
-        <div style="display:flex;align-items:center;gap:10px;padding:.6rem 0;border-bottom:1px solid #f8fafc">
-            <i class="ti {{ $ico }}" style="font-size:16px;color:#94a3b8;width:20px;text-align:center"></i>
-            <span style="font-size:.83rem;color:#64748b;width:110px;flex-shrink:0">{{ $label }}</span>
-            <span style="font-size:.83rem;font-weight:600;color:#0f172a">{{ $val }}</span>
+        <div class="user-list">
+            @forelse($recentClients as $c)
+            <a href="{{ route('admin.clients.index') }}" class="user-row">
+                <div class="u-av-sm" style="background:#dbeafe;color:#1d4ed8">
+                    {{ strtoupper(substr($c->name_client, 0, 2)) }}
+                </div>
+                <div>
+                    <div class="u-nm">{{ $c->name_client }}</div>
+                    <div class="u-em">{{ $c->contacts_count }} contacto(s)</div>
+                </div>
+                <span class="u-badge" style="background:#dcfce7;color:#166534">ACTIVO</span>
+            </a>
+            @empty
+            <div style="padding:1.5rem;text-align:center;color:#94a3b8;font-size:13px">
+                Sin clientes aún
+            </div>
+            @endforelse
         </div>
-        @endforeach
     </div>
+
+    {{-- Mi cuenta --}}
+    <div class="panel">
+        <div class="panel-head">
+            <div>
+                <div class="panel-title">Mi cuenta</div>
+                <div class="panel-sub">Información personal</div>
+            </div>
+            <a href="{{ route('perfil.edit') }}" class="btn btn-secondary btn-sm">
+                <i class="ti ti-edit" style="font-size:13px"></i> Editar
+            </a>
+        </div>
+        <div style="padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:.7rem">
+            @foreach([
+                ['ti-user',    'Nombre',        $user->name],
+                ['ti-mail',    'Correo',         $user->email],
+                ['ti-calendar','Miembro desde',  $user->created_at->format('d/m/Y')],
+            ] as [$ico, $label, $val])
+            <div style="display:flex;align-items:center;gap:10px;padding:.6rem 0;border-bottom:1px solid #f8fafc">
+                <i class="ti {{ $ico }}" style="font-size:16px;color:#94a3b8;width:20px;text-align:center"></i>
+                <span style="font-size:.83rem;color:#64748b;width:110px;flex-shrink:0">{{ $label }}</span>
+                <span style="font-size:.83rem;font-weight:600;color:#0f172a">{{ $val }}</span>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+</div>
+
+{{-- FILA INFERIOR --}}
+<div class="dash-bottom">
+
+    {{-- Proveedores recientes --}}
+    <div class="panel">
+        <div class="panel-head">
+            <div>
+                <div class="panel-title">Proveedores recientes</div>
+                <div class="panel-sub">Últimos registrados</div>
+            </div>
+            <a href="{{ route('admin.suppliers.index') }}" class="btn btn-secondary btn-sm">Ver todos</a>
+        </div>
+        <div class="user-list">
+            @forelse($recentSuppliers as $s)
+            <a href="{{ route('admin.suppliers.index') }}" class="user-row">
+                <div class="u-av-sm" style="background:#f0f9ff;color:#0369a1">
+                    {{ strtoupper(substr($s->supplier_name, 0, 2)) }}
+                </div>
+                <div>
+                    <div class="u-nm">{{ $s->supplier_name }}</div>
+                    <div class="u-em">
+                        {{ $s->destination?->destination_name ?? 'Sin destino' }}
+                        @if($s->category) · {{ $s->category->category_name }} @endif
+                    </div>
+                </div>
+            </a>
+            @empty
+            <div style="padding:1.5rem;text-align:center;color:#94a3b8;font-size:13px">
+                Sin proveedores aún
+            </div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Accesos rápidos --}}
+    <div class="panel">
+        <div class="panel-head">
+            <div>
+                <div class="panel-title">Accesos rápidos</div>
+                <div class="panel-sub">Atajos del sistema</div>
+            </div>
+        </div>
+        <div class="quick-grid">
+            <a href="{{ route('admin.clients.index') }}" class="qa-card">
+                <div class="qa-icon">🏢</div>
+                <div class="qa-nm">Clientes</div>
+                <div class="qa-sub">Ver todos</div>
+            </a>
+            <a href="{{ route('admin.contacts.index') }}" class="qa-card">
+                <div class="qa-icon">📇</div>
+                <div class="qa-nm">Contactos</div>
+                <div class="qa-sub">Gestionar</div>
+            </a>
+            <a href="{{ route('admin.suppliers.index') }}" class="qa-card">
+                <div class="qa-icon">🚚</div>
+                <div class="qa-nm">Proveedores</div>
+                <div class="qa-sub">Ver todos</div>
+            </a>
+            <a href="{{ route('perfil') }}" class="qa-card">
+                <div class="qa-icon">🪪</div>
+                <div class="qa-nm">Mi perfil</div>
+                <div class="qa-sub">Ver mis datos</div>
+            </a>
+        </div>
+    </div>
+
 </div>
 @endif
 
