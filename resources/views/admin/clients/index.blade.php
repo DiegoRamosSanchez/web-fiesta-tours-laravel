@@ -29,12 +29,6 @@
     </div>
 </div>
 
-@if(session('success'))
-    <div class="alert alert-success" style="margin-bottom:1rem">
-        <i class="ti ti-circle-check"></i> {{ session('success') }}
-    </div>
-@endif
-
 @if($clients->isEmpty())
     <div style="text-align:center;padding:4rem;background:#fff;border-radius:14px;border:1px solid #e2e8f0">
         <i class="ti ti-building-off" style="font-size:48px;color:#cbd5e1;display:block;margin-bottom:1rem"></i>

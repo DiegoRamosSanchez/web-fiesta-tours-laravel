@@ -26,14 +26,32 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'supplier_name'          => 'required|string|max:100',
-            'id_destinations'        => 'nullable|exists:destinations,id_destinations',
-            'id_categories_suppliers'=> 'nullable|exists:categories_suppliers,id_categories_suppliers',
+            'supplier_name'           => 'required|string|max:100',
+            'id_destinations'         => 'nullable|exists:destinations,id_destinations',
+            'id_categories_suppliers' => 'nullable|exists:categories_suppliers,id_categories_suppliers',
+            'new_destination_name'    => 'nullable|string|max:100',
+            'new_category_name'       => 'nullable|string|max:100',
         ]);
 
-        Supplier::create($request->only([
-            'supplier_name', 'id_destinations', 'id_categories_suppliers'
-        ]));
+        // Crear destino al vuelo si se escribió uno nuevo
+        $destinationId = $request->id_destinations;
+        if ($request->filled('new_destination_name')) {
+            $dest          = Destination::create(['destination_name' => $request->new_destination_name]);
+            $destinationId = $dest->id_destinations;
+        }
+
+        // Crear categoría al vuelo si se escribió una nueva
+        $categoryId = $request->id_categories_suppliers;
+        if ($request->filled('new_category_name')) {
+            $cat        = CategorySupplier::create(['category_name' => $request->new_category_name]);
+            $categoryId = $cat->id_categories_suppliers;
+        }
+
+        Supplier::create([
+            'supplier_name'           => $request->supplier_name,
+            'id_destinations'         => $destinationId ?: null,
+            'id_categories_suppliers' => $categoryId ?: null,
+        ]);
 
         return redirect()->route('admin.suppliers.index')
             ->with('success', 'Proveedor creado correctamente.');
@@ -49,14 +67,32 @@ class SupplierController extends Controller
     public function update(Request $request, Supplier $supplier)
     {
         $request->validate([
-            'supplier_name'          => 'required|string|max:100',
-            'id_destinations'        => 'nullable|exists:destinations,id_destinations',
-            'id_categories_suppliers'=> 'nullable|exists:categories_suppliers,id_categories_suppliers',
+            'supplier_name'           => 'required|string|max:100',
+            'id_destinations'         => 'nullable|exists:destinations,id_destinations',
+            'id_categories_suppliers' => 'nullable|exists:categories_suppliers,id_categories_suppliers',
+            'new_destination_name'    => 'nullable|string|max:100',
+            'new_category_name'       => 'nullable|string|max:100',
         ]);
 
-        $supplier->update($request->only([
-            'supplier_name', 'id_destinations', 'id_categories_suppliers'
-        ]));
+        // Crear destino al vuelo
+        $destinationId = $request->id_destinations;
+        if ($request->filled('new_destination_name')) {
+            $dest          = Destination::create(['destination_name' => $request->new_destination_name]);
+            $destinationId = $dest->id_destinations;
+        }
+
+        // Crear categoría al vuelo
+        $categoryId = $request->id_categories_suppliers;
+        if ($request->filled('new_category_name')) {
+            $cat        = CategorySupplier::create(['category_name' => $request->new_category_name]);
+            $categoryId = $cat->id_categories_suppliers;
+        }
+
+        $supplier->update([
+            'supplier_name'           => $request->supplier_name,
+            'id_destinations'         => $destinationId ?: null,
+            'id_categories_suppliers' => $categoryId ?: null,
+        ]);
 
         return redirect()->route('admin.suppliers.index')
             ->with('success', 'Proveedor actualizado correctamente.');
