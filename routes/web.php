@@ -29,14 +29,19 @@ Route::middleware('auth')->group(function () {
 
     // ── CLIENTES (admin y cliente) ──
     Route::prefix('clientes')->name('admin.clients.')->group(function () {
-        Route::get('/',           [ClientController::class, 'index'])->name('index');
-        Route::get('/crear',      [ClientController::class, 'create'])->name('create');
-        Route::post('/',          [ClientController::class, 'store'])->name('store');
+        Route::get('/',                [ClientController::class, 'index'])->name('index');
+        Route::get('/exportar/pdf',    [ClientController::class, 'exportPdf'])->name('export.pdf');
+        Route::get('/exportar/excel',  [ClientController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/plantilla',       [ClientController::class, 'downloadTemplate'])->name('template');
+        Route::get('/importar',        [ClientController::class, 'importView'])->name('import.view');
+        Route::post('/importar',       [ClientController::class, 'import'])->name('import');
+        Route::get('/crear',           [ClientController::class, 'create'])->name('create');
+        Route::post('/',               [ClientController::class, 'store'])->name('store');
+
+        // Rutas con parámetro DESPUÉS
         Route::get('/{client}/editar', [ClientController::class, 'edit'])->name('edit');
-        Route::put('/{client}',   [ClientController::class, 'update'])->name('update');
-        Route::delete('/{client}',[ClientController::class, 'destroy'])->name('destroy');
-        Route::get('/exportar/pdf',        [ClientController::class, 'exportPdf'])->name('export.pdf');
-        Route::get('/exportar/excel',      [ClientController::class, 'exportExcel'])->name('export.excel');
+        Route::put('/{client}',        [ClientController::class, 'update'])->name('update');
+        Route::delete('/{client}',     [ClientController::class, 'destroy'])->name('destroy');
     });
 
     // ── CONTACTOS (admin y cliente) ──

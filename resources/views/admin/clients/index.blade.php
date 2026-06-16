@@ -8,6 +8,13 @@
         <div class="page-sub">Gestiona todos los clientes registrados</div>
     </div>
     <div style="display:flex;gap:.6rem;align-items:center">
+        {{-- Importar Excel --}}
+        <a href="{{ route('admin.clients.import.view') }}"
+        style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
+                background:#fff;border:1px solid #e2e8f0;border-radius:8px;
+                font-size:13px;font-weight:600;color:#6366f1;text-decoration:none">
+            <i class="ti ti-file-upload" style="font-size:16px"></i> Importar
+        </a>
         {{-- Exportar PDF --}}
         <a href="{{ route('admin.clients.export.pdf') }}"
            style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
