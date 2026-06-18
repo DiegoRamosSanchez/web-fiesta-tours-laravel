@@ -89,8 +89,20 @@ class ClientController extends Controller
             ->orderBy('name_client')
             ->get();
 
+        // Configurar PDF en formato vertical (retrato)
         $pdf = Pdf::loadView('admin.clients.export-pdf', compact('clients'))
-            ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'portrait') // Cambiar de 'landscape' a 'portrait'
+            ->setOptions([
+                'defaultFont' => 'Arial',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'dpi' => 96,
+                'defaultPaperSize' => 'a4',
+                'margin_left' => 10,
+                'margin_right' => 10,
+                'margin_top' => 10,
+                'margin_bottom' => 10,
+            ]);
 
         return $pdf->download('clientes_' . now()->format('Ymd') . '.pdf');
     }

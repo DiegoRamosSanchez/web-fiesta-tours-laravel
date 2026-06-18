@@ -186,7 +186,7 @@
         {{-- GENERAL --}}
         <div class="sb-group">General</div>
         @if(auth()->user()->isAdmin())
-            <a href="#" class="sb-link">
+            <a href="{{ route('perfil') }}" class="sb-link {{ request()->routeIs('perfil*') ? 'active' : '' }}">
                 <i class="ti ti-settings"></i> Configuración
             </a>
         @endif
@@ -197,7 +197,7 @@
             @csrf
             <button type="submit" class="sb-link"
                 style="width:100%;border:none;background:none;text-align:left;
-                       cursor:pointer;color:rgba(255,255,255,.55)">
+                    cursor:pointer;color:rgba(255,255,255,.55)">
                 <i class="ti ti-logout"></i> Cerrar sesión
             </button>
         </form>
