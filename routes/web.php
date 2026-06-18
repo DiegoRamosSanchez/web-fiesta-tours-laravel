@@ -35,8 +35,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/plantilla',       [ClientController::class, 'downloadTemplate'])->name('template');
         Route::get('/importar',        [ClientController::class, 'importView'])->name('import.view');
         Route::post('/importar',       [ClientController::class, 'import'])->name('import');
-        Route::get('/crear',           [ClientController::class, 'create'])->name('create');
         Route::post('/',               [ClientController::class, 'store'])->name('store');
+        Route::delete('/bulk',         [ClientController::class, 'bulkDestroy'])->name('bulk-destroy');
 
         // Rutas con parámetro DESPUÉS
         Route::get('/{client}/editar', [ClientController::class, 'edit'])->name('edit');
