@@ -185,11 +185,9 @@
 
         {{-- GENERAL --}}
         <div class="sb-group">General</div>
-        @if(auth()->user()->isAdmin())
-            <a href="{{ route('perfil') }}" class="sb-link {{ request()->routeIs('perfil*') ? 'active' : '' }}">
-                <i class="ti ti-settings"></i> Configuración
-            </a>
-        @endif
+        <a href="{{ route('perfil') }}" class="sb-link {{ request()->routeIs('perfil*') ? 'active' : '' }}">
+            <i class="ti ti-settings"></i> Configuración
+        </a>
         <a href="#" class="sb-link">
             <i class="ti ti-help"></i> Ayuda
         </a>

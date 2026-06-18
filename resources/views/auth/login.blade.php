@@ -142,20 +142,84 @@
             color: #64748b; text-transform: uppercase;
             letter-spacing: .6px; margin-bottom: 5px;
         }
-        input[type="email"], input[type="password"] {
-            width: 100%; padding: 10px 13px;
-            border: 1px solid #e2e8f0; border-radius: 8px;
-            background: #f8fafc; color: #0f172a;
-            font-size: 13px; outline: none;
+
+        /* ── CONTENEDOR DEL INPUT CON OJO ── */
+        .password-wrapper {
+            position: relative;
             margin-bottom: 1.1rem;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {  /* Para cuando se muestra la contraseña */
+            width: 100%;
+            padding: 10px 13px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #0f172a;
+            font-size: 13px;
+            outline: none;
             transition: border-color .15s, background .15s;
         }
-        input:focus { border-color: #6366f1; background: #fff; }
+
+        /* El input de password con padding a la derecha para el ojo */
+        .password-wrapper input {
+            padding-right: 42px;
+            margin-bottom: 0;
+        }
+
+        input:focus {
+            border-color: #1c1d30;
+            background: #fff;
+        }
+
+        /* ── BOTÓN OJO ── */
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 18px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color .2s;
+            line-height: 1;
+        }
+
+        .toggle-password:hover {
+            color: #1c1d30;
+        }
+
+        .toggle-password:focus {
+            outline: none;
+        }
+
+        /* SVG del ojo - tamaño y color */
+        .toggle-password svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
 
         .forgot {
-            font-size: 12px; color: #6366f1;
-            text-align: right; margin-top: -8px;
-            margin-bottom: 2rem; text-decoration: none; display: block;
+            font-size: 12px;
+            color: #1c1d30;
+            text-align: right;
+            margin-top: -8px;
+            margin-bottom: 2rem;
+            text-decoration: none;
+            display: block;
         }
         .forgot:hover { text-decoration: underline; }
 
@@ -169,6 +233,22 @@
         }
         .btn-login:hover  { background: #c42a2a; }
         .btn-login:active { transform: scale(.98); }
+
+        /* Ajuste responsive */
+        @media (max-width: 768px) {
+            .wrapper {
+                flex-direction: column;
+                width: 95%;
+                max-width: 400px;
+                min-height: auto;
+                border-radius: 16px;
+            }
+            .left { display: none; }
+            .right {
+                width: 100%;
+                padding: 2rem 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -236,8 +316,19 @@
                        required autofocus>
 
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password"
-                       placeholder="••••••••" required>
+
+                {{-- Contenedor con el ojo --}}
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password"
+                           placeholder="••••••••" required>
+                    <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar u ocultar contraseña">
+                        <!-- Icono Ojo (SVG) -->
+                        <svg viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
 
                 <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
 
@@ -246,6 +337,40 @@
         </div>
 
     </div>
+
+    {{-- JavaScript para el toggle del ojo --}}
+    <script>
+        (function() {
+            const toggleBtn = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function() {
+                    // Alternar tipo de input
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+
+                    // Cambiar el ícono del ojo (opcional)
+                    const svg = this.querySelector('svg');
+                    if (svg) {
+                        if (type === 'text') {
+                            // Ojo tachado (ocultar contraseña)
+                            svg.innerHTML = `
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            `;
+                        } else {
+                            // Ojo abierto (mostrar contraseña)
+                            svg.innerHTML = `
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            `;
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
 
 </body>
 </html>
