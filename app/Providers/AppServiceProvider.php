@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Route::bind('destination', function ($value) {
-            return Supplier::where('id_destinations', $value)->firstOrFail();
+            return Destination::where('id_destinations', $value)->firstOrFail();
         });
 
         Route::bind('category', function ($value) {
