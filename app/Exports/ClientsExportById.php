@@ -28,7 +28,17 @@ class ClientsExportById implements FromCollection, WithHeadings, WithStyles, Sho
     public function __construct(int $clientId)
     {
         $this->clientId = $clientId;
-        $this->maxContacts = 1;
+
+        // ─── IMPORTANTE ───
+        // headings() se ejecuta ANTES que collection() en Maatwebsite\Excel,
+        // por lo que maxContacts debe calcularse aquí (en el constructor),
+        // y no dentro de collection(). De lo contrario los encabezados de
+        // los contactos 2, 3, ... nunca se generan.
+        $this->maxContacts = Client::withCount('contacts')
+            ->find($clientId)
+            ?->contacts_count ?: 1;
+
+        $this->totalRows = 1;
     }
 
     public function title(): string
@@ -49,7 +59,6 @@ class ClientsExportById implements FromCollection, WithHeadings, WithStyles, Sho
         }
 
         $this->totalRows = 1;
-        $this->maxContacts = $client->contacts_count > 0 ? $client->contacts_count : 1;
 
         return collect([$client])->map(function ($client) {
             $row = [

@@ -200,6 +200,130 @@ tr.selected td { background: #fef2f2 !important; }
 .btn-cancel-export:hover {
     background: #e2e8f0;
 }
+
+/* ══════════ MODAL CREAR CLIENTE (rediseñado) ══════════ */
+.modal-overlay{
+    position:fixed; inset:0; background:rgba(15,23,42,.55);
+    z-index:999; display:flex; align-items:center; justify-content:center;
+    padding:1.2rem;
+}
+.modal-crear-box{
+    background:#fff; border-radius:18px; width:100%; max-width:760px;
+    max-height:95vh; display:flex; flex-direction:column; overflow:hidden;
+    animation:modalFadeIn .2s ease-out;
+    box-shadow:0 25px 50px -12px rgba(0,0,0,.35);
+}
+.modal-crear-header{
+    display:flex; align-items:flex-start; gap:14px;
+    padding:1.5rem 1.8rem 1.2rem; border-bottom:1px solid #f1f5f9;
+    flex-shrink:0; background:#fff; position:relative; z-index:2;
+}
+.modal-crear-header-icon{
+    width:44px; height:44px; border-radius:12px; background:#eef2ff; color:#6366f1;
+    display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+}
+.modal-crear-header h2{ font-size:18px; font-weight:700; color:#0f172a; margin:0 0 2px; }
+.modal-crear-header p{ font-size:12.5px; color:#94a3b8; margin:0; }
+.modal-crear-header .modal-close{ position:static; margin-left:auto; flex-shrink:0; }
+
+.modal-crear-body{
+    padding:1.6rem 1.8rem;
+    overflow-y:auto;
+    flex:1;
+    max-height: calc(95vh - 180px);
+}
+
+/* ── FIX: Scroll en el wrapper de contactos ── */
+#contactos-wrapper {
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 6px;
+    margin-right: -6px;
+}
+
+#contactos-wrapper::-webkit-scrollbar {
+    width: 5px;
+}
+#contactos-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+#contactos-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+#contactos-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.form-section{ margin-bottom:1.8rem; }
+.form-section:last-child{ margin-bottom:0; }
+.form-section-title{
+    display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700;
+    color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:.2rem;
+}
+.form-section-title i{ font-size:15px; color:#6366f1; }
+.form-section-title-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:.2rem; flex-wrap:wrap; gap:.5rem; }
+.form-section-hint{ font-size:11.5px; color:#94a3b8; margin:.1rem 0 .9rem; }
+.form-section-divider{ border-top:1px solid #f1f5f9; margin:1.6rem 0; }
+
+.field{ display:flex; flex-direction:column; gap:.35rem; }
+.field label{
+    font-size:10.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px;
+}
+.field label .req{ color:#ef4444; }
+.field input, .field select{
+    width:100%; padding:.62rem .8rem; border:1px solid #e2e8f0; border-radius:9px;
+    font-size:13px; color:#0f172a; outline:none; transition:border-color .15s, background .15s;
+    background:#fff; box-sizing:border-box;
+}
+.field input::placeholder{ color:#cbd5e1; }
+.field input:focus, .field select:focus{ border-color:#6366f1; background:#fff; }
+
+.form-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:.9rem; margin:1rem 0; }
+.form-grid-2:first-of-type{ margin-top:0; }
+.form-grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.9rem; }
+@media (max-width:620px){
+    .form-grid-2, .form-grid-3{ grid-template-columns:1fr; }
+}
+
+.add-contact-btn{
+    display:inline-flex; align-items:center; gap:6px; padding:.45rem .85rem;
+    background:#10b981; color:#fff; border:none; border-radius:8px;
+    font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;
+}
+.add-contact-btn:hover{ background:#0d9b6c; }
+
+.contact-card{
+    border:1px solid #e2e8f0; border-radius:12px; padding:1.1rem 1.2rem;
+    margin-bottom:.9rem; background:#fbfcfe;
+}
+.contact-card:last-child{ margin-bottom:0; }
+.contact-card-head{
+    display:flex; align-items:center; gap:10px; margin-bottom:1rem; flex-wrap:wrap;
+}
+.contact-badge{
+    width:24px; height:24px; border-radius:50%; background:#e0e7ff; color:#4338ca;
+    font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+}
+.contact-card-title{ font-size:12.5px; font-weight:700; color:#374151; }
+.contact-principal-tag{
+    font-size:10px; font-weight:700; color:#92400e; background:#fef3c7;
+    border:1px solid #fde68a; padding:2px 8px; border-radius:999px;
+    display:inline-flex; align-items:center; gap:3px;
+}
+.contact-remove-btn{
+    margin-left:auto; background:none; border:none; cursor:pointer; color:#cbd5e1;
+    font-size:15px; padding:.3rem; border-radius:6px;
+}
+.contact-remove-btn:hover{ color:#e63232; background:#fef2f2; }
+
+.modal-crear-footer{
+    display:flex; justify-content:flex-end; gap:.8rem;
+    padding:1.1rem 1.8rem; border-top:1px solid #f1f5f9;
+    flex-shrink:0; background:#fff; position:sticky; bottom:0; z-index:2;
+}
 </style>
 @endpush
 
@@ -489,93 +613,92 @@ tr.selected td { background: #fef2f2 !important; }
 @endif
 
 {{-- ══════════ MODAL CREAR CLIENTE ══════════ --}}
-<div id="modal-crear" class="hidden"
-     style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;
-            display:flex;align-items:center;justify-content:center">
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:560px;
-                max-height:90vh;overflow-y:auto;padding:2rem;position:relative">
+<div id="modal-crear" class="hidden modal-overlay">
+    <div class="modal-crear-box">
 
-        <button onclick="document.getElementById('modal-crear').classList.add('hidden')"
-                style="position:absolute;top:1rem;right:1rem;background:none;border:none;
-                       font-size:22px;cursor:pointer;color:#94a3b8">
-            <i class="ti ti-x"></i>
-        </button>
+        <div class="modal-crear-header">
+            <div class="modal-crear-header-icon">
+                <i class="ti ti-building-plus"></i>
+            </div>
+            <div>
+                <h2>Registrar Nuevo Cliente</h2>
+                <p>Completa los datos de la empresa y agrega sus contactos</p>
+            </div>
+            <button type="button" class="modal-close"
+                    onclick="document.getElementById('modal-crear').classList.add('hidden')">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
 
-        <h2 style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:1.4rem">
-            Registrar Nuevo Cliente
-        </h2>
-
-        <form action="{{ route('admin.clients.store') }}" method="POST">
+        <form action="{{ route('admin.clients.store') }}" method="POST" id="form-crear-cliente">
             @csrf
 
-            <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem">
-                Datos de la Empresa
-            </p>
+            <div class="modal-crear-body">
 
-            <div class="form-field" style="margin-bottom:1rem">
-                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
-                    Nombre comercial *
-                </label>
-                <input type="text" name="name_client" value="{{ old('name_client') }}"
-                    placeholder="Ej: Fiesta Tours Perú S.A.C."
-                    style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box"
-                    required>
+                {{-- ── DATOS DE LA EMPRESA ── --}}
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="ti ti-building"></i> Datos de la empresa
+                    </div>
+                    <p class="form-section-hint">Información general que identifica a la agencia o cliente.</p>
+
+                    <div class="form-grid-2">
+                        <div class="field">
+                            <label>Nombre comercial <span class="req">*</span></label>
+                            <input type="text" name="name_client" value="{{ old('name_client') }}"
+                                   placeholder="Ej: Fiesta Tours Perú S.A.C." required>
+                        </div>
+                        <div class="field">
+                            <label>Razón Social <span class="req">*</span></label>
+                            <input type="text" name="business_name" value="{{ old('business_name') }}"
+                                   placeholder="Ej: Fiesta Tours Perú S.A.C." required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="field">
+                            <label>Código tributario (RUC)</label>
+                            <input type="text" name="tax_code" value="{{ old('tax_code') }}"
+                                   placeholder="Ej: 20123456789">
+                        </div>
+                        <div class="field">
+                            <label>Teléfono general</label>
+                            <input type="text" name="general_phone" value="{{ old('general_phone') }}"
+                                   placeholder="Ej: 01-234567">
+                        </div>
+                        <div class="field">
+                            <label>Email general</label>
+                            <input type="email" name="general_email" value="{{ old('general_email') }}"
+                                   placeholder="contacto@empresa.com">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section-divider"></div>
+
+                {{-- ── CONTACTOS ── --}}
+                <div class="form-section">
+                    <div class="form-section-title-row">
+                        <div class="form-section-title">
+                            <i class="ti ti-users"></i> Contactos
+                        </div>
+                        <button type="button" class="add-contact-btn" onclick="agregarContacto()">
+                            <i class="ti ti-plus" style="font-size:13px"></i> Añadir contacto
+                        </button>
+                    </div>
+                    <p class="form-section-hint">El primer contacto se registrará como el representante principal.</p>
+
+                    <div id="contactos-wrapper"></div>
+                </div>
+
             </div>
 
-            <div class="form-field" style="margin-bottom:1rem">
-                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
-                    Razón Social *
-                </label>
-                <input type="text" name="business_name" value="{{ old('business_name') }}"
-                    placeholder="Ej: Fiesta Tours Perú S.A.C."
-                    style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box"
-                    required>
-            </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.2rem">
-                <div class="form-field">
-                    <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
-                        Código tributario (RUC)
-                    </label>
-                    <input type="text" name="tax_code" value="{{ old('tax_code') }}"
-                        placeholder="Ej: 20123456789"
-                        style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box">
-                </div>
-                <div class="form-field">
-                    <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
-                        Teléfono general
-                    </label>
-                    <input type="text" name="general_phone" value="{{ old('general_phone') }}"
-                        placeholder="Ej: 01-234567"
-                        style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box">
-                </div>
-                <div class="form-field">
-                    <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
-                        Email general
-                    </label>
-                    <input type="email" name="general_email" value="{{ old('general_email') }}"
-                        placeholder="contacto@empresa.com"
-                        style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box">
-                </div>
-            </div>
-
-            <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem">
-                Contactos
-            </p>
-
-            <div id="contactos-wrapper"></div>
-
-            <button type="button" onclick="agregarContacto()"
-                    style="background:#10b981;color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;
-                        font-size:13px;font-weight:600;cursor:pointer;margin-bottom:1.2rem;
-                        display:flex;align-items:center;gap:6px">
-                <i class="ti ti-plus"></i> Añadir contacto
-            </button>
-
-            <div style="display:flex;justify-content:flex-end;gap:.8rem;padding-top:1rem;border-top:1px solid #f1f5f9">
+            <div class="modal-crear-footer">
                 <button type="button" onclick="document.getElementById('modal-crear').classList.add('hidden')"
                         class="btn btn-secondary">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy" style="font-size:14px"></i> Guardar Cliente
+                </button>
             </div>
         </form>
     </div>
@@ -813,46 +936,69 @@ function bulkDelete() {
 // ── Modal crear cliente ───────────────────────────────────────
 let contactoIdx = 0;
 
+function actualizarNumeros() {
+    const cards = document.querySelectorAll('#contactos-wrapper .contact-card');
+    cards.forEach((card, index) => {
+        const badge = card.querySelector('.contact-badge');
+        const title = card.querySelector('.contact-card-title');
+        if (badge) badge.textContent = index + 1;
+        if (title) {
+            title.textContent = index === 0 ? 'Representante principal' : 'Contacto adicional';
+        }
+    });
+}
+
 function agregarContacto() {
     const i = contactoIdx++;
-    const label = i === 0 ? 'Contacto #1 — Representante Principal' : `Contacto #${i+1}`;
     const wrapper = document.getElementById('contactos-wrapper');
     const div = document.createElement('div');
+    div.className = 'contact-card';
     div.id = `contacto-${i}`;
-    div.style.cssText = 'border:1px solid #e2e8f0;border-radius:10px;padding:1rem;margin-bottom:.8rem;position:relative';
     div.innerHTML = `
-        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:.8rem">${label}</div>
-        ${i > 0 ? `<button type="button" onclick="document.getElementById('contacto-${i}').remove()"
-            style="position:absolute;top:.7rem;right:.7rem;background:none;border:none;
-                   cursor:pointer;color:#ef4444;font-size:16px"><i class="ti ti-x"></i></button>` : ''}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
-            <div>
-                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase">NOMBRE *</label>
-                <input type="text" name="contacts[${i}][name]" placeholder="Nombre" required
-                       style="width:100%;padding:.5rem .7rem;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;margin-top:.3rem;box-sizing:border-box">
+        <div class="contact-card-head">
+            <span class="contact-badge">${i + 1}</span>
+            <span class="contact-card-title">${i === 0 ? 'Representante principal' : 'Contacto adicional'}</span>
+            ${i === 0 ? '<span class="contact-principal-tag"><i class="ti ti-star-filled"></i> Principal</span>' : ''}
+            ${i > 0 ? `<button type="button" class="contact-remove-btn" title="Quitar contacto"
+                onclick="document.getElementById('contacto-${i}').remove(); actualizarNumeros();"><i class="ti ti-trash"></i></button>` : ''}
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>Nombre <span class="req">*</span></label>
+                <input type="text" name="contacts[${i}][name]" placeholder="Nombre" required>
             </div>
-            <div>
-                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase">APELLIDOS</label>
-                <input type="text" name="contacts[${i}][last_names]" placeholder="Apellidos"
-                       style="width:100%;padding:.5rem .7rem;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;margin-top:.3rem;box-sizing:border-box">
+            <div class="field">
+                <label>Apellidos</label>
+                <input type="text" name="contacts[${i}][last_names]" placeholder="Apellidos">
             </div>
-            <div style="grid-column:1/3">
-                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase">CORREO</label>
-                <input type="email" name="contacts[${i}][email]" placeholder="ejemplo@correo.com"
-                       style="width:100%;padding:.5rem .7rem;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;margin-top:.3rem;box-sizing:border-box">
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>Correo</label>
+                <input type="email" name="contacts[${i}][email]" placeholder="ejemplo@correo.com">
             </div>
-            <div>
-                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase">TELÉFONO 1</label>
-                <input type="text" name="contacts[${i}][first_phone]" placeholder="Principal"
-                       style="width:100%;padding:.5rem .7rem;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;margin-top:.3rem;box-sizing:border-box">
+            <div class="field">
+                <label>Cargo</label>
+                <input type="text" name="contacts[${i}][qualification]" placeholder="Ej: Gerente, Coordinador...">
             </div>
-            <div>
-                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase">TELÉFONO 2</label>
-                <input type="text" name="contacts[${i}][second_phone]" placeholder="Opcional"
-                       style="width:100%;padding:.5rem .7rem;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;margin-top:.3rem;box-sizing:border-box">
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>Teléfono 1</label>
+                <input type="text" name="contacts[${i}][first_phone]" placeholder="Principal">
+            </div>
+            <div class="field">
+                <label>Teléfono 2</label>
+                <input type="text" name="contacts[${i}][second_phone]" placeholder="Opcional">
             </div>
         </div>`;
     wrapper.appendChild(div);
+
+    // Hacer scroll al final del wrapper
+    wrapper.scrollTop = wrapper.scrollHeight;
 }
 
 @if($errors->any())

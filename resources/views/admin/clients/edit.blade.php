@@ -12,195 +12,233 @@
     </a>
 </div>
 
-<div style="max-width:700px">
-    @if($errors->any())
-        <div class="alert alert-error">
-            <i class="ti ti-alert-circle"></i>
-            <ul style="list-style:none;margin-left:.5rem">
-                @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
-            </ul>
-        </div>
-    @endif
+@if($errors->any())
+    <div class="alert alert-error" style="margin-bottom:1rem">
+        <i class="ti ti-alert-circle"></i>
+        <ul style="list-style:none;margin-left:.5rem">
+            @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+        </ul>
+    </div>
+@endif
 
-    <form action="{{ route('admin.clients.update', $client->id_client) }}"
-          method="POST" id="edit-form">
-        @csrf @method('PUT')
+<style>
+    .edit-client-layout{
+        display:grid;
+        grid-template-columns: 550px 1fr;
+        gap:1.4rem;
+        align-items:start;
+    }
+    @media (max-width: 980px){
+        .edit-client-layout{ grid-template-columns: 1fr; }
+        .edit-client-left{ position:static !important; }
+    }
+    .edit-client-left{
+        position:sticky;
+        top:1rem;
+    }
 
-        {{-- Campos ocultos para contactos a eliminar --}}
-        <div id="delete-inputs"></div>
+    /* ── Tabla de contactos ── */
+    .contacts-table-wrap{ overflow-x:auto; border:1px solid #e2e8f0; border-radius:10px; }
+    table.contacts-table{ width:100%; border-collapse:collapse; min-width:880px; }
+    table.contacts-table thead th{
+        background:#f8fafc; color:#94a3b8; font-size:10.5px; font-weight:700;
+        text-transform:uppercase; letter-spacing:.4px; text-align:left;
+        padding:.6rem .6rem; border-bottom:1px solid #e2e8f0; white-space:nowrap;
+    }
+    table.contacts-table tbody td{
+        border-bottom:1px solid #f1f5f9; padding:.35rem .5rem; vertical-align:middle;
+    }
+    table.contacts-table tbody tr:last-child td{ border-bottom:none; }
+    table.contacts-table tbody tr.is-new{ background:#f8fdfb; }
+    table.contacts-table tbody tr.is-deleted{ opacity:.35; }
+    table.contacts-table tbody tr.is-deleted input{ pointer-events:none; }
 
-        {{-- ── DATOS DEL CLIENTE ── --}}
-        <div class="card" style="margin-bottom:1rem">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Datos de la empresa</div>
-                    <div class="card-sub">ID #{{ $client->id_client }}</div>
+    .contacts-table input[type="text"],
+    .contacts-table input[type="email"]{
+        width:100%; border:1px solid transparent; background:transparent;
+        font-size:12.5px; padding:.4rem .45rem; border-radius:6px; color:#0f172a;
+        min-width:110px;
+    }
+    .contacts-table input[type="text"]:hover,
+    .contacts-table input[type="email"]:hover{ background:#f8fafc; }
+    .contacts-table input[type="text"]:focus,
+    .contacts-table input[type="email"]:focus{
+        background:#fff; border-color:#cbd5e1; outline:none;
+        box-shadow:0 0 0 2px rgba(203,213,225,.4);
+    }
+    .contacts-table td.col-name input{ font-weight:600; min-width:130px; }
+    .contacts-table td.col-principal{ text-align:center; width:44px; }
+    .contacts-table td.col-actions{ text-align:center; width:40px; }
+
+    .star-toggle{ width:16px; height:16px; cursor:pointer; accent-color:#d97706; }
+
+    .row-del-btn{
+        background:none; border:none; cursor:pointer; color:#cbd5e1; font-size:15px;
+        padding:.3rem; border-radius:6px; line-height:1;
+    }
+    .row-del-btn:hover{ color:#e63232; background:#fef2f2; }
+    .row-del-btn.active{ color:#e63232; }
+
+    .add-row-btn{
+        display:inline-flex; align-items:center; gap:6px; padding:.55rem .9rem;
+        background:#10b981; color:#fff; border:none; border-radius:8px;
+        font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;
+    }
+    .add-row-btn:hover{ background:#0d9b6c; }
+
+    .table-empty-note{ color:#94a3b8; font-size:12.5px; text-align:center; padding:1.4rem; }
+</style>
+
+<form action="{{ route('admin.clients.update', $client->id_client) }}"
+      method="POST" id="edit-form">
+    @csrf @method('PUT')
+
+    {{-- Campos ocultos para contactos a eliminar --}}
+    <div id="delete-inputs"></div>
+
+    <div class="edit-client-layout">
+
+        {{-- ══════════ IZQUIERDA: DATOS DEL CLIENTE ══════════ --}}
+        <div class="edit-client-left">
+            <div class="card" style="margin-bottom:1rem">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Datos de la empresa</div>
+                        <div class="card-sub">ID #{{ $client->id_client }}</div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-field" style="margin-bottom:1.1rem">
-                <label>Nombre comercial *</label>
-                <input type="text" name="name_client"
-                    value="{{ old('name_client', $client->name_client) }}"
-                    maxlength="120" required autofocus>
-            </div>
+                <div class="form-field" style="margin-bottom:1.1rem">
+                    <label>Nombre comercial *</label>
+                    <input type="text" name="name_client"
+                        value="{{ old('name_client', $client->name_client) }}"
+                        maxlength="120" required autofocus>
+                </div>
 
-            <div class="form-field" style="margin-bottom:1.1rem">
-                <label>Razón Social</label>
-                <input type="text" name="business_name"
-                    value="{{ old('business_name', $client->business_name) }}"
-                    maxlength="150">
-            </div>
+                <div class="form-field" style="margin-bottom:1.1rem">
+                    <label>Razón Social</label>
+                    <input type="text" name="business_name"
+                        value="{{ old('business_name', $client->business_name) }}"
+                        maxlength="150">
+                </div>
 
-            <div class="form-grid">
-                <div class="form-field">
+                <div class="form-field" style="margin-bottom:1.1rem">
                     <label>Código tributario (RUC)</label>
                     <input type="text" name="tax_code"
                         value="{{ old('tax_code', $client->tax_code) }}"
                         maxlength="20" placeholder="Ej: 20123456789">
                 </div>
-                <div class="form-field">
+                <div class="form-field" style="margin-bottom:1.1rem">
                     <label>Teléfono general</label>
                     <input type="text" name="general_phone"
                         value="{{ old('general_phone', $client->general_phone) }}"
                         maxlength="20" placeholder="Ej: 01-234567">
                 </div>
-                <div class="form-field" style="grid-column:1/3">
+                <div class="form-field">
                     <label>Email general</label>
                     <input type="email" name="general_email"
                         value="{{ old('general_email', $client->general_email) }}"
                         maxlength="120" placeholder="contacto@empresa.com">
                 </div>
             </div>
-        </div>
 
-        {{-- ── CONTACTOS EXISTENTES ── --}}
-        <div class="card" style="margin-bottom:1rem">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Contactos registrados</div>
-                    <div class="card-sub">{{ $client->contacts->count() }} contacto(s)</div>
-                </div>
-            </div>
-
-            <div id="existing-contacts">
-                @foreach($client->contacts as $idx => $contact)
-                <div class="contact-block" id="existing-{{ $contact->id_contacts }}"
-                     style="border:1px solid #e2e8f0;border-radius:10px;padding:1rem;
-                            margin-bottom:.8rem;position:relative;transition:opacity .2s">
-
-                    {{-- Badge principal --}}
-                    @if($contact->es_principal)
-                        <span style="position:absolute;top:.7rem;left:1rem;
-                                     background:#fef3c7;color:#92400e;font-size:10px;
-                                     font-weight:700;padding:2px 8px;border-radius:999px;
-                                     border:1px solid #fde68a">
-                            ⭐ Principal
-                        </span>
-                    @endif
-
-                    {{-- Botón eliminar contacto --}}
-                    <button type="button"
-                            onclick="markDelete({{ $contact->id_contacts }}, this)"
-                            style="position:absolute;top:.7rem;right:.7rem;background:none;
-                                   border:none;cursor:pointer;color:#94a3b8;font-size:16px"
-                            title="Eliminar contacto">
-                        <i class="ti ti-trash"></i>
-                    </button>
-
-                    <input type="hidden" name="contacts[{{ $idx }}][id]" value="{{ $contact->id_contacts }}">
-
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:{{ $contact->es_principal ? '1.8rem' : '.3rem' }}">
-                        <div class="form-field">
-                            <label>Nombre *</label>
-                            <input type="text" name="contacts[{{ $idx }}][name]"
-                                   value="{{ old('contacts.'.$idx.'.name', $contact->name) }}"
-                                   required>
-                        </div>
-                        <div class="form-field">
-                            <label>Apellidos</label>
-                            <input type="text" name="contacts[{{ $idx }}][last_names]"
-                                   value="{{ old('contacts.'.$idx.'.last_names', $contact->last_names) }}">
-                        </div>
-                        <div class="form-field">
-                            <label>Email</label>
-                            <input type="email" name="contacts[{{ $idx }}][email]"
-                                   value="{{ old('contacts.'.$idx.'.email', $contact->email) }}">
-                        </div>
-                        <div class="form-field">
-                            <label>Cargo</label>
-                            <input type="text" name="contacts[{{ $idx }}][qualification]"
-                                   value="{{ old('contacts.'.$idx.'.qualification', $contact->qualification) }}"
-                                   placeholder="Ej: Gerente, Coordinador...">
-                        </div>
-                        <div class="form-field">
-                            <label>Teléfono 1</label>
-                            <input type="text" name="contacts[{{ $idx }}][first_phone]"
-                                   value="{{ old('contacts.'.$idx.'.first_phone', $contact->first_phone) }}">
-                        </div>
-                        <div class="form-field">
-                            <label>Teléfono 2</label>
-                            <input type="text" name="contacts[{{ $idx }}][second_phone]"
-                                   value="{{ old('contacts.'.$idx.'.second_phone', $contact->second_phone) }}">
-                        </div>
-                    </div>
-
-                    {{-- Marcar como principal --}}
-                    <div style="margin-top:.8rem;display:flex;align-items:center;gap:8px">
-                        <input type="checkbox" name="contacts[{{ $idx }}][es_principal]"
-                               id="principal-{{ $idx }}" value="1"
-                               {{ $contact->es_principal ? 'checked' : '' }}
-                               style="width:15px;height:15px;accent-color:#e63232;cursor:pointer">
-                        <label for="principal-{{ $idx }}"
-                               style="font-size:12px;color:#64748b;cursor:pointer;
-                                      text-transform:none;letter-spacing:0">
-                            Marcar como contacto principal
-                        </label>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-
-            @if($client->contacts->isEmpty())
-                <p style="color:#94a3b8;font-size:13px;text-align:center;padding:1rem">
-                    Este cliente no tiene contactos aún
-                </p>
-            @endif
-        </div>
-
-        {{-- ── NUEVOS CONTACTOS ── --}}
-        <div class="card" style="margin-bottom:1rem">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Agregar nuevos contactos</div>
-                    <div class="card-sub">Opcional — se agregarán al guardar</div>
-                </div>
-                <button type="button" onclick="addNewContact()"
-                        style="display:inline-flex;align-items:center;gap:6px;
-                               padding:.5rem .9rem;background:#10b981;color:#fff;
-                               border:none;border-radius:8px;font-size:12px;
-                               font-weight:600;cursor:pointer">
-                    <i class="ti ti-plus" style="font-size:14px"></i> Añadir contacto
+            <div style="display:flex;gap:.8rem">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy" style="font-size:14px"></i> Guardar cambios
                 </button>
-            </div>
-            <div id="new-contacts-wrapper">
-                <p id="new-contacts-empty"
-                   style="color:#94a3b8;font-size:13px;text-align:center;padding:.5rem">
-                    Haz clic en "Añadir contacto" para agregar uno nuevo
-                </p>
+                <a href="{{ route('admin.clients.index') }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </div>
 
-        {{-- ── ACCIONES ── --}}
-        <div style="display:flex;gap:.8rem">
-            <button type="submit" class="btn btn-primary">
-                <i class="ti ti-device-floppy" style="font-size:14px"></i> Guardar cambios
-            </button>
-            <a href="{{ route('admin.clients.index') }}" class="btn btn-secondary">Cancelar</a>
+        {{-- ══════════ DERECHA: CONTACTOS EN TABLA ══════════ --}}
+        <div class="edit-client-right">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Contactos registrados</div>
+                        <div class="card-sub" id="contacts-count">{{ $client->contacts->count() }} contacto(s)</div>
+                    </div>
+                    <button type="button" class="add-row-btn" onclick="addNewContact()">
+                        <i class="ti ti-plus" style="font-size:14px"></i> Añadir contacto
+                    </button>
+                </div>
+
+                <div class="contacts-table-wrap">
+                    <table class="contacts-table">
+                        <thead>
+                            <tr>
+                                <th title="Principal"><i class="ti ti-star"></i></th>
+                                <th>Nombre *</th>
+                                <th>Apellidos</th>
+                                <th>Email</th>
+                                <th>Cargo</th>
+                                <th>Teléfono 1</th>
+                                <th>Teléfono 2</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="contacts-tbody">
+                            @foreach($client->contacts as $idx => $contact)
+                            <tr class="contact-row" id="existing-row-{{ $contact->id_contacts }}">
+                                <td class="col-principal">
+                                    <input type="hidden" name="contacts[{{ $idx }}][id]" value="{{ $contact->id_contacts }}">
+                                    <input type="checkbox" class="star-toggle principal-checkbox"
+                                           name="contacts[{{ $idx }}][es_principal]" value="1"
+                                           title="Marcar como principal"
+                                           {{ old('contacts.'.$idx.'.es_principal', $contact->es_principal) ? 'checked' : '' }}>
+                                </td>
+                                <td class="col-name">
+                                    <input type="text" name="contacts[{{ $idx }}][name]"
+                                           value="{{ old('contacts.'.$idx.'.name', $contact->name) }}"
+                                           placeholder="Nombre" required>
+                                </td>
+                                <td>
+                                    <input type="text" name="contacts[{{ $idx }}][last_names]"
+                                           value="{{ old('contacts.'.$idx.'.last_names', $contact->last_names) }}"
+                                           placeholder="Apellidos">
+                                </td>
+                                <td>
+                                    <input type="email" name="contacts[{{ $idx }}][email]"
+                                           value="{{ old('contacts.'.$idx.'.email', $contact->email) }}"
+                                           placeholder="correo@ejemplo.com">
+                                </td>
+                                <td>
+                                    <input type="text" name="contacts[{{ $idx }}][qualification]"
+                                           value="{{ old('contacts.'.$idx.'.qualification', $contact->qualification) }}"
+                                           placeholder="Ej: Gerente">
+                                </td>
+                                <td>
+                                    <input type="text" name="contacts[{{ $idx }}][first_phone]"
+                                           value="{{ old('contacts.'.$idx.'.first_phone', $contact->first_phone) }}"
+                                           placeholder="Principal">
+                                </td>
+                                <td>
+                                    <input type="text" name="contacts[{{ $idx }}][second_phone]"
+                                           value="{{ old('contacts.'.$idx.'.second_phone', $contact->second_phone) }}"
+                                           placeholder="Opcional">
+                                </td>
+                                <td class="col-actions">
+                                    <button type="button" class="row-del-btn"
+                                            onclick="markDelete({{ $contact->id_contacts }}, this)"
+                                            title="Eliminar contacto">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
+                    <p class="table-empty-note" id="no-contacts-note"
+                       style="{{ $client->contacts->isEmpty() ? '' : 'display:none' }}">
+                        Este cliente no tiene contactos aún. Usa "Añadir contacto" para crear uno.
+                    </p>
+                </div>
+            </div>
         </div>
 
-    </form>
-</div>
+    </div>
+</form>
 
 @push('scripts')
 <script>
@@ -208,25 +246,22 @@
 const toDelete = new Set();
 
 function markDelete(id, btn) {
-    const block = document.getElementById('existing-' + id);
+    const row = document.getElementById('existing-row-' + id);
     if (toDelete.has(id)) {
-        // Desmarcar
         toDelete.delete(id);
-        block.style.opacity = '1';
-        block.style.pointerEvents = 'auto';
-        btn.style.color = '#94a3b8';
+        row.classList.remove('is-deleted');
+        btn.classList.remove('active');
         btn.title = 'Eliminar contacto';
-        block.querySelector('input[type="hidden"]').disabled = false;
-        block.querySelectorAll('input:not([type="hidden"])').forEach(i => i.disabled = false);
+        row.querySelectorAll('input').forEach(i => i.disabled = false);
     } else {
-        // Marcar para eliminar
         if (!confirm('¿Eliminar este contacto al guardar?')) return;
         toDelete.add(id);
-        block.style.opacity = '.4';
-        block.style.pointerEvents = 'none';
-        btn.style.color = '#e63232';
+        row.classList.add('is-deleted');
+        btn.classList.add('active');
         btn.title = 'Clic para deshacer';
-        btn.style.pointerEvents = 'auto';
+        row.querySelectorAll('input').forEach(i => {
+            if (i.type !== 'hidden') i.disabled = true;
+        });
     }
     syncDeleteInputs();
 }
@@ -243,59 +278,53 @@ function syncDeleteInputs() {
     });
 }
 
-// ── Agregar nuevo contacto ────────────────────────────────────
+// ── Solo un contacto principal a la vez ───────────────────────
+document.addEventListener('change', function (e) {
+    if (e.target.classList && e.target.classList.contains('principal-checkbox') && e.target.checked) {
+        document.querySelectorAll('.principal-checkbox').forEach(cb => {
+            if (cb !== e.target) cb.checked = false;
+        });
+    }
+});
+
+// ── Agregar nuevo contacto (como fila de la tabla) ────────────
 let newIdx = 0;
 
 function addNewContact() {
-    document.getElementById('new-contacts-empty').style.display = 'none';
-    const wrapper = document.getElementById('new-contacts-wrapper');
+    document.getElementById('no-contacts-note').style.display = 'none';
+    const tbody = document.getElementById('contacts-tbody');
     const i = newIdx++;
-    const div = document.createElement('div');
-    div.id = 'new-contact-' + i;
-    div.style.cssText = 'border:1px solid #e2e8f0;border-radius:10px;padding:1rem;margin-bottom:.8rem;position:relative;background:#f8fafc';
-    div.innerHTML = `
-        <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:.8rem">
-            <i class="ti ti-user-plus" style="font-size:14px"></i> Nuevo contacto
-        </div>
-        <button type="button" onclick="document.getElementById('new-contact-${i}').remove();checkEmpty()"
-                style="position:absolute;top:.7rem;right:.7rem;background:none;border:none;
-                       cursor:pointer;color:#94a3b8;font-size:16px">
-            <i class="ti ti-x"></i>
-        </button>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
-            <div class="form-field">
-                <label>Nombre *</label>
-                <input type="text" name="new_contacts[${i}][name]" placeholder="Nombre" required>
-            </div>
-            <div class="form-field">
-                <label>Apellidos</label>
-                <input type="text" name="new_contacts[${i}][last_names]" placeholder="Apellidos">
-            </div>
-            <div class="form-field">
-                <label>Email</label>
-                <input type="email" name="new_contacts[${i}][email]" placeholder="correo@ejemplo.com">
-            </div>
-            <div class="form-field">
-                <label>Cargo</label>
-                <input type="text" name="new_contacts[${i}][qualification]" placeholder="Ej: Gerente...">
-            </div>
-            <div class="form-field">
-                <label>Teléfono 1</label>
-                <input type="text" name="new_contacts[${i}][first_phone]" placeholder="Principal">
-            </div>
-            <div class="form-field">
-                <label>Teléfono 2</label>
-                <input type="text" name="new_contacts[${i}][second_phone]" placeholder="Opcional">
-            </div>
-        </div>`;
-    wrapper.appendChild(div);
-}
-
-function checkEmpty() {
-    const wrapper = document.getElementById('new-contacts-wrapper');
-    const blocks  = wrapper.querySelectorAll('[id^="new-contact-"]');
-    document.getElementById('new-contacts-empty').style.display =
-        blocks.length === 0 ? 'block' : 'none';
+    const tr = document.createElement('tr');
+    tr.className = 'contact-row is-new';
+    tr.id = 'new-row-' + i;
+    tr.innerHTML = `
+        <td class="col-principal" title="Los contactos nuevos no inician como principal">—</td>
+        <td class="col-name">
+            <input type="text" name="new_contacts[${i}][name]" placeholder="Nombre" required>
+        </td>
+        <td>
+            <input type="text" name="new_contacts[${i}][last_names]" placeholder="Apellidos">
+        </td>
+        <td>
+            <input type="email" name="new_contacts[${i}][email]" placeholder="correo@ejemplo.com">
+        </td>
+        <td>
+            <input type="text" name="new_contacts[${i}][qualification]" placeholder="Ej: Gerente">
+        </td>
+        <td>
+            <input type="text" name="new_contacts[${i}][first_phone]" placeholder="Principal">
+        </td>
+        <td>
+            <input type="text" name="new_contacts[${i}][second_phone]" placeholder="Opcional">
+        </td>
+        <td class="col-actions">
+            <button type="button" class="row-del-btn" title="Quitar fila"
+                    onclick="document.getElementById('new-row-${i}').remove()">
+                <i class="ti ti-x"></i>
+            </button>
+        </td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('input[name^="new_contacts"]').focus();
 }
 </script>
 @endpush
