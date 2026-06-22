@@ -37,11 +37,40 @@
                     <div class="card-sub">ID #{{ $client->id_client }}</div>
                 </div>
             </div>
-            <div class="form-field">
-                <label>Nombre del cliente *</label>
+
+            <div class="form-field" style="margin-bottom:1.1rem">
+                <label>Nombre comercial *</label>
                 <input type="text" name="name_client"
-                       value="{{ old('name_client', $client->name_client) }}"
-                       maxlength="100" required autofocus>
+                    value="{{ old('name_client', $client->name_client) }}"
+                    maxlength="120" required autofocus>
+            </div>
+
+            <div class="form-field" style="margin-bottom:1.1rem">
+                <label>Razón Social</label>
+                <input type="text" name="business_name"
+                    value="{{ old('business_name', $client->business_name) }}"
+                    maxlength="150">
+            </div>
+
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>Código tributario (RUC)</label>
+                    <input type="text" name="tax_code"
+                        value="{{ old('tax_code', $client->tax_code) }}"
+                        maxlength="20" placeholder="Ej: 20123456789">
+                </div>
+                <div class="form-field">
+                    <label>Teléfono general</label>
+                    <input type="text" name="general_phone"
+                        value="{{ old('general_phone', $client->general_phone) }}"
+                        maxlength="20" placeholder="Ej: 01-234567">
+                </div>
+                <div class="form-field" style="grid-column:1/3">
+                    <label>Email general</label>
+                    <input type="email" name="general_email"
+                        value="{{ old('general_email', $client->general_email) }}"
+                        maxlength="120" placeholder="contacto@empresa.com">
+                </div>
             </div>
         </div>
 

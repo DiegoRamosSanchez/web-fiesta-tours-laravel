@@ -27,10 +27,18 @@
 
         /* ── DETALLE DE CONTACTOS ── */
         .section-title { font-size: 16px; font-weight: 700; color: #0B1F3A; margin: 20px 0 14px 0; padding-bottom: 8px; border-bottom: 3px solid #C9A84C; }
+
         .client-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 16px; padding: 16px 20px; page-break-inside: avoid; }
         .client-card .client-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; }
         .client-card .client-name { font-size: 15px; font-weight: 700; color: #0B1F3A; }
         .client-card .client-count { font-size: 11px; color: #64748b; background: #f1f5f9; padding: 2px 14px; border-radius: 20px; font-weight: 600; }
+
+        {{-- NUEVO: Estilos para los datos del cliente --}}
+        .client-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 10.5px; }
+        .client-info-grid .info-item { display: flex; gap: 4px; }
+        .client-info-grid .info-label { color: #94a3b8; font-weight: 600; min-width: 90px; }
+        .client-info-grid .info-value { color: #0f172a; font-weight: 500; }
+
         .contacts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .contact-item { background: #fafafa; border: 1px solid #e8ecf0; border-radius: 8px; padding: 10px 14px; }
         .contact-item.principal { background: #FFF8E7; border-color: #C9A84C; }
@@ -98,6 +106,26 @@
                 <div class="client-header">
                     <div class="client-name">{{ $client->name_client }}</div>
                     <div class="client-count">{{ $client->contacts_count }} contacto(s)</div>
+                </div>
+
+                {{-- NUEVO: Información del cliente --}}
+                <div class="client-info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Razón Social:</span>
+                        <span class="info-value">{{ $client->business_name ?? '—' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Código Tributario:</span>
+                        <span class="info-value">{{ $client->tax_code ?? '—' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Teléfono General:</span>
+                        <span class="info-value">{{ $client->general_phone ?? '—' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email General:</span>
+                        <span class="info-value">{{ $client->general_email ?? '—' }}</span>
+                    </div>
                 </div>
 
                 @if($client->contacts->isNotEmpty())

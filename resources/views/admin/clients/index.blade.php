@@ -56,6 +56,150 @@ tr.selected td { background: #fef2f2 !important; }
     color: #94a3b8;
     margin-left: auto;
 }
+
+/* Modal styles */
+.hidden { display: none !important; }
+
+#modal-export {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#modal-export.show {
+    display: flex;
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    animation: modalFadeIn .2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #94a3b8;
+    transition: color .15s;
+}
+.modal-close:hover { color: #0f172a; }
+
+.export-option {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: .8rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.export-option:hover {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+.export-option .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.export-option .icon.green { background: #f0fdf4; color: #16a34a; }
+.export-option .icon.blue { background: #eff6ff; color: #3b82f6; }
+.export-option .title { font-size: 14px; font-weight: 600; color: #0f172a; }
+.export-option .sub { font-size: 12px; color: #94a3b8; }
+.export-option .arrow { color: #94a3b8; font-size: 18px; margin-left: auto; }
+
+.export-by-id-wrapper {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    transition: all .2s;
+    margin-bottom: .8rem;
+}
+.export-by-id-wrapper:hover {
+    border-color: #6366f1;
+}
+.export-by-id-wrapper .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.export-by-id-wrapper .input-group {
+    display: flex;
+    gap: .6rem;
+    margin-top: .8rem;
+    padding-left: 52px;
+}
+.export-by-id-wrapper .input-group input {
+    flex: 1;
+    padding: .5rem .7rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+}
+.export-by-id-wrapper .input-group input:focus {
+    border-color: #6366f1;
+}
+.export-by-id-wrapper .input-group button {
+    padding: .5rem 1rem;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+}
+.export-by-id-wrapper .input-group button:hover {
+    background: #4f46e5;
+}
+
+.btn-cancel-export {
+    width: 100%;
+    padding: .6rem;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: background .15s;
+    margin-top: .4rem;
+}
+.btn-cancel-export:hover {
+    background: #e2e8f0;
+}
 </style>
 @endpush
 
@@ -73,13 +217,13 @@ tr.selected td { background: #fef2f2 !important; }
                   font-size:13px;font-weight:600;color:#6366f1;text-decoration:none">
             <i class="ti ti-file-upload" style="font-size:16px"></i> Importar
         </a>
-        <a href="{{ route('admin.clients.export.pdf') }}"
+        <a href="#" id="btn-export-pdf"
            style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
                   background:#fff;border:1px solid #e2e8f0;border-radius:8px;
                   font-size:13px;font-weight:600;color:#ef4444;text-decoration:none">
             <i class="ti ti-file-type-pdf" style="font-size:16px"></i> PDF
         </a>
-        <a href="{{ route('admin.clients.export.excel') }}"
+        <a href="#" id="btn-export-excel"
            style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
                   background:#fff;border:1px solid #e2e8f0;border-radius:8px;
                   font-size:13px;font-weight:600;color:#16a34a;text-decoration:none">
@@ -94,7 +238,6 @@ tr.selected td { background: #fef2f2 !important; }
 
 {{-- BARRA DE FILTROS --}}
 <div class="filter-bar">
-    {{-- Búsqueda general --}}
     <div style="position:relative;flex:1;min-width:200px">
         <i class="ti ti-search" style="position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px"></i>
         <input type="text" id="f-search" class="filter-input"
@@ -104,7 +247,6 @@ tr.selected td { background: #fef2f2 !important; }
 
     <div class="filter-sep"></div>
 
-    {{-- Filtro por cantidad de contactos --}}
     <select id="f-contacts" class="filter-input" style="min-width:160px">
         <option value="">Todos los contactos</option>
         <option value="0">Sin contactos</option>
@@ -113,7 +255,6 @@ tr.selected td { background: #fef2f2 !important; }
         <option value="5">5+ contactos</option>
     </select>
 
-    {{-- Filtro por fecha --}}
     <select id="f-date" class="filter-input" style="min-width:150px">
         <option value="">Cualquier fecha</option>
         <option value="today">Hoy</option>
@@ -122,7 +263,6 @@ tr.selected td { background: #fef2f2 !important; }
         <option value="year">Este año</option>
     </select>
 
-    {{-- Ordenar por --}}
     <select id="f-sort" class="filter-input" style="min-width:150px">
         <option value="newest">Más recientes</option>
         <option value="oldest">Más antiguos</option>
@@ -134,7 +274,6 @@ tr.selected td { background: #fef2f2 !important; }
 
     <div class="filter-sep"></div>
 
-    {{-- Limpiar filtros --}}
     <button onclick="clearFilters()"
             style="padding:.5rem .9rem;background:none;border:1px solid #e2e8f0;
                    border-radius:8px;font-size:12px;color:#64748b;cursor:pointer;
@@ -196,9 +335,10 @@ tr.selected td { background: #fef2f2 !important; }
                     </th>
                     <th>ID</th>
                     <th>AGENCIA</th>
+                    <th>CODIGO TRIBUTARIO</th>
                     <th>CONTACTO PRINCIPAL</th>
-                    <th>EMAIL</th>
-                    <th>TELÉFONO</th>
+                    <th>EMAIL EMPRESARIAL</th>
+                    <th>TELÉFONO EMPRESARIAL</th>
                     <th>CONTACTOS</th>
                     <th>REGISTRO</th>
                     <th style="text-align:center">ACCIONES</th>
@@ -210,6 +350,7 @@ tr.selected td { background: #fef2f2 !important; }
                     <tr class="client-row"
                         data-id="{{ $c->id_client }}"
                         data-name="{{ strtolower($c->name_client) }}"
+                        data-code="{{ strtolower($c->tax_code) }}"
                         data-email="{{ strtolower($principal->email ?? '') }}"
                         data-phone="{{ $principal->first_phone ?? '' }}"
                         data-contacts="{{ $c->contacts_count }}"
@@ -225,6 +366,7 @@ tr.selected td { background: #fef2f2 !important; }
                         <td>
                             <div style="font-weight:600;color:#0f172a;font-size:13px">{{ $c->name_client }}</div>
                         </td>
+                        <td style="font-size:12px;color:#64748b">{{ $c->tax_code ?? '—' }}</td>
                         <td style="font-size:13px;color:#374151">
                             @if($principal)
                                 {{ trim($principal->name . ' ' . ($principal->last_names ?? '')) }}
@@ -235,8 +377,8 @@ tr.selected td { background: #fef2f2 !important; }
                                 <span style="color:#cbd5e1">—</span>
                             @endif
                         </td>
-                        <td style="font-size:12px;color:#64748b">{{ $principal->email ?? '—' }}</td>
-                        <td style="font-size:12px;color:#64748b">{{ $principal->first_phone ?? '—' }}</td>
+                        <td style="font-size:12px;color:#64748b">{{ $c->general_email ?? '—' }}</td>
+                        <td style="font-size:12px;color:#64748b">{{ $c->general_phone ?? '—' }}</td>
                         <td>
                             <span style="background:#f0f9ff;color:#0369a1;font-size:11px;font-weight:700;
                                          padding:2px 9px;border-radius:20px;border:1px solid #bae6fd">
@@ -273,14 +415,12 @@ tr.selected td { background: #fef2f2 !important; }
                 @endforeach
             </tbody>
         </table>
-        {{-- Reemplázalo con esto: --}}
         <div class="table-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
             <span id="footer-count">
                 Mostrando {{ $clients->firstItem() }}–{{ $clients->lastItem() }}
                 de {{ $clients->total() }} cliente(s)
             </span>
             <div style="display:flex;align-items:center;gap:.4rem">
-                {{-- Anterior --}}
                 @if($clients->onFirstPage())
                     <span style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
                                 font-size:12px;color:#cbd5e1;cursor:default">
@@ -297,7 +437,6 @@ tr.selected td { background: #fef2f2 !important; }
                     </a>
                 @endif
 
-                {{-- Páginas --}}
                 @foreach($clients->getUrlRange(1, $clients->lastPage()) as $page => $url)
                     @if($page == $clients->currentPage())
                         <span style="padding:.35rem .65rem;border:1px solid #6366f1;border-radius:7px;
@@ -319,7 +458,6 @@ tr.selected td { background: #fef2f2 !important; }
                     @endif
                 @endforeach
 
-                {{-- Siguiente --}}
                 @if($clients->hasMorePages())
                     <a href="{{ $clients->nextPageUrl() }}"
                     style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
@@ -342,7 +480,6 @@ tr.selected td { background: #fef2f2 !important; }
         </div>
     </div>
 
-    {{-- Sin resultados --}}
     <div id="no-results" style="display:none;text-align:center;padding:3rem;
          background:#fff;border-radius:14px;border:1px solid #e2e8f0;margin-top:.5rem">
         <i class="ti ti-search-off" style="font-size:40px;color:#cbd5e1;display:block;margin-bottom:.7rem"></i>
@@ -371,39 +508,135 @@ tr.selected td { background: #fef2f2 !important; }
         <form action="{{ route('admin.clients.store') }}" method="POST">
             @csrf
 
-            <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;
-                      letter-spacing:.5px;margin-bottom:.6rem">Datos de la Empresa</p>
-            <div class="form-field" style="margin-bottom:1.2rem">
-                <label style="font-size:10px;font-weight:700;color:#94a3b8;
-                              text-transform:uppercase;letter-spacing:.5px">
-                    Nombre de la empresa / Cliente corporativo
+            <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem">
+                Datos de la Empresa
+            </p>
+
+            <div class="form-field" style="margin-bottom:1rem">
+                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
+                    Nombre comercial *
                 </label>
                 <input type="text" name="name_client" value="{{ old('name_client') }}"
-                       placeholder="Ej: Fiesta Tours Perú S.A.C."
-                       style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;
-                              border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box"
-                       required>
+                    placeholder="Ej: Fiesta Tours Perú S.A.C."
+                    style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box"
+                    required>
             </div>
 
-            <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;
-                      letter-spacing:.5px;margin-bottom:.6rem">Contactos</p>
+            <div class="form-field" style="margin-bottom:1rem">
+                <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
+                    Razón Social *
+                </label>
+                <input type="text" name="business_name" value="{{ old('business_name') }}"
+                    placeholder="Ej: Fiesta Tours Perú S.A.C."
+                    style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box"
+                    required>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.2rem">
+                <div class="form-field">
+                    <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
+                        Código tributario (RUC)
+                    </label>
+                    <input type="text" name="tax_code" value="{{ old('tax_code') }}"
+                        placeholder="Ej: 20123456789"
+                        style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box">
+                </div>
+                <div class="form-field">
+                    <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
+                        Teléfono general
+                    </label>
+                    <input type="text" name="general_phone" value="{{ old('general_phone') }}"
+                        placeholder="Ej: 01-234567"
+                        style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box">
+                </div>
+                <div class="form-field">
+                    <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">
+                        Email general
+                    </label>
+                    <input type="email" name="general_email" value="{{ old('general_email') }}"
+                        placeholder="contacto@empresa.com"
+                        style="width:100%;padding:.6rem .8rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:.4rem;box-sizing:border-box">
+                </div>
+            </div>
+
+            <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem">
+                Contactos
+            </p>
+
             <div id="contactos-wrapper"></div>
 
             <button type="button" onclick="agregarContacto()"
-                    style="background:#10b981;color:#fff;border:none;padding:.5rem 1rem;
-                           border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
-                           margin-bottom:1.2rem;display:flex;align-items:center;gap:6px">
+                    style="background:#10b981;color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;
+                        font-size:13px;font-weight:600;cursor:pointer;margin-bottom:1.2rem;
+                        display:flex;align-items:center;gap:6px">
                 <i class="ti ti-plus"></i> Añadir contacto
             </button>
 
-            <div style="display:flex;justify-content:flex-end;gap:.8rem;
-                        padding-top:1rem;border-top:1px solid #f1f5f9">
-                <button type="button"
-                        onclick="document.getElementById('modal-crear').classList.add('hidden')"
+            <div style="display:flex;justify-content:flex-end;gap:.8rem;padding-top:1rem;border-top:1px solid #f1f5f9">
+                <button type="button" onclick="document.getElementById('modal-crear').classList.add('hidden')"
                         class="btn btn-secondary">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Guardar Cliente</button>
             </div>
         </form>
+    </div>
+</div>
+
+{{-- ══════════ MODAL EXPORTAR ══════════ --}}
+<div id="modal-export">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeExportModal()">
+            <i class="ti ti-x"></i>
+        </button>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
+            <div style="width:44px;height:44px;background:#f0fdf4;border-radius:50%;
+                        display:flex;align-items:center;justify-content:center;font-size:22px">
+                <i class="ti ti-file-export" id="export-modal-icon" style="color:#16a34a"></i>
+            </div>
+            <div>
+                <h2 style="font-size:17px;font-weight:700;color:#0f172a;margin:0">
+                    Exportar <span id="export-type-label" style="color:#16a34a">Excel</span>
+                </h2>
+                <p style="font-size:12px;color:#94a3b8;margin:0">Selecciona qué datos quieres exportar</p>
+            </div>
+        </div>
+
+        {{-- Opción 1: Todos los datos --}}
+        <div class="export-option" onclick="exportAll()">
+            <div class="icon green">
+                <i class="ti ti-list"></i>
+            </div>
+            <div style="flex:1">
+                <div class="title">Todos los clientes</div>
+                <div class="sub">Exporta el listado completo de clientes</div>
+            </div>
+            <i class="ti ti-chevron-right arrow"></i>
+        </div>
+
+        {{-- Opción 2: Por ID --}}
+        <div class="export-by-id-wrapper">
+            <div class="header">
+                <div class="icon blue">
+                    <i class="ti ti-user"></i>
+                </div>
+                <div style="flex:1">
+                    <div class="title">Cliente específico</div>
+                    <div class="sub">Exporta los datos de un solo cliente</div>
+                </div>
+            </div>
+            <div class="input-group">
+                <input type="number" id="export-client-id"
+                       placeholder="Ingresa el ID del cliente"
+                       min="1">
+                <button onclick="exportById(document.getElementById('export-client-id').value)">
+                    <i class="ti ti-arrow-right" style="font-size:14px"></i> Exportar
+                </button>
+            </div>
+        </div>
+
+        <button class="btn-cancel-export" onclick="closeExportModal()">
+            Cancelar
+        </button>
     </div>
 </div>
 
@@ -431,7 +664,6 @@ function applyFilters() {
         const phone   = row.dataset.phone;
         const cnt     = parseInt(row.dataset.contacts);
         const rowDate = new Date(row.dataset.date);
-        const ts      = parseInt(row.dataset.ts) * 1000;
 
         // Búsqueda texto
         if (search && !name.includes(search) && !email.includes(search) && !phone.includes(search)) {
@@ -461,7 +693,7 @@ function applyFilters() {
             case 'za':           return b.dataset.name.localeCompare(a.dataset.name);
             case 'contacts-desc':return parseInt(b.dataset.contacts) - parseInt(a.dataset.contacts);
             case 'contacts-asc': return parseInt(a.dataset.contacts) - parseInt(b.dataset.contacts);
-            default:             return b.dataset.ts - a.dataset.ts; // newest
+            default:             return b.dataset.ts - a.dataset.ts;
         }
     });
 
@@ -504,9 +736,10 @@ function clearFilters() {
 // Escuchar cambios
 ['f-search','f-contacts','f-date','f-sort'].forEach(id => {
     const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('input',  applyFilters);
-    el.addEventListener('change', applyFilters);
+    if (el) {
+        el.addEventListener('input',  applyFilters);
+        el.addEventListener('change',  applyFilters);
+    }
 });
 
 // ── Selección múltiple ────────────────────────────────────────
@@ -631,10 +864,89 @@ function agregarContacto() {
 
 const totalVisible = rows.length;
 document.getElementById('results-count').textContent = totalVisible + ' en esta página';
-</script>
 
-<style>
-.hidden { display: none !important; }
-</style>
+// ── MODAL EXPORTAR ──────────────────────────────────────────────
+let exportType = 'excel';
+
+function openExportModal(type) {
+    exportType = type;
+    const modal = document.getElementById('modal-export');
+    modal.classList.add('show');
+
+    const label = document.getElementById('export-type-label');
+    const icon = document.getElementById('export-modal-icon');
+
+    if (type === 'excel') {
+        label.textContent = 'Excel';
+        label.style.color = '#16a34a';
+        icon.style.color = '#16a34a';
+    } else {
+        label.textContent = 'PDF';
+        label.style.color = '#ef4444';
+        icon.style.color = '#ef4444';
+    }
+
+    document.getElementById('export-client-id').value = '';
+}
+
+function closeExportModal() {
+    document.getElementById('modal-export').classList.remove('show');
+}
+
+function exportAll() {
+    const url = exportType === 'excel'
+        ? '{{ route("admin.clients.export.excel") }}'
+        : '{{ route("admin.clients.export.pdf") }}';
+
+    window.location.href = url;
+    closeExportModal();
+}
+
+function exportById(id) {
+    if (!id || id < 1) {
+        alert('Por favor, ingresa un ID de cliente válido');
+        return;
+    }
+
+    const url = exportType === 'excel'
+        ? '{{ route("admin.clients.export.excel") }}?client_id=' + id
+        : '{{ route("admin.clients.export.pdf") }}?client_id=' + id;
+
+    window.location.href = url;
+    closeExportModal();
+}
+
+// ── EVENTOS PARA BOTONES DE EXPORTACIÓN ──────────────────────
+document.getElementById('btn-export-pdf').addEventListener('click', function(e) {
+    e.preventDefault();
+    openExportModal('pdf');
+});
+
+document.getElementById('btn-export-excel').addEventListener('click', function(e) {
+    e.preventDefault();
+    openExportModal('excel');
+});
+
+// ── ENTER EN EL INPUT DE ID ──────────────────────────────────
+document.getElementById('export-client-id').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        exportById(this.value);
+    }
+});
+
+// ── CERRAR MODAL CON ESC ──────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeExportModal();
+    }
+});
+
+// ── CERRAR MODAL CLICK FUERA ─────────────────────────────────
+document.getElementById('modal-export').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeExportModal();
+    }
+});
+</script>
 @endpush
 @endsection

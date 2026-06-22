@@ -14,40 +14,44 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize, WithTitle, WithEvents
+class ClientsExportById implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize, WithTitle, WithEvents
 {
     const NAVY    = '0B1F3A';
     const GOLD    = 'C9A84C';
     const GOLD2   = 'E8C97A';
     const ROW_ALT = 'F8F5EE';
 
+    private int $clientId;
     private int $totalRows;
     private int $maxContacts;
 
-    public function __construct()
+    public function __construct(int $clientId)
     {
-        $this->maxContacts = Client::withCount('contacts')
-            ->get()
-            ->max('contacts_count') ?? 1;
+        $this->clientId = $clientId;
+        $this->maxContacts = 1;
     }
 
     public function title(): string
     {
-        return 'Clientes';
+        return 'Cliente_' . $this->clientId;
     }
 
     public function collection()
     {
-        $clients = Client::with(['contacts' => function ($q) {
+        $client = Client::with(['contacts' => function ($q) {
             $q->orderBy('es_principal', 'desc')->orderBy('created_at');
         }])
-            ->withCount('contacts')
-            ->orderBy('name_client')
-            ->get();
+        ->withCount('contacts')
+        ->find($this->clientId);
 
-        $this->totalRows = $clients->count();
+        if (!$client) {
+            return collect([]);
+        }
 
-        return $clients->map(function ($client) {
+        $this->totalRows = 1;
+        $this->maxContacts = $client->contacts_count > 0 ? $client->contacts_count : 1;
+
+        return collect([$client])->map(function ($client) {
             $row = [
                 'id'             => $client->id_client,
                 'agencia'        => $client->name_client,
@@ -60,25 +64,25 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
                 'total_contactos'=> $client->contacts_count,
             ];
 
+            // ─── LLENAR CONTACTOS EXISTENTES ───
             foreach ($client->contacts as $idx => $contact) {
                 $n = $idx + 1;
-                // ─── NOMBRE COMPLETO (name + last_names) ───
-                $row["contacto_{$n}__nombre"] = $contact->name ?? '';
-                $row["contacto_{$n}_last_names"] = $contact->last_names ?? '';  // ← NUEVO
-                $row["contacto_{$n}_cargo"]    = $contact->qualification ?? '';
-                $row["contacto_{$n}_email"]    = $contact->email         ?? '';
-                $row["contacto_{$n}_telefono"] = $contact->first_phone   ?? '';
-                $row["contacto_{$n}_telefono2"]= $contact->second_phone  ?? '';
+                $row["contacto_{$n}"]     = $contact->name ?? '';
+                $row["apellidos_{$n}"]    = $contact->last_names ?? '';
+                $row["cargo_{$n}"]        = $contact->qualification ?? '';
+                $row["email_{$n}"]        = $contact->email ?? '';
+                $row["telefono_{$n}"]     = $contact->first_phone ?? '';
+                $row["telefono2_{$n}"]    = $contact->second_phone ?? '';
             }
 
-            // Rellenar columnas vacías
+            // ─── RELLENAR COLUMNAS VACÍAS ───
             for ($i = $client->contacts_count + 1; $i <= $this->maxContacts; $i++) {
-                $row["contacto_{$i}_nombre"]    = '';
-                $row["contacto_{$i}_last_names"] = '';  // ← NUEVO
-                $row["contacto_{$i}_cargo"]     = '';
-                $row["contacto_{$i}_email"]     = '';
-                $row["contacto_{$i}_telefono"]  = '';
-                $row["contacto_{$i}_telefono2"] = '';
+                $row["contacto_{$i}"]     = '';
+                $row["apellidos_{$i}"]    = '';
+                $row["cargo_{$i}"]        = '';
+                $row["email_{$i}"]        = '';
+                $row["telefono_{$i}"]     = '';
+                $row["telefono2_{$i}"]    = '';
             }
 
             return $row;
@@ -101,7 +105,7 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
 
         for ($i = 1; $i <= $this->maxContacts; $i++) {
             $headings[] = "Contacto {$i}";
-            $headings[] = "Apellidos {$i}";      // ← NUEVO
+            $headings[] = "Apellidos {$i}";
             $headings[] = "Cargo {$i}";
             $headings[] = "Email {$i}";
             $headings[] = "Teléfono {$i}";
@@ -122,7 +126,6 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // 9 columnas fijas + 6 por contacto (ahora incluye last_names)
                 $totalColumns = 9 + ($this->maxContacts * 6);
                 $lastColumn   = $this->getColumnLetter($totalColumns);
                 $lastRow      = $this->totalRows + 4;
@@ -138,7 +141,7 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
 
                 // FILA 2: Título
                 $sheet->mergeCells("A2:{$lastColumn}2");
-                $sheet->setCellValue('A2', 'FIESTA TOURS PERU  ·  Listado de Clientes');
+                $sheet->setCellValue('A2', 'FIESTA TOURS PERU  ·  Cliente Específico');
                 $sheet->getRowDimension(2)->setRowHeight(28);
                 $sheet->getStyle('A2')->applyFromArray([
                     'font'      => ['bold' => true, 'size' => 14, 'color' => ['argb' => 'FF'.self::GOLD], 'name' => 'Arial'],

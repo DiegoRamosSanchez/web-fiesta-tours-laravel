@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ClientsExport;
+use App\Exports\ClientsExportById;
 use App\Imports\ClientsImport;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -28,25 +29,37 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name_client'             => 'required|string|max:100',
-            'contacts.*.name'         => 'required|string|max:100',
-            'contacts.*.last_names'   => 'nullable|string|max:100',
-            'contacts.*.email'        => 'nullable|email|max:80',
-            'contacts.*.first_phone'  => 'nullable|string|max:20',
-            'contacts.*.second_phone' => 'nullable|string|max:20',
+            'name_client'                   => 'required|string|max:120',
+            'business_name'                 => 'nullable|string|max:150',
+            'tax_code'                      => 'nullable|string|max:20',
+            'general_phone'                 => 'nullable|string|max:20',
+            'general_email'                 => 'nullable|email|max:120',
+            'contacts.*.name'               => 'required|string|max:100',
+            'contacts.*.last_names'         => 'nullable|string|max:100',
+            'contacts.*.qualification'      => 'nullable|string|max:30',
+            'contacts.*.email'              => 'nullable|email|max:80',
+            'contacts.*.first_phone'        => 'nullable|string|max:20',
+            'contacts.*.second_phone'       => 'nullable|string|max:20',
         ]);
 
-        $client = Client::create(['name_client' => $request->name_client]);
+        $client = Client::create([
+            'name_client'    => $request->name_client,
+            'business_name'  => $request->business_name,
+            'tax_code'       => $request->tax_code,
+            'general_phone'  => $request->general_phone,
+            'general_email'  => $request->general_email,
+        ]);
 
         foreach ($request->input('contacts', []) as $i => $data) {
             if (empty($data['name'])) continue;
             $client->contacts()->create([
-                'name'         => $data['name'],
-                'last_names'   => $data['last_names']   ?? null,
-                'email'        => $data['email']        ?? null,
-                'first_phone'  => $data['first_phone']  ?? null,
-                'second_phone' => $data['second_phone'] ?? null,
-                'es_principal' => $i === 0,
+                'name'          => $data['name'],
+                'last_names'    => $data['last_names']    ?? null,
+                'qualification' => $data['qualification'] ?? null,
+                'email'         => $data['email']         ?? null,
+                'first_phone'   => $data['first_phone']   ?? null,
+                'second_phone'  => $data['second_phone']  ?? null,
+                'es_principal'  => $i === 0,
             ]);
         }
 
@@ -63,25 +76,37 @@ class ClientController extends Controller
     public function update(Request $request, Client $client)
     {
         $request->validate([
-            'name_client'                  => 'required|string|max:100',
-            'contacts.*.id'                => 'nullable|integer',
-            'contacts.*.name'              => 'required|string|max:100',
-            'contacts.*.last_names'        => 'nullable|string|max:100',
-            'contacts.*.email'             => 'nullable|email|max:80',
-            'contacts.*.first_phone'       => 'nullable|string|max:20',
-            'contacts.*.second_phone'      => 'nullable|string|max:20',
-            'contacts.*.es_principal'      => 'nullable|boolean',
-            'new_contacts.*.name'          => 'nullable|string|max:100',
-            'new_contacts.*.last_names'    => 'nullable|string|max:100',
-            'new_contacts.*.email'         => 'nullable|email|max:80',
-            'new_contacts.*.first_phone'   => 'nullable|string|max:20',
-            'new_contacts.*.second_phone'  => 'nullable|string|max:20',
-            'delete_contacts'              => 'nullable|array',
-            'delete_contacts.*'            => 'integer|exists:contacts,id_contacts',
+            'name_client'                    => 'required|string|max:120',
+            'business_name'                  => 'nullable|string|max:150',
+            'tax_code'                       => 'nullable|string|max:20',
+            'general_phone'                  => 'nullable|string|max:20',
+            'general_email'                  => 'nullable|email|max:120',
+            'contacts.*.id'                  => 'nullable|integer',
+            'contacts.*.name'                => 'required|string|max:100',
+            'contacts.*.last_names'          => 'nullable|string|max:100',
+            'contacts.*.qualification'       => 'nullable|string|max:30',
+            'contacts.*.email'               => 'nullable|email|max:80',
+            'contacts.*.first_phone'         => 'nullable|string|max:20',
+            'contacts.*.second_phone'        => 'nullable|string|max:20',
+            'contacts.*.es_principal'        => 'nullable|boolean',
+            'new_contacts.*.name'            => 'nullable|string|max:100',
+            'new_contacts.*.last_names'      => 'nullable|string|max:100',
+            'new_contacts.*.qualification'   => 'nullable|string|max:30',
+            'new_contacts.*.email'           => 'nullable|email|max:80',
+            'new_contacts.*.first_phone'     => 'nullable|string|max:20',
+            'new_contacts.*.second_phone'    => 'nullable|string|max:20',
+            'delete_contacts'                => 'nullable|array',
+            'delete_contacts.*'              => 'integer|exists:contacts,id_contacts',
         ]);
 
-        // Actualizar nombre del cliente
-        $client->update(['name_client' => $request->name_client]);
+        // Actualizar datos del cliente
+        $client->update([
+            'name_client'    => $request->name_client,
+            'business_name'  => $request->business_name,
+            'tax_code'       => $request->tax_code,
+            'general_phone'  => $request->general_phone,
+            'general_email'  => $request->general_email,
+        ]);
 
         // Eliminar contactos marcados
         if ($request->filled('delete_contacts')) {
@@ -98,12 +123,13 @@ class ClientController extends Controller
                 ->first();
             if (!$contact) continue;
             $contact->update([
-                'name'         => $data['name'],
-                'last_names'   => $data['last_names']   ?? null,
-                'email'        => $data['email']        ?? null,
-                'first_phone'  => $data['first_phone']  ?? null,
-                'second_phone' => $data['second_phone'] ?? null,
-                'es_principal' => isset($data['es_principal']),
+                'name'          => $data['name'],
+                'last_names'    => $data['last_names']    ?? null,
+                'qualification' => $data['qualification'] ?? null,
+                'email'         => $data['email']         ?? null,
+                'first_phone'   => $data['first_phone']   ?? null,
+                'second_phone'  => $data['second_phone']  ?? null,
+                'es_principal'  => isset($data['es_principal']),
             ]);
         }
 
@@ -111,12 +137,13 @@ class ClientController extends Controller
         foreach ($request->input('new_contacts', []) as $data) {
             if (empty($data['name'])) continue;
             $client->contacts()->create([
-                'name'         => $data['name'],
-                'last_names'   => $data['last_names']   ?? null,
-                'email'        => $data['email']        ?? null,
-                'first_phone'  => $data['first_phone']  ?? null,
-                'second_phone' => $data['second_phone'] ?? null,
-                'es_principal' => false,
+                'name'          => $data['name'],
+                'last_names'    => $data['last_names']    ?? null,
+                'qualification' => $data['qualification'] ?? null,
+                'email'         => $data['email']         ?? null,
+                'first_phone'   => $data['first_phone']   ?? null,
+                'second_phone'  => $data['second_phone']  ?? null,
+                'es_principal'  => false,
             ]);
         }
 
@@ -142,39 +169,6 @@ class ClientController extends Controller
 
         return redirect()->route('admin.clients.index')
             ->with('success', "{$count} cliente(s) eliminado(s) correctamente.");
-    }
-
-    // ── EXPORTAR PDF ──────────────────────────────────────────
-    public function exportPdf()
-    {
-        $clients = Client::with(['contacts' => function($q) {
-                $q->orderBy('es_principal', 'desc')->orderBy('created_at');
-            }])
-            ->withCount('contacts')
-            ->orderBy('name_client')
-            ->get();
-
-        $pdf = Pdf::loadView('admin.clients.export-pdf', compact('clients'))
-            ->setPaper('a4', 'portrait')
-            ->setOptions([
-                'defaultFont'          => 'Arial',
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled'      => true,
-                'dpi'                  => 96,
-                'isPhpEnabled'         => true,
-                'encoding'             => 'UTF-8',
-            ]);
-
-        return $pdf->download('clientes_' . now()->format('Ymd') . '.pdf');
-    }
-
-    // ── EXPORTAR EXCEL ────────────────────────────────────────
-    public function exportExcel()
-    {
-        return Excel::download(
-            new ClientsExport(),
-            'clientes_' . now()->format('Ymd') . '.xlsx'
-        );
     }
 
     // ── VISTA IMPORTAR ────────────────────────────────────────
@@ -209,107 +203,67 @@ class ClientController extends Controller
         return redirect()->route('admin.clients.index')->with('success', $msg);
     }
 
-    // ── DESCARGAR PLANTILLA ───────────────────────────────────
-    public function downloadTemplate()
+
+    // ── EXPORTAR EXCEL CON OPCIONES ──────────────────────────
+    public function exportExcel(Request $request)
     {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Clientes');
-
-        $navy = '0B1F3A';
-        $gold = 'C9A84C';
-        $alt  = 'F8F5EE';
-
-        $sheet->mergeCells('A1:Q1');
-        $sheet->getRowDimension(1)->setRowHeight(5);
-        $sheet->getStyle('A1:Q1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($gold);
-
-        $sheet->mergeCells('A2:Q2');
-        $sheet->setCellValue('A2', 'FIESTA TOURS PERU  ·  Plantilla de Importación de Clientes');
-        $sheet->getRowDimension(2)->setRowHeight(26);
-        $sheet->getStyle('A2')->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 13, 'color' => ['argb' => 'FF'.$gold], 'name' => 'Arial'],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF'.$navy]],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER, 'indent' => 2],
-        ]);
-
-        $sheet->mergeCells('A3:Q3');
-        $sheet->setCellValue('A3', 'INSTRUCCIONES: Una fila por contacto. El primer contacto de cada Agencia será el Principal. No modifiques los encabezados de la fila 4.');
-        $sheet->getRowDimension(3)->setRowHeight(14);
-        $sheet->getStyle('A3')->applyFromArray([
-            'font'      => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FFFBBF24'], 'name' => 'Arial'],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF'.$navy]],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER, 'indent' => 2],
-        ]);
-
-        $headers = [
-            'A4'=>'agencia_cliente','B4'=>'contacto_1','C4'=>'cargo_1',
-            'D4'=>'email_1','E4'=>'telefono_1','F4'=>'telefono_2_1',
-            'G4'=>'contacto_2','H4'=>'cargo_2','I4'=>'email_2',
-            'J4'=>'telefono_1_2','K4'=>'telefono_2_2',
-            'L4'=>'contacto_3','M4'=>'cargo_3','N4'=>'email_3',
-            'O4'=>'telefono_1_3','P4'=>'telefono_2_3',
-        ];
-        foreach ($headers as $cell => $value) $sheet->setCellValue($cell, $value);
-
-        $sheet->getRowDimension(4)->setRowHeight(18);
-        $sheet->getStyle('A4:P4')->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FF'.$gold], 'name' => 'Arial'],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF'.$navy]],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-            'borders'   => ['bottom' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF'.$gold]]],
-        ]);
-
-        $ejemplos = [
-            5 => ['Empresa ABC S.A.C.','Juan','Gerente General','juan@abc.com','987654321','01-2345678','María','Asistente','maria@abc.com','956789012','','','','','',''],
-            6 => ['Turismo XYZ','Carlos','Director','carlos@xyz.com','912345678','','Ana','Coordinadora','ana@xyz.com','934567890','01-9876543','Pedro','Técnico','pedro@xyz.com','945678901',''],
-            7 => ['Viajes Express','Luis','Gerente','luis@express.com','923456789','','','','','','','','','','',''],
-        ];
-
-        $cols = range('A', 'P');
-        foreach ($ejemplos as $rowNum => $values) {
-            foreach ($values as $i => $val) $sheet->setCellValue($cols[$i].$rowNum, $val);
-            $sheet->getStyle('A'.$rowNum.':P'.$rowNum)->applyFromArray([
-                'font'      => ['size' => 9, 'name' => 'Arial', 'color' => ['argb' => 'FF64748B']],
-                'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => ($rowNum-5)%2===0 ? 'FFFFFFFF' : 'FF'.$alt]],
-                'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
-                'borders'   => ['bottom' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFE2E8F0']]],
-            ]);
+        // Si se envía un ID específico, usar el export por ID
+        if ($request->has('client_id') && !empty($request->client_id)) {
+            $export = new ClientsExportById($request->client_id);
+            $filename = 'cliente_id_' . $request->client_id . '_' . now()->format('Ymd') . '.xlsx';
+        } else {
+            $export = new ClientsExport();
+            $filename = 'clientes_' . now()->format('Ymd') . '.xlsx';
         }
 
-        $sheet->mergeCells('A9:P9');
-        $sheet->setCellValue('A9', '↑  FILAS DE EJEMPLO — Bórralas antes de importar y agrega tus propios datos desde la fila 5');
-        $sheet->getRowDimension(9)->setRowHeight(14);
-        $sheet->getStyle('A9')->applyFromArray([
-            'font'      => ['italic' => true, 'bold' => true, 'size' => 8, 'color' => ['argb' => 'FF'.$navy]],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFF8E7']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER, 'indent' => 2],
-            'borders'   => ['top' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF'.$gold]]],
-        ]);
+        return Excel::download($export, $filename);
+    }
 
-        $widths = ['A'=>28,'B'=>18,'C'=>14,'D'=>22,'E'=>14,'F'=>14,'G'=>18,'H'=>14,'I'=>22,'J'=>14,'K'=>14,'L'=>18,'M'=>14,'N'=>22,'O'=>14,'P'=>14];
-        foreach ($widths as $col => $width) $sheet->getColumnDimension($col)->setWidth($width);
+    // ── EXPORTAR PDF CON OPCIONES ─────────────────────────────
+    public function exportPdf(Request $request)
+    {
+        $query = Client::with(['contacts' => function($q) {
+            $q->orderBy('es_principal', 'desc')->orderBy('created_at');
+        }])
+        ->withCount('contacts');
 
-        $sheet->freezePane('A5');
+        // Si se envía un ID específico
+        if ($request->has('client_id') && !empty($request->client_id)) {
+            $query->where('id_client', $request->client_id);
+            $suffix = '_id_' . $request->client_id;
+        } else {
+            $suffix = '';
+        }
 
-        $sheet->mergeCells('A10:P10');
-        $sheet->setCellValue('A10', 'Fiesta Tours Peru © '.now()->format('Y').'  ·  Plantilla de importación  ·  www.fiestatoursperu.com');
-        $sheet->getRowDimension(10)->setRowHeight(13);
-        $sheet->getStyle('A10')->applyFromArray([
-            'font'      => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FF'.$navy]],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE8C97A']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-        ]);
+        $clients = $query->orderBy('name_client')->get();
 
-        // ── Descargar
-        $writer = new Xlsx($spreadsheet);
-        $filename = 'plantilla_clientes_'.now()->format('Ymd').'.xlsx';
+        $pdf = Pdf::loadView('admin.clients.export-pdf', compact('clients'))
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'defaultFont'          => 'Arial',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled'      => true,
+                'dpi'                  => 96,
+                'isPhpEnabled'         => true,
+                'encoding'             => 'UTF-8',
+            ]);
 
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="'.$filename.'"');
-        header('Cache-Control: max-age=0');
+        return $pdf->download('clientes' . $suffix . '_' . now()->format('Ymd') . '.pdf');
+    }
 
-        $writer->save('php://output');
-        exit;
+    // ── OBTENER CLIENTE POR ID (PARA EL MODAL) ──────────────
+    public function getClient(Request $request)
+    {
+        $client = Client::with(['contacts' => function($q) {
+            $q->orderBy('es_principal', 'desc')->orderBy('created_at');
+        }])
+        ->withCount('contacts')
+        ->find($request->id);
+
+        if (!$client) {
+            return response()->json(['error' => 'Cliente no encontrado'], 404);
+        }
+
+        return response()->json($client);
     }
 }

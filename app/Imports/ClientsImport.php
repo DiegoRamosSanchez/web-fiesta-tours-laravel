@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Imports;
 
 use App\Models\Client;
@@ -13,7 +14,6 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
     public int $skipped  = 0;
     public array $errors = [];
 
-    // ← Esto es lo clave: los encabezados están en la fila 4
     public function headingRow(): int
     {
         return 4;
@@ -23,7 +23,17 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
     {
         $grouped = [];
 
-        foreach ($rows as $row) {
+        // Convertir a array para saber el total de filas
+        $rowsArray = $rows->toArray();
+        $totalRows = count($rowsArray);
+
+        foreach ($rowsArray as $index => $row) {
+            // Saltar las últimas 2 filas (footer)
+            if ($index >= $totalRows - 2) {
+                $this->skipped++;
+                continue;
+            }
+
             $agencia = trim($row['agencia_cliente'] ?? '');
 
             if (empty($agencia)) {
@@ -31,34 +41,87 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 continue;
             }
 
-            $grouped[$agencia][] = $row;
+            // ─── USAR LOS HEADERS CORRECTOS DEL EXPORT ───
+            $businessName = trim($row['razon_social'] ?? '');
+            $taxCode = trim($row['codigo_tributario'] ?? '');
+            $generalPhone = trim($row['telefono_general'] ?? '');
+            $generalEmail = trim($row['email_general'] ?? '');
+
+            // Si no hay datos de empresa, intentar con los nombres alternativos
+            if (empty($businessName)) {
+                $businessName = trim($row['business_name'] ?? '');
+            }
+            if (empty($taxCode)) {
+                $taxCode = trim($row['tax_code'] ?? $row['ruc'] ?? '');
+            }
+            if (empty($generalPhone)) {
+                $generalPhone = trim($row['general_phone'] ?? '');
+            }
+            if (empty($generalEmail)) {
+                $generalEmail = trim($row['general_email'] ?? '');
+            }
+
+            $grouped[$agencia][] = [
+                'business_name' => $businessName,
+                'tax_code' => $taxCode,
+                'general_phone' => $generalPhone,
+                'general_email' => $generalEmail,
+                'row' => $row
+            ];
         }
 
         foreach ($grouped as $agencia => $filas) {
             try {
-                $client = Client::firstOrCreate(['name_client' => $agencia]);
+                $primera = $filas[0];
 
-                foreach ($filas as $row) {
-                    // Los 3 slots de contacto por fila
+                // Buscar o crear cliente con TODOS los campos
+                $client = Client::firstOrCreate(
+                    ['name_client' => $agencia],
+                    [
+                        'business_name' => $primera['business_name'] ?: null,
+                        'tax_code'      => $primera['tax_code'] ?: null,
+                        'general_phone' => $primera['general_phone'] ?: null,
+                        'general_email' => $primera['general_email'] ?: null,
+                    ]
+                );
+
+                // Si el cliente ya existía, actualizar campos vacíos
+                $clientUpdates = [];
+                foreach (['business_name', 'tax_code', 'general_phone', 'general_email'] as $field) {
+                    if (empty($client->$field) && !empty($primera[$field])) {
+                        $clientUpdates[$field] = $primera[$field];
+                    }
+                }
+                if (!empty($clientUpdates)) {
+                    $client->update($clientUpdates);
+                }
+
+                // Procesar contactos
+                foreach ($filas as $fila) {
+                    $row = $fila['row'];
+
                     $slots = [
                         1 => [
                             'nombre' => trim($row['contacto_1'] ?? ''),
-                            'cargo'  => trim($row['cargo_1']    ?? ''),
-                            'email'  => trim($row['email_1']    ?? ''),
+                            'last_names' => trim($row['apellidos_1'] ?? ''),  // ← NUEVO
+                            'cargo'  => trim($row['cargo_1'] ?? ''),
+                            'email'  => trim($row['email_1'] ?? ''),
                             'tel1'   => trim($row['telefono_1'] ?? ''),
                             'tel2'   => trim($row['telefono_2_1'] ?? ''),
                         ],
                         2 => [
-                            'nombre' => trim($row['contacto_2']   ?? ''),
-                            'cargo'  => trim($row['cargo_2']      ?? ''),
-                            'email'  => trim($row['email_2']      ?? ''),
+                            'nombre' => trim($row['contacto_2'] ?? ''),
+                            'last_names' => trim($row['apellidos_2'] ?? ''),  // ← NUEVO
+                            'cargo'  => trim($row['cargo_2'] ?? ''),
+                            'email'  => trim($row['email_2'] ?? ''),
                             'tel1'   => trim($row['telefono_1_2'] ?? ''),
                             'tel2'   => trim($row['telefono_2_2'] ?? ''),
                         ],
                         3 => [
-                            'nombre' => trim($row['contacto_3']   ?? ''),
-                            'cargo'  => trim($row['cargo_3']      ?? ''),
-                            'email'  => trim($row['email_3']      ?? ''),
+                            'nombre' => trim($row['contacto_3'] ?? ''),
+                            'last_names' => trim($row['apellidos_3'] ?? ''),  // ← NUEVO
+                            'cargo'  => trim($row['cargo_3'] ?? ''),
+                            'email'  => trim($row['email_3'] ?? ''),
                             'tel1'   => trim($row['telefono_1_3'] ?? ''),
                             'tel2'   => trim($row['telefono_2_3'] ?? ''),
                         ],
@@ -78,7 +141,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
                         $client->contacts()->create([
                             'name'          => $data['nombre'],
-                            'last_names'    => null,
+                            'last_names'    => $data['last_names'] ?: null,  // ← NUEVO
                             'qualification' => $data['cargo'] ?: null,
                             'email'         => $email,
                             'first_phone'   => $data['tel1'] ?: null,

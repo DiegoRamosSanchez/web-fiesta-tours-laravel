@@ -8,7 +8,7 @@ class Client extends Model
     protected $table      = 'clients';
     protected $primaryKey = 'id_client';
 
-    protected $fillable = ['name_client'];
+    protected $fillable = ['name_client', 'business_name', 'tax_code', 'general_phone', 'general_email'];
 
     public function contacts()
     {
