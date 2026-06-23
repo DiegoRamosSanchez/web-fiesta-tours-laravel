@@ -91,4 +91,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/usuarios',          [UserController::class, 'store'])->name('usuarios.store');
         Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
     });
+
+
+     Route::get('/api/paises', [AuthController::class, 'obtenerPorContinente']);
+    Route::get('/api/paises/ciudades', [AuthController::class, 'obtenerPorPais']);
 });
