@@ -21,6 +21,12 @@ return new class extends Migration
             $table->string('tax_code', 20)->nullable();
             $table->string('general_phone', 20)->nullable();
             $table->string('general_email', 120)->nullable();
+
+
+            $table->string('country_name', 100)->nullable();
+            $table->string('city_name', 150)->nullable();
+            $table->string('address', 255)->nullable();
+            
             $table->timestamps();
         });
     }

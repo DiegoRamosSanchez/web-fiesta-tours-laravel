@@ -13,7 +13,6 @@ class GeoController extends Controller
         return config('services.geonames.username');
     }
 
-    // ── TODOS LOS PAÍSES DEL MUNDO ──────────────────────────────
     public function paises(Request $request)
     {
         $paises = Cache::remember('geo:paises:todos', now()->addHours(24), function () {
@@ -40,7 +39,6 @@ class GeoController extends Controller
         return response()->json($paises);
     }
 
-    // ── CIUDADES POR PAÍS (todo el país, sin filtrar por departamento) ──
     public function ciudades(Request $request)
     {
         $pais = strtoupper($request->query('country', 'PE'));

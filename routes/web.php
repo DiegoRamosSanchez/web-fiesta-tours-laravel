@@ -100,4 +100,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
     });
 
+        Route::get('suppliers/{supplier}/pdf', [SupplierController::class, 'exportPdf'])
+    ->name('admin.suppliers.pdf');
+
+
 });
