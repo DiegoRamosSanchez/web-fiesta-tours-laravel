@@ -163,7 +163,7 @@
             </tbody>
         </table>
         
-        {{-- PAGINADOR CORREGIDO --}}
+        {{-- PAGINADOR --}}
         @if($suppliers->hasPages())
             <div class="table-footer" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem 1.5rem;border-top:1px solid #e2e8f0">
                 <span style="font-size:13px;color:#64748b">
@@ -327,7 +327,7 @@
     @endforeach
 @endif
 
-{{-- ══════════ MODAL EXPORTAR PDF (SOLO PROVEEDOR ESPECÍFICO) ══════════ --}}
+{{-- ══════════ MODAL EXPORTAR PDF (ESTILO CLIENTES) ══════════ --}}
 <div id="modal-export-suppliers">
     <div class="modal-box">
         <button class="modal-close" onclick="closeExportSuppliersModal()">
@@ -337,47 +337,58 @@
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
             <div style="width:44px;height:44px;background:#f0fdf4;border-radius:50%;
                         display:flex;align-items:center;justify-content:center;font-size:22px">
-                <i class="ti ti-file-export" style="color:#2f7d4f"></i>
+                <i class="ti ti-file-export" style="color:#16a34a"></i>
             </div>
             <div>
                 <h2 style="font-size:17px;font-weight:700;color:#0f172a;margin:0">
-                    Exportar <span style="color:#2f7d4f">PDF</span>
+                    Exportar <span style="color:#16a34a">PDF</span>
                 </h2>
                 <p style="font-size:12px;color:#94a3b8;margin:0">Selecciona un proveedor para exportar</p>
             </div>
         </div>
 
-        {{-- Única opción: Buscar proveedor específico --}}
-        <div class="export-search-wrapper">
+        {{-- Opción: Proveedor específico (estilo clientes) --}}
+        <div class="export-by-id-wrapper">
             <div class="header">
                 <div class="icon">
                     <i class="ti ti-truck"></i>
                 </div>
                 <div style="flex:1">
                     <div class="title">Proveedor específico</div>
-                    <div class="sub">Busca por nombre y exporta solo ese proveedor</div>
+                    <div class="sub">Busca y elige un proveedor por nombre</div>
                 </div>
             </div>
-
-            <div id="supplier-search-box">
-                <input type="text" id="supplier-search-input"
-                       placeholder="Escribe el nombre del proveedor..."
-                       autocomplete="off">
-                <div id="supplier-search-results"></div>
-            </div>
-
-            <div id="supplier-selected-chip">
-                <div class="chip">
-                    <span id="supplier-selected-name"></span>
-                    <button type="button" onclick="clearSelectedSupplier()" title="Quitar selección">
+            <div style="position:relative; margin-top:.8rem; padding-left:52px; display:flex; gap:.6rem; align-items:center">
+                <div style="flex:1; position:relative">
+                    <input type="text"
+                           id="export-supplier-search"
+                           placeholder="Escribe para buscar proveedor..."
+                           autocomplete="off"
+                           style="width:100%; padding:.5rem .7rem; border:1px solid #e2e8f0;
+                                  border-radius:7px; font-size:13px; outline:none;
+                                  transition:border-color .15s; box-sizing:border-box">
+                    <button type="button" id="export-supplier-clear"
+                            style="display:none; position:absolute; right:.5rem; top:50%;
+                                   transform:translateY(-50%); background:none; border:none;
+                                   color:#cbd5e1; cursor:pointer; font-size:14px; padding:2px; line-height:1">
                         <i class="ti ti-x"></i>
                     </button>
+                    <div id="export-supplier-list"
+                         style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+                                background:#fff; border:1px solid #e2e8f0; border-radius:9px;
+                                max-height:200px; overflow-y:auto; z-index:60;
+                                box-shadow:0 10px 25px -5px rgba(0,0,0,.1)">
+                    </div>
                 </div>
+                <button id="export-supplier-btn"
+                        onclick="exportSelectedSupplier()"
+                        disabled
+                        style="padding:.5rem 1rem; background:#6366f1; color:#fff; border:none;
+                               border-radius:7px; font-size:13px; font-weight:600; cursor:pointer;
+                               transition:background .15s; white-space:nowrap; opacity:.45">
+                    <i class="ti ti-arrow-right" style="font-size:14px"></i> Exportar
+                </button>
             </div>
-
-            <button id="btn-export-supplier-confirm" onclick="exportSelectedSupplier()">
-                <i class="ti ti-download" style="font-size:13px"></i> Exportar este proveedor
-            </button>
         </div>
 
         <button class="btn-cancel-export" onclick="closeExportSuppliersModal()">
@@ -428,118 +439,35 @@
 }
 #modal-export-suppliers .modal-close:hover { color: #0f172a; }
 
-.export-search-wrapper {
+.export-by-id-wrapper {
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     padding: 1rem 1.2rem;
     transition: all .2s;
     margin-bottom: .8rem;
 }
-.export-search-wrapper:hover { border-color: #6366f1; }
-.export-search-wrapper .header { display: flex; align-items: center; gap: 12px; }
-.export-search-wrapper .icon {
-    width: 40px; height: 40px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
-    background: #eff6ff; color: #3b82f6;
+.export-by-id-wrapper:hover {
+    border-color: #6366f1;
 }
-.export-search-wrapper .title { font-size: 14px; font-weight: 600; color: #0f172a; }
-.export-search-wrapper .sub { font-size: 12px; color: #94a3b8; }
-
-#supplier-search-box {
-    position: relative;
-    margin-top: .8rem;
-    padding-left: 0;
-}
-#supplier-search-input {
-    width: 100%;
-    padding: .55rem .8rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 13px;
-    outline: none;
-    box-sizing: border-box;
-}
-#supplier-search-input:focus { border-color: #6366f1; }
-
-#supplier-search-results {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    box-shadow: 0 8px 20px -4px rgba(0,0,0,.15);
-    max-height: 220px;
-    overflow-y: auto;
-    z-index: 10;
-    display: none;
-}
-#supplier-search-results.show { display: block; }
-
-.supplier-result-item {
-    padding: .6rem .8rem;
-    cursor: pointer;
-    font-size: 13px;
-    border-bottom: 1px solid #f1f5f9;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.supplier-result-item:last-child { border-bottom: none; }
-.supplier-result-item:hover { background: #f8fafc; }
-.supplier-result-item .name { font-weight: 600; color: #0f172a; }
-.supplier-result-item .meta { font-size: 11px; color: #94a3b8; }
-
-.supplier-result-empty {
-    padding: .8rem;
-    font-size: 12.5px;
-    color: #94a3b8;
-    text-align: center;
-}
-
-#supplier-selected-chip {
-    display: none;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: .6rem;
-    padding-left: 0;
-}
-#supplier-selected-chip.show { display: flex; }
-#supplier-selected-chip .chip {
-    background: #eef2ff;
-    border: 1px solid #c7d2fe;
-    border-radius: 8px;
-    padding: .5rem .8rem;
-    font-size: 13px;
-    color: #4338ca;
-    font-weight: 600;
-    flex: 1;
+.export-by-id-wrapper .header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    gap: 12px;
 }
-#supplier-selected-chip .chip button {
-    background: none; border: none; cursor: pointer; color: #6366f1; font-size: 15px;
+.export-by-id-wrapper .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    background: #eff6ff;
+    color: #3b82f6;
 }
-
-#btn-export-supplier-confirm {
-    display: none;
-    margin-top: .7rem;
-    padding: .55rem;
-    background: #6366f1;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-}
-#btn-export-supplier-confirm.show { display: block; }
-#btn-export-supplier-confirm:hover { background: #4f46e5; }
+.export-by-id-wrapper .title { font-size: 14px; font-weight: 600; color: #0f172a; }
+.export-by-id-wrapper .sub { font-size: 12px; color: #94a3b8; }
 
 .btn-cancel-export {
     width: 100%;
@@ -621,105 +549,172 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// ══════════ EXPORTAR PDF: buscador con autocompletar ══════════
+// ══════════ EXPORTAR PDF (ESTILO CLIENTES) ══════════
+let exportSupplierId = null;
 
-let selectedSupplierId = null;
+// Datos de proveedores de la página actual
+const suppliersData = @json($suppliers->map(fn($s) => ['id' => $s->id_supplier, 'name' => $s->supplier_name, 'tax_code' => $s->tax_code]));
+
+(function initExportCombo() {
+    const input  = document.getElementById('export-supplier-search');
+    const list   = document.getElementById('export-supplier-list');
+    const clear  = document.getElementById('export-supplier-clear');
+    const btn    = document.getElementById('export-supplier-btn');
+    let activeIdx = -1;
+    let filtered  = [];
+
+    function normalizeStr(str) {
+        return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function renderList(term) {
+        const q = normalizeStr(term);
+        filtered = q
+            ? suppliersData.filter(s => normalizeStr(s.name).includes(q))
+            : suppliersData.slice(0, 50);
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div style="padding:.6rem .8rem;font-size:12.5px;color:#94a3b8">Sin resultados</div>';
+        } else {
+            list.innerHTML = filtered.map((s, i) =>
+                `<div data-idx="${i}"
+                      style="padding:.55rem .8rem;font-size:13px;color:#0f172a;cursor:pointer;
+                             transition:background .1s">
+                    <span style="color:#94a3b8;font-size:11px;margin-right:6px">#${s.id}</span>${s.name}
+                    ${s.tax_code ? `<span style="color:#94a3b8;font-size:11px;margin-left:6px">· ${s.tax_code}</span>` : ''}
+                </div>`
+            ).join('');
+        }
+        activeIdx = -1;
+        list.style.display = 'block';
+    }
+
+    function selectSupplier(s) {
+        input.value    = s.name + (s.tax_code ? ' · ' + s.tax_code : '');
+        exportSupplierId = s.id;
+        clear.style.display  = 'block';
+        btn.disabled         = false;
+        btn.style.opacity    = '1';
+        btn.style.cursor     = 'pointer';
+        list.style.display   = 'none';
+        input.style.borderColor = '#6366f1';
+    }
+
+    function clearSelection() {
+        input.value    = '';
+        exportSupplierId = null;
+        clear.style.display  = 'none';
+        btn.disabled         = true;
+        btn.style.opacity    = '.45';
+        btn.style.cursor     = 'default';
+        list.style.display   = 'none';
+        input.style.borderColor = '#e2e8f0';
+        input.focus();
+    }
+
+    function updateActive() {
+        list.querySelectorAll('[data-idx]').forEach(el => {
+            el.style.background = '';
+            el.style.color = '#0f172a';
+        });
+        const el = list.querySelector(`[data-idx="${activeIdx}"]`);
+        if (el) {
+            el.style.background = '#eef2ff';
+            el.style.color = '#4338ca';
+            el.scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    input.addEventListener('focus', () => renderList(input.value));
+
+    input.addEventListener('input', () => {
+        exportSupplierId = null;
+        btn.disabled = true;
+        btn.style.opacity = '.45';
+        btn.style.cursor  = 'default';
+        input.style.borderColor = '#e2e8f0';
+        clear.style.display = input.value ? 'block' : 'none';
+        renderList(input.value);
+    });
+
+    input.addEventListener('keydown', e => {
+        if (list.style.display === 'none') return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIdx = Math.min(activeIdx + 1, filtered.length - 1);
+            updateActive();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIdx = Math.max(activeIdx - 1, 0);
+            updateActive();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeIdx >= 0 && filtered[activeIdx]) selectSupplier(filtered[activeIdx]);
+        } else if (e.key === 'Escape') {
+            list.style.display = 'none';
+        }
+    });
+
+    list.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const item = e.target.closest('[data-idx]');
+        if (!item) return;
+        selectSupplier(filtered[parseInt(item.dataset.idx)]);
+    });
+
+    list.addEventListener('mouseover', e => {
+        const item = e.target.closest('[data-idx]');
+        if (!item) return;
+        list.querySelectorAll('[data-idx]').forEach(el => { el.style.background = ''; el.style.color = '#0f172a'; });
+        item.style.background = '#eef2ff';
+        item.style.color = '#4338ca';
+        activeIdx = parseInt(item.dataset.idx);
+    });
+
+    clear.addEventListener('click', clearSelection);
+
+    document.addEventListener('click', e => {
+        if (!input.contains(e.target) && !list.contains(e.target)) {
+            list.style.display = 'none';
+        }
+    });
+})();
 
 function openExportSuppliersModal() {
     document.getElementById('modal-export-suppliers').classList.add('show');
-    // Limpiar estado previo
-    clearSelectedSupplier();
-    document.getElementById('supplier-search-input').value = '';
-    document.getElementById('supplier-search-input').style.display = '';
+    // Resetear estado
+    const input = document.getElementById('export-supplier-search');
+    const clear = document.getElementById('export-supplier-clear');
+    const list  = document.getElementById('export-supplier-list');
+    const btn   = document.getElementById('export-supplier-btn');
+    input.value           = '';
+    input.style.borderColor = '#e2e8f0';
+    clear.style.display   = 'none';
+    list.style.display    = 'none';
+    btn.disabled          = true;
+    btn.style.opacity     = '.45';
+    btn.style.cursor      = 'default';
+    exportSupplierId      = null;
 }
 
 function closeExportSuppliersModal() {
     document.getElementById('modal-export-suppliers').classList.remove('show');
-    clearSelectedSupplier();
-    document.getElementById('supplier-search-results').classList.remove('show');
 }
 
-function clearSelectedSupplier() {
-    selectedSupplierId = null;
-    document.getElementById('supplier-selected-chip').classList.remove('show');
-    document.getElementById('btn-export-supplier-confirm').classList.remove('show');
-    document.getElementById('supplier-search-input').value = '';
-    document.getElementById('supplier-search-input').style.display = '';
-}
-
-function selectSupplier(id, name, taxCode) {
-    selectedSupplierId = id;
-    document.getElementById('supplier-selected-name').textContent =
-        name + (taxCode ? ' · ' + taxCode : '');
-    document.getElementById('supplier-selected-chip').classList.add('show');
-    document.getElementById('btn-export-supplier-confirm').classList.add('show');
-    document.getElementById('supplier-search-results').classList.remove('show');
-    document.getElementById('supplier-search-input').style.display = 'none';
-}
-
-// Buscador con autocompletar
-document.getElementById('supplier-search-input').addEventListener('input', function() {
-    const query = this.value.trim();
-    const resultsContainer = document.getElementById('supplier-search-results');
-
-    if (query.length < 2) {
-        resultsContainer.classList.remove('show');
+function exportSelectedSupplier() {
+    if (!exportSupplierId) {
+        alert('Por favor, selecciona un proveedor primero.');
         return;
     }
-
-    fetch(`/admin/suppliers/search?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            resultsContainer.innerHTML = '';
-            if (data.length === 0) {
-                resultsContainer.innerHTML = '<div class="supplier-result-empty">No se encontraron proveedores</div>';
-                resultsContainer.classList.add('show');
-                return;
-            }
-
-            data.forEach(supplier => {
-                const div = document.createElement('div');
-                div.className = 'supplier-result-item';
-                div.innerHTML = `
-                    <span class="name">${supplier.supplier_name}</span>
-                    <span class="meta">${supplier.tax_code || 'Sin RUC'} · ${supplier.business_name || 'Sin razón social'}</span>
-                `;
-                div.addEventListener('click', function() {
-                    selectSupplier(supplier.id_supplier, supplier.supplier_name, supplier.tax_code);
-                });
-                resultsContainer.appendChild(div);
-            });
-            resultsContainer.classList.add('show');
-        })
-        .catch(() => {
-            resultsContainer.innerHTML = '<div class="supplier-result-empty">Error al buscar proveedores</div>';
-            resultsContainer.classList.add('show');
-        });
-});
-
-// Cerrar resultados al hacer clic fuera
-document.addEventListener('click', function(e) {
-    const box = document.getElementById('supplier-search-box');
-    if (box && !box.contains(e.target)) {
-        document.getElementById('supplier-search-results').classList.remove('show');
-    }
-});
+    window.location.href = `/admin/suppliers/${exportSupplierId}/pdf`;
+    closeExportSuppliersModal();
+}
 
 // Botón header
 document.getElementById('btn-export-pdf-suppliers').addEventListener('click', function(e) {
     e.preventDefault();
     openExportSuppliersModal();
 });
-
-// Exportar proveedor seleccionado
-function exportSelectedSupplier() {
-    if (!selectedSupplierId) {
-        alert('Por favor, selecciona un proveedor primero.');
-        return;
-    }
-    window.location.href = `/admin/suppliers/${selectedSupplierId}/pdf`;
-    closeExportSuppliersModal();
-}
 
 // Cerrar con ESC
 document.addEventListener('keydown', function(e) {
