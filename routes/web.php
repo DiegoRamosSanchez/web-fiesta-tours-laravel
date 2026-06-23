@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GeoController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\Admin\ClientController;
@@ -16,6 +17,13 @@ Route::get('/', fn() => redirect()->route('login'));
 Route::middleware('guest')->group(function () {
     Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+});
+
+// ── GEONAMES (paises, departamentos, ciudades) ──
+// Sin middleware 'auth' porque se usan en formularios públicos/registro.
+Route::prefix('api/geo')->group(function () {
+    Route::get('/paises',        [GeoController::class, 'paises']);
+    Route::get('/ciudades',      [GeoController::class, 'ciudades']);
 });
 
 Route::middleware('auth')->group(function () {
@@ -92,7 +100,4 @@ Route::middleware('auth')->group(function () {
         Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
     });
 
-
-     Route::get('/api/paises', [AuthController::class, 'obtenerPorContinente']);
-    Route::get('/api/paises/ciudades', [AuthController::class, 'obtenerPorPais']);
 });

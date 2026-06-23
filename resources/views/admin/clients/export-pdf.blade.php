@@ -33,11 +33,17 @@
         .client-card .client-name { font-size: 15px; font-weight: 700; color: #0B1F3A; }
         .client-card .client-count { font-size: 11px; color: #64748b; background: #f1f5f9; padding: 2px 14px; border-radius: 20px; font-weight: 600; }
 
-        {{-- NUEVO: Estilos para los datos del cliente --}}
         .client-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 10.5px; }
         .client-info-grid .info-item { display: flex; gap: 4px; }
         .client-info-grid .info-label { color: #94a3b8; font-weight: 600; min-width: 90px; }
         .client-info-grid .info-value { color: #0f172a; font-weight: 500; }
+
+        {{-- NUEVO: Bloque de ubicación separado (Dirección puede ser larga, va a ancho completo) --}}
+        .client-location { background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 10.5px; border-top: 1px dashed #e2e8f0; }
+        .client-location .location-row { display: flex; gap: 4px; flex-wrap: wrap; }
+        .client-location .location-row + .location-row { margin-top: 4px; }
+        .client-location .info-label { color: #94a3b8; font-weight: 600; min-width: 90px; }
+        .client-location .info-value { color: #0f172a; font-weight: 500; }
 
         .contacts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .contact-item { background: #fafafa; border: 1px solid #e8ecf0; border-radius: 8px; padding: 10px 14px; }
@@ -108,7 +114,7 @@
                     <div class="client-count">{{ $client->contacts_count }} contacto(s)</div>
                 </div>
 
-                {{-- NUEVO: Información del cliente --}}
+                {{-- Información del cliente --}}
                 <div class="client-info-grid">
                     <div class="info-item">
                         <span class="info-label">Razón Social:</span>
@@ -127,6 +133,25 @@
                         <span class="info-value">{{ $client->general_email ?? '—' }}</span>
                     </div>
                 </div>
+
+                {{-- NUEVO: Ubicación (País, Ciudad, Dirección) --}}
+                @if($client->country_name || $client->city_name || $client->address)
+                    <div class="client-location">
+                        <div class="location-row">
+                            <span class="info-label">País:</span>
+                            <span class="info-value">{{ $client->country_name ?? '—' }}</span>
+                            <span style="width:18px"></span>
+                            <span class="info-label">Ciudad:</span>
+                            <span class="info-value">{{ $client->city_name ?? '—' }}</span>
+                        </div>
+                        @if($client->address)
+                            <div class="location-row">
+                                <span class="info-label">Dirección:</span>
+                                <span class="info-value">{{ $client->address }}</span>
+                            </div>
+                        @endif
+                    </div>
+                @endif
 
                 @if($client->contacts->isNotEmpty())
                     <div class="contacts-grid">

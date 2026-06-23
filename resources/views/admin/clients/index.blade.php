@@ -150,39 +150,6 @@ tr.selected td { background: #fef2f2 !important; }
     align-items: center;
     gap: 12px;
 }
-.export-by-id-wrapper .input-group {
-    display: flex;
-    gap: .6rem;
-    margin-top: .8rem;
-    padding-left: 52px;
-}
-.export-by-id-wrapper .input-group input {
-    flex: 1;
-    padding: .5rem .7rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 7px;
-    font-size: 13px;
-    outline: none;
-    transition: border-color .15s;
-}
-.export-by-id-wrapper .input-group input:focus {
-    border-color: #6366f1;
-}
-.export-by-id-wrapper .input-group button {
-    padding: .5rem 1rem;
-    background: #6366f1;
-    color: #fff;
-    border: none;
-    border-radius: 7px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s;
-    white-space: nowrap;
-}
-.export-by-id-wrapper .input-group button:hover {
-    background: #4f46e5;
-}
 
 .btn-cancel-export {
     width: 100%;
@@ -324,6 +291,36 @@ tr.selected td { background: #fef2f2 !important; }
     padding:1.1rem 1.8rem; border-top:1px solid #f1f5f9;
     flex-shrink:0; background:#fff; position:sticky; bottom:0; z-index:2;
 }
+
+/* ══════════ COMBOS BUSCABLES (País / Departamento / Ciudad) ══════════ */
+.combo-wrap{ position:relative; }
+.combo-input{
+    width:100%; padding:.62rem .8rem; border:1px solid #e2e8f0; border-radius:9px;
+    font-size:13px; color:#0f172a; outline:none; transition:border-color .15s, background .15s;
+    background:#fff; box-sizing:border-box;
+}
+.combo-input:focus{ border-color:#6366f1; }
+.combo-input[disabled]{ background:#f8fafc; color:#94a3b8; cursor:not-allowed; }
+.combo-list{
+    position:absolute; top:calc(100% + 4px); left:0; right:0;
+    background:#fff; border:1px solid #e2e8f0; border-radius:9px;
+    max-height:220px; overflow-y:auto; z-index:50;
+    box-shadow:0 10px 25px -5px rgba(0,0,0,.1);
+    display:none;
+}
+.combo-list.show{ display:block; }
+.combo-item{
+    padding:.55rem .8rem; font-size:13px; color:#0f172a; cursor:pointer;
+}
+.combo-item:hover, .combo-item.active{ background:#eef2ff; color:#4338ca; }
+.combo-empty{ padding:.6rem .8rem; font-size:12.5px; color:#94a3b8; }
+.combo-clear{
+    position:absolute; right:.6rem; top:50%; transform:translateY(-50%);
+    background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:14px;
+    display:none; padding:2px; line-height:1;
+}
+.combo-clear.show{ display:block; }
+.combo-clear:hover{ color:#ef4444; }
 </style>
 @endpush
 
@@ -676,6 +673,51 @@ tr.selected td { background: #fef2f2 !important; }
 
                 <div class="form-section-divider"></div>
 
+                {{-- ── UBICACIÓN (combos buscables) ── --}}
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="ti ti-map-pin"></i> Ubicación
+                    </div>
+                    <p class="form-section-hint">Escribe para buscar el país y la ciudad, y detalla la dirección exacta.</p>
+
+                    <div class="form-grid-2">
+                        <div class="field">
+                            <label>País</label>
+                            <div class="combo-wrap" id="combo-pais">
+                                <input type="text" class="combo-input" id="create-pais-input"
+                                       placeholder="Cargando países..." autocomplete="off" disabled>
+                                <button type="button" class="combo-clear" id="create-pais-clear" tabindex="-1">
+                                    <i class="ti ti-x"></i>
+                                </button>
+                                <div class="combo-list" id="create-pais-list"></div>
+                            </div>
+                            <input type="hidden" name="country_name" id="create-country-name">
+                            <input type="hidden" id="create-country-code">
+                        </div>
+
+                        <div class="field">
+                            <label>Ciudad</label>
+                            <div class="combo-wrap" id="combo-ciudad">
+                                <input type="text" class="combo-input" id="create-ciudad-input"
+                                       placeholder="Seleccione país primero" autocomplete="off" disabled>
+                                <button type="button" class="combo-clear" id="create-ciudad-clear" tabindex="-1">
+                                    <i class="ti ti-x"></i>
+                                </button>
+                                <div class="combo-list" id="create-ciudad-list"></div>
+                            </div>
+                            <input type="hidden" name="city_name" id="create-ciudad-name">
+                        </div>
+                    </div>
+
+                    <div class="field" style="margin-top:.9rem">
+                        <label>Dirección</label>
+                        <input type="text" name="address" value="{{ old('address') }}"
+                               placeholder="Ej: Avenida Suecia, calle 124, primera casa">
+                    </div>
+                </div>
+
+                <div class="form-section-divider"></div>
+
                 {{-- ── CONTACTOS ── --}}
                 <div class="form-section">
                     <div class="form-section-title-row">
@@ -736,22 +778,45 @@ tr.selected td { background: #fef2f2 !important; }
             <i class="ti ti-chevron-right arrow"></i>
         </div>
 
-        {{-- Opción 2: Por ID --}}
-        <div class="export-by-id-wrapper">
+        {{-- Opción 2: Cliente específico (combo buscable) --}}
+        <div class="export-by-id-wrapper" id="export-client-combo-wrap">
             <div class="header">
                 <div class="icon blue">
                     <i class="ti ti-user"></i>
                 </div>
                 <div style="flex:1">
                     <div class="title">Cliente específico</div>
-                    <div class="sub">Exporta los datos de un solo cliente</div>
+                    <div class="sub">Busca y elige un cliente por nombre</div>
                 </div>
             </div>
-            <div class="input-group">
-                <input type="number" id="export-client-id"
-                       placeholder="Ingresa el ID del cliente"
-                       min="1">
-                <button onclick="exportById(document.getElementById('export-client-id').value)">
+            <div style="position:relative; margin-top:.8rem; padding-left:52px; display:flex; gap:.6rem; align-items:center">
+                <div style="flex:1; position:relative">
+                    <input type="text"
+                           id="export-client-search"
+                           placeholder="Escribe para buscar cliente..."
+                           autocomplete="off"
+                           style="width:100%; padding:.5rem .7rem; border:1px solid #e2e8f0;
+                                  border-radius:7px; font-size:13px; outline:none;
+                                  transition:border-color .15s; box-sizing:border-box">
+                    <button type="button" id="export-client-clear"
+                            style="display:none; position:absolute; right:.5rem; top:50%;
+                                   transform:translateY(-50%); background:none; border:none;
+                                   color:#cbd5e1; cursor:pointer; font-size:14px; padding:2px; line-height:1">
+                        <i class="ti ti-x"></i>
+                    </button>
+                    <div id="export-client-list"
+                         style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+                                background:#fff; border:1px solid #e2e8f0; border-radius:9px;
+                                max-height:200px; overflow-y:auto; z-index:60;
+                                box-shadow:0 10px 25px -5px rgba(0,0,0,.1)">
+                    </div>
+                </div>
+                <button id="export-client-btn"
+                        onclick="exportSelectedClient()"
+                        disabled
+                        style="padding:.5rem 1rem; background:#6366f1; color:#fff; border:none;
+                               border-radius:7px; font-size:13px; font-weight:600; cursor:pointer;
+                               transition:background .15s; white-space:nowrap; opacity:.45">
                     <i class="ti ti-arrow-right" style="font-size:14px"></i> Exportar
                 </button>
             </div>
@@ -788,18 +853,15 @@ function applyFilters() {
         const cnt     = parseInt(row.dataset.contacts);
         const rowDate = new Date(row.dataset.date);
 
-        // Búsqueda texto
         if (search && !name.includes(search) && !email.includes(search) && !phone.includes(search)) {
             return false;
         }
 
-        // Filtro contactos
         if (contacts === '0'  && cnt !== 0) return false;
         if (contacts === '1'  && cnt !== 1) return false;
         if (contacts === '2'  && cnt < 2)   return false;
         if (contacts === '5'  && cnt < 5)   return false;
 
-        // Filtro fecha
         if (date === 'today' && row.dataset.date !== today) return false;
         if (date === 'week'  && rowDate < weekStart)        return false;
         if (date === 'month' && rowDate < monthStart)       return false;
@@ -808,7 +870,6 @@ function applyFilters() {
         return true;
     });
 
-    // Ordenar
     visible.sort((a, b) => {
         switch (sort) {
             case 'oldest':       return a.dataset.ts - b.dataset.ts;
@@ -820,12 +881,10 @@ function applyFilters() {
         }
     });
 
-    // Aplicar visibilidad
     const tbody = document.getElementById('tabla-body');
     rows.forEach(r => r.style.display = 'none');
     visible.forEach(r => { r.style.display = ''; tbody.appendChild(r); });
 
-    // Mostrar/ocultar "sin resultados"
     const noResults = document.getElementById('no-results');
     const tableContainer = document.getElementById('table-container');
     if (visible.length === 0) {
@@ -836,7 +895,6 @@ function applyFilters() {
         tableContainer.style.display = 'block';
     }
 
-    // Actualizar contador
     const count = visible.length;
     document.getElementById('results-count').textContent = count + ' resultado(s)';
     document.getElementById('footer-count').textContent = count + ' cliente(s)';
@@ -844,7 +902,6 @@ function applyFilters() {
     const hasFilters = search || contacts || date || sort !== 'newest';
     footerFilter.style.display = hasFilters ? 'block' : 'none';
 
-    // Reset checkboxes al filtrar
     deselectAll();
 }
 
@@ -856,19 +913,17 @@ function clearFilters() {
     applyFilters();
 }
 
-// Escuchar cambios
 ['f-search','f-contacts','f-date','f-sort'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener('input',  applyFilters);
-        el.addEventListener('change',  applyFilters);
+        el.addEventListener('change', applyFilters);
     }
 });
 
 // ── Selección múltiple ────────────────────────────────────────
 function toggleAll(checked) {
     document.querySelectorAll('.row-check').forEach(cb => {
-        // Solo los visibles
         if (cb.closest('tr').style.display !== 'none') {
             cb.checked = checked;
             cb.closest('tr').classList.toggle('selected', checked);
@@ -900,17 +955,15 @@ function updateBulk() {
         document.getElementById('check-all').checked = false;
     }
 
-    // Marcar/desmarcar fila
     document.querySelectorAll('.row-check').forEach(cb => {
         cb.closest('tr').classList.toggle('selected', cb.checked);
     });
 
-    // Check-all indeterminado
     const all = document.querySelectorAll('.row-check');
-    const allChecked = [...all].filter(cb => cb.closest('tr').style.display !== 'none');
+    const allVisible = [...all].filter(cb => cb.closest('tr').style.display !== 'none');
     const ca = document.getElementById('check-all');
     if (checked.length === 0) { ca.checked = false; ca.indeterminate = false; }
-    else if (checked.length === allChecked.length) { ca.checked = true; ca.indeterminate = false; }
+    else if (checked.length === allVisible.length) { ca.checked = true; ca.indeterminate = false; }
     else { ca.indeterminate = true; }
 }
 
@@ -996,8 +1049,6 @@ function agregarContacto() {
             </div>
         </div>`;
     wrapper.appendChild(div);
-
-    // Hacer scroll al final del wrapper
     wrapper.scrollTop = wrapper.scrollHeight;
 }
 
@@ -1011,28 +1062,368 @@ function agregarContacto() {
 const totalVisible = rows.length;
 document.getElementById('results-count').textContent = totalVisible + ' en esta página';
 
-// ── MODAL EXPORTAR ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// ── COMBO BUSCABLE GENÉRICO (país / ciudad) ──────────────────────
+// ════════════════════════════════════════════════════════════════
+function crearCombo({ inputId, listId, clearId, onSelect, onClear }) {
+    const input = document.getElementById(inputId);
+    const list  = document.getElementById(listId);
+    const clear = document.getElementById(clearId);
+    let options = [];
+    let activeIndex = -1;
+
+    function normalizar(str) {
+        return (str || '').toString()
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function render(filtro) {
+        const term = normalizar(filtro);
+        const filtradas = term
+            ? options.filter(o => normalizar(o.label).includes(term))
+            : options;
+
+        if (filtradas.length === 0) {
+            list.innerHTML = '<div class="combo-empty">Sin resultados</div>';
+        } else {
+            list.innerHTML = filtradas.map((o, idx) =>
+                `<div class="combo-item" data-idx="${idx}">${o.label}</div>`
+            ).join('');
+        }
+        list._filtradas = filtradas;
+        activeIndex = -1;
+        list.classList.add('show');
+    }
+
+    function cerrar() {
+        list.classList.remove('show');
+        activeIndex = -1;
+    }
+
+    function seleccionar(opt) {
+        input.value = opt.label;
+        clear.classList.add('show');
+        cerrar();
+        onSelect(opt);
+    }
+
+    function actualizarActivo() {
+        list.querySelectorAll('.combo-item').forEach(el => el.classList.remove('active'));
+        const el = list.querySelector(`[data-idx="${activeIndex}"]`);
+        if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest' }); }
+    }
+
+    input.addEventListener('focus', () => {
+        if (!input.disabled) render(input.value);
+    });
+
+    input.addEventListener('input', () => {
+        if (input.value === '') {
+            clear.classList.remove('show');
+        } else {
+            clear.classList.add('show');
+        }
+        render(input.value);
+        onClear && onClear(false);
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const filtradas = list._filtradas || [];
+        if (!list.classList.contains('show')) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIndex = Math.min(activeIndex + 1, filtradas.length - 1);
+            actualizarActivo();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIndex = Math.max(activeIndex - 1, 0);
+            actualizarActivo();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeIndex >= 0 && filtradas[activeIndex]) {
+                seleccionar(filtradas[activeIndex]);
+            }
+        } else if (e.key === 'Escape') {
+            cerrar();
+        }
+    });
+
+    list.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const item = e.target.closest('.combo-item');
+        if (!item) return;
+        const idx = parseInt(item.dataset.idx);
+        seleccionar(list._filtradas[idx]);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !list.contains(e.target)) cerrar();
+    });
+
+    clear.addEventListener('click', () => {
+        input.value = '';
+        clear.classList.remove('show');
+        cerrar();
+        onClear && onClear(true);
+        input.focus();
+    });
+
+    return {
+        setOptions(nuevasOpciones, placeholder) {
+            options = nuevasOpciones || [];
+            input.value = '';
+            clear.classList.remove('show');
+            input.disabled = false;
+            input.placeholder = placeholder || 'Escribe para buscar...';
+            cerrar();
+        },
+        disable(placeholder) {
+            input.disabled = true;
+            input.value = '';
+            clear.classList.remove('show');
+            input.placeholder = placeholder || '';
+            options = [];
+            cerrar();
+        }
+    };
+}
+
+// ── Instancias combos País → Ciudad ──────────────────────────
+const comboPais = crearCombo({
+    inputId: 'create-pais-input',
+    listId:  'create-pais-list',
+    clearId: 'create-pais-clear',
+    onSelect: (opt) => {
+        document.getElementById('create-country-name').value = opt.label;
+        document.getElementById('create-country-code').value = opt.value;
+        cargarCiudades(opt.value);
+    },
+    onClear: (full) => {
+        document.getElementById('create-country-name').value = '';
+        document.getElementById('create-country-code').value = '';
+        if (full) {
+            comboCiudad.disable('Seleccione país primero');
+            document.getElementById('create-ciudad-name').value = '';
+        }
+    }
+});
+
+const comboCiudad = crearCombo({
+    inputId: 'create-ciudad-input',
+    listId:  'create-ciudad-list',
+    clearId: 'create-ciudad-clear',
+    onSelect: (opt) => {
+        document.getElementById('create-ciudad-name').value = opt.label;
+    },
+    onClear: () => {
+        document.getElementById('create-ciudad-name').value = '';
+    }
+});
+
+function cargarPaises() {
+    fetch(`/api/geo/paises`)
+        .then(r => r.json())
+        .then(paises => {
+            const opciones = paises.map(p => ({ value: p.codigo, label: p.nombre }));
+            comboPais.setOptions(opciones, 'Escribe para buscar país...');
+        })
+        .catch(() => comboPais.setOptions([], 'No se pudo cargar'));
+}
+
+function cargarCiudades(countryCode) {
+    comboCiudad.disable('Cargando...');
+    if (!countryCode) {
+        comboCiudad.disable('Seleccione país primero');
+        return;
+    }
+    fetch(`/api/geo/ciudades?country=${countryCode}`)
+        .then(r => r.json())
+        .then(ciudades => {
+            const opciones = ciudades.map(c => ({ value: c.nombre, label: c.nombre, geoNameId: c.geoNameId }));
+            comboCiudad.setOptions(opciones, 'Escribe para buscar ciudad...');
+        })
+        .catch(() => comboCiudad.setOptions([], 'No se pudo cargar'));
+}
+
+cargarPaises();
+
+// ════════════════════════════════════════════════════════════════
+// ── MODAL EXPORTAR ───────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
 let exportType = 'excel';
+let exportClientId = null;
+
+// Lista de clientes de la página actual para el combo de exportar.
+// Si necesitas TODOS los clientes (no solo la página), pasa una variable
+// separada desde el controller: Client::all(['id_client','name_client'])
+const clientsData = @json($clients->map(fn($c) => ['id' => $c->id_client, 'name' => $c->name_client]));
+
+(function initExportCombo() {
+    const input  = document.getElementById('export-client-search');
+    const list   = document.getElementById('export-client-list');
+    const clear  = document.getElementById('export-client-clear');
+    const btn    = document.getElementById('export-client-btn');
+    let activeIdx = -1;
+    let filtered  = [];
+
+    function normalizeStr(str) {
+        return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function renderList(term) {
+        const q = normalizeStr(term);
+        filtered = q
+            ? clientsData.filter(c => normalizeStr(c.name).includes(q))
+            : clientsData.slice(0, 50);
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div style="padding:.6rem .8rem;font-size:12.5px;color:#94a3b8">Sin resultados</div>';
+        } else {
+            list.innerHTML = filtered.map((c, i) =>
+                `<div data-idx="${i}"
+                      style="padding:.55rem .8rem;font-size:13px;color:#0f172a;cursor:pointer;
+                             transition:background .1s">
+                    <span style="color:#94a3b8;font-size:11px;margin-right:6px">#${c.id}</span>${c.name}
+                </div>`
+            ).join('');
+        }
+        activeIdx = -1;
+        list.style.display = 'block';
+    }
+
+    function selectClient(c) {
+        input.value    = c.name;
+        exportClientId = c.id;
+        clear.style.display  = 'block';
+        btn.disabled         = false;
+        btn.style.opacity    = '1';
+        btn.style.cursor     = 'pointer';
+        list.style.display   = 'none';
+        input.style.borderColor = '#6366f1';
+    }
+
+    function clearSelection() {
+        input.value    = '';
+        exportClientId = null;
+        clear.style.display  = 'none';
+        btn.disabled         = true;
+        btn.style.opacity    = '.45';
+        btn.style.cursor     = 'default';
+        list.style.display   = 'none';
+        input.style.borderColor = '#e2e8f0';
+        input.focus();
+    }
+
+    function updateActive() {
+        list.querySelectorAll('[data-idx]').forEach(el => {
+            el.style.background = '';
+            el.style.color = '#0f172a';
+        });
+        const el = list.querySelector(`[data-idx="${activeIdx}"]`);
+        if (el) {
+            el.style.background = '#eef2ff';
+            el.style.color = '#4338ca';
+            el.scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    input.addEventListener('focus', () => renderList(input.value));
+
+    input.addEventListener('input', () => {
+        exportClientId = null;
+        btn.disabled = true;
+        btn.style.opacity = '.45';
+        btn.style.cursor  = 'default';
+        input.style.borderColor = '#e2e8f0';
+        clear.style.display = input.value ? 'block' : 'none';
+        renderList(input.value);
+    });
+
+    input.addEventListener('keydown', e => {
+        if (list.style.display === 'none') return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIdx = Math.min(activeIdx + 1, filtered.length - 1);
+            updateActive();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIdx = Math.max(activeIdx - 1, 0);
+            updateActive();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeIdx >= 0 && filtered[activeIdx]) selectClient(filtered[activeIdx]);
+        } else if (e.key === 'Escape') {
+            list.style.display = 'none';
+        }
+    });
+
+    list.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const item = e.target.closest('[data-idx]');
+        if (!item) return;
+        selectClient(filtered[parseInt(item.dataset.idx)]);
+    });
+
+    // Hover en items de la lista
+    list.addEventListener('mouseover', e => {
+        const item = e.target.closest('[data-idx]');
+        if (!item) return;
+        list.querySelectorAll('[data-idx]').forEach(el => { el.style.background = ''; el.style.color = '#0f172a'; });
+        item.style.background = '#eef2ff';
+        item.style.color = '#4338ca';
+        activeIdx = parseInt(item.dataset.idx);
+    });
+
+    clear.addEventListener('click', clearSelection);
+
+    document.addEventListener('click', e => {
+        if (!input.contains(e.target) && !list.contains(e.target)) {
+            list.style.display = 'none';
+        }
+    });
+})();
+
+function exportSelectedClient() {
+    if (!exportClientId) return;
+    const url = exportType === 'excel'
+        ? '{{ route("admin.clients.export.excel") }}?client_id=' + exportClientId
+        : '{{ route("admin.clients.export.pdf") }}?client_id=' + exportClientId;
+    window.location.href = url;
+    closeExportModal();
+}
 
 function openExportModal(type) {
     exportType = type;
-    const modal = document.getElementById('modal-export');
-    modal.classList.add('show');
+    document.getElementById('modal-export').classList.add('show');
 
     const label = document.getElementById('export-type-label');
-    const icon = document.getElementById('export-modal-icon');
+    const icon  = document.getElementById('export-modal-icon');
 
     if (type === 'excel') {
         label.textContent = 'Excel';
         label.style.color = '#16a34a';
-        icon.style.color = '#16a34a';
+        icon.style.color  = '#16a34a';
     } else {
         label.textContent = 'PDF';
         label.style.color = '#ef4444';
-        icon.style.color = '#ef4444';
+        icon.style.color  = '#ef4444';
     }
 
-    document.getElementById('export-client-id').value = '';
+    // Reset combo al abrir
+    const input = document.getElementById('export-client-search');
+    const clear = document.getElementById('export-client-clear');
+    const list  = document.getElementById('export-client-list');
+    const btn   = document.getElementById('export-client-btn');
+    input.value           = '';
+    input.style.borderColor = '#e2e8f0';
+    clear.style.display   = 'none';
+    list.style.display    = 'none';
+    btn.disabled          = true;
+    btn.style.opacity     = '.45';
+    btn.style.cursor      = 'default';
+    exportClientId        = null;
 }
 
 function closeExportModal() {
@@ -1043,26 +1434,11 @@ function exportAll() {
     const url = exportType === 'excel'
         ? '{{ route("admin.clients.export.excel") }}'
         : '{{ route("admin.clients.export.pdf") }}';
-
     window.location.href = url;
     closeExportModal();
 }
 
-function exportById(id) {
-    if (!id || id < 1) {
-        alert('Por favor, ingresa un ID de cliente válido');
-        return;
-    }
-
-    const url = exportType === 'excel'
-        ? '{{ route("admin.clients.export.excel") }}?client_id=' + id
-        : '{{ route("admin.clients.export.pdf") }}?client_id=' + id;
-
-    window.location.href = url;
-    closeExportModal();
-}
-
-// ── EVENTOS PARA BOTONES DE EXPORTACIÓN ──────────────────────
+// ── Botones de exportación ────────────────────────────────────
 document.getElementById('btn-export-pdf').addEventListener('click', function(e) {
     e.preventDefault();
     openExportModal('pdf');
@@ -1073,25 +1449,14 @@ document.getElementById('btn-export-excel').addEventListener('click', function(e
     openExportModal('excel');
 });
 
-// ── ENTER EN EL INPUT DE ID ──────────────────────────────────
-document.getElementById('export-client-id').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        exportById(this.value);
-    }
-});
-
-// ── CERRAR MODAL CON ESC ──────────────────────────────────────
+// ── Cerrar modal con ESC ──────────────────────────────────────
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeExportModal();
-    }
+    if (e.key === 'Escape') closeExportModal();
 });
 
-// ── CERRAR MODAL CLICK FUERA ─────────────────────────────────
+// ── Cerrar modal al hacer clic fuera ─────────────────────────
 document.getElementById('modal-export').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeExportModal();
-    }
+    if (e.target === this) closeExportModal();
 });
 </script>
 @endpush

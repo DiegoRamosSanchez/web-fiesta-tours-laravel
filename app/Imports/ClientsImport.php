@@ -46,6 +46,9 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
             $taxCode = trim($row['codigo_tributario'] ?? '');
             $generalPhone = trim($row['telefono_general'] ?? '');
             $generalEmail = trim($row['email_general'] ?? '');
+            $countryName = trim($row['pais'] ?? '');
+            $cityName = trim($row['ciudad'] ?? '');
+            $address = trim($row['direccion'] ?? '');
 
             // Si no hay datos de empresa, intentar con los nombres alternativos
             if (empty($businessName)) {
@@ -60,12 +63,24 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
             if (empty($generalEmail)) {
                 $generalEmail = trim($row['general_email'] ?? '');
             }
+            if (empty($countryName)) {
+                $countryName = trim($row['country_name'] ?? $row['pais_cliente'] ?? '');
+            }
+            if (empty($cityName)) {
+                $cityName = trim($row['city_name'] ?? $row['ciudad_cliente'] ?? '');
+            }
+            if (empty($address)) {
+                $address = trim($row['address'] ?? $row['direccion_cliente'] ?? '');
+            }
 
             $grouped[$agencia][] = [
                 'business_name' => $businessName,
-                'tax_code' => $taxCode,
+                'tax_code'      => $taxCode,
                 'general_phone' => $generalPhone,
                 'general_email' => $generalEmail,
+                'country_name'  => $countryName,
+                'city_name'     => $cityName,
+                'address'       => $address,
                 'row' => $row
             ];
         }
@@ -82,12 +97,15 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                         'tax_code'      => $primera['tax_code'] ?: null,
                         'general_phone' => $primera['general_phone'] ?: null,
                         'general_email' => $primera['general_email'] ?: null,
+                        'country_name'  => $primera['country_name'] ?: null,
+                        'city_name'     => $primera['city_name'] ?: null,
+                        'address'       => $primera['address'] ?: null,
                     ]
                 );
 
                 // Si el cliente ya existía, actualizar campos vacíos
                 $clientUpdates = [];
-                foreach (['business_name', 'tax_code', 'general_phone', 'general_email'] as $field) {
+                foreach (['business_name', 'tax_code', 'general_phone', 'general_email', 'country_name', 'city_name', 'address'] as $field) {
                     if (empty($client->$field) && !empty($primera[$field])) {
                         $clientUpdates[$field] = $primera[$field];
                     }
@@ -103,7 +121,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                     $slots = [
                         1 => [
                             'nombre' => trim($row['contacto_1'] ?? ''),
-                            'last_names' => trim($row['apellidos_1'] ?? ''),  // ← NUEVO
+                            'last_names' => trim($row['apellidos_1'] ?? ''),
                             'cargo'  => trim($row['cargo_1'] ?? ''),
                             'email'  => trim($row['email_1'] ?? ''),
                             'tel1'   => trim($row['telefono_1'] ?? ''),
@@ -111,7 +129,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                         ],
                         2 => [
                             'nombre' => trim($row['contacto_2'] ?? ''),
-                            'last_names' => trim($row['apellidos_2'] ?? ''),  // ← NUEVO
+                            'last_names' => trim($row['apellidos_2'] ?? ''),
                             'cargo'  => trim($row['cargo_2'] ?? ''),
                             'email'  => trim($row['email_2'] ?? ''),
                             'tel1'   => trim($row['telefono_1_2'] ?? ''),
@@ -119,7 +137,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                         ],
                         3 => [
                             'nombre' => trim($row['contacto_3'] ?? ''),
-                            'last_names' => trim($row['apellidos_3'] ?? ''),  // ← NUEVO
+                            'last_names' => trim($row['apellidos_3'] ?? ''),
                             'cargo'  => trim($row['cargo_3'] ?? ''),
                             'email'  => trim($row['email_3'] ?? ''),
                             'tel1'   => trim($row['telefono_1_3'] ?? ''),
@@ -141,7 +159,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
                         $client->contacts()->create([
                             'name'          => $data['nombre'],
-                            'last_names'    => $data['last_names'] ?: null,  // ← NUEVO
+                            'last_names'    => $data['last_names'] ?: null,
                             'qualification' => $data['cargo'] ?: null,
                             'email'         => $email,
                             'first_phone'   => $data['tel1'] ?: null,

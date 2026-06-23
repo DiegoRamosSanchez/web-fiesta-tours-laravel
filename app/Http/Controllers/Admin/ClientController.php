@@ -34,6 +34,9 @@ class ClientController extends Controller
             'tax_code'                      => 'nullable|string|max:20',
             'general_phone'                 => 'nullable|string|max:20',
             'general_email'                 => 'nullable|email|max:120',
+            'country_name'                  => 'nullable|string|max:100',
+            'city_name'                     => 'nullable|string|max:150',
+            'address'                       => 'nullable|string|max:255',
             'contacts.*.name'               => 'required|string|max:100',
             'contacts.*.last_names'         => 'nullable|string|max:100',
             'contacts.*.qualification'      => 'nullable|string|max:30',
@@ -43,11 +46,14 @@ class ClientController extends Controller
         ]);
 
         $client = Client::create([
-            'name_client'    => $request->name_client,
-            'business_name'  => $request->business_name,
-            'tax_code'       => $request->tax_code,
-            'general_phone'  => $request->general_phone,
-            'general_email'  => $request->general_email,
+            'name_client'   => $request->name_client,
+            'business_name' => $request->business_name,
+            'tax_code'      => $request->tax_code,
+            'general_phone' => $request->general_phone,
+            'general_email' => $request->general_email,
+            'country_name'  => $request->country_name,
+            'city_name'     => $request->city_name,
+            'address'       => $request->address,
         ]);
 
         foreach ($request->input('contacts', []) as $i => $data) {
@@ -76,36 +82,42 @@ class ClientController extends Controller
     public function update(Request $request, Client $client)
     {
         $request->validate([
-            'name_client'                    => 'required|string|max:120',
-            'business_name'                  => 'nullable|string|max:150',
-            'tax_code'                       => 'nullable|string|max:20',
-            'general_phone'                  => 'nullable|string|max:20',
-            'general_email'                  => 'nullable|email|max:120',
-            'contacts.*.id'                  => 'nullable|integer',
-            'contacts.*.name'                => 'required|string|max:100',
-            'contacts.*.last_names'          => 'nullable|string|max:100',
-            'contacts.*.qualification'       => 'nullable|string|max:30',
-            'contacts.*.email'               => 'nullable|email|max:80',
-            'contacts.*.first_phone'         => 'nullable|string|max:20',
-            'contacts.*.second_phone'        => 'nullable|string|max:20',
-            'contacts.*.es_principal'        => 'nullable|boolean',
-            'new_contacts.*.name'            => 'nullable|string|max:100',
-            'new_contacts.*.last_names'      => 'nullable|string|max:100',
-            'new_contacts.*.qualification'   => 'nullable|string|max:30',
-            'new_contacts.*.email'           => 'nullable|email|max:80',
-            'new_contacts.*.first_phone'     => 'nullable|string|max:20',
-            'new_contacts.*.second_phone'    => 'nullable|string|max:20',
-            'delete_contacts'                => 'nullable|array',
-            'delete_contacts.*'              => 'integer|exists:contacts,id_contacts',
+            'name_client'                     => 'required|string|max:120',
+            'business_name'                   => 'nullable|string|max:150',
+            'tax_code'                        => 'nullable|string|max:20',
+            'general_phone'                   => 'nullable|string|max:20',
+            'general_email'                   => 'nullable|email|max:120',
+            'country_name'                    => 'nullable|string|max:100',
+            'city_name'                       => 'nullable|string|max:150',
+            'address'                         => 'nullable|string|max:255',
+            'contacts.*.id'                   => 'nullable|integer',
+            'contacts.*.name'                 => 'required|string|max:100',
+            'contacts.*.last_names'           => 'nullable|string|max:100',
+            'contacts.*.qualification'        => 'nullable|string|max:30',
+            'contacts.*.email'                => 'nullable|email|max:80',
+            'contacts.*.first_phone'          => 'nullable|string|max:20',
+            'contacts.*.second_phone'         => 'nullable|string|max:20',
+            'contacts.*.es_principal'         => 'nullable|boolean',
+            'new_contacts.*.name'             => 'nullable|string|max:100',
+            'new_contacts.*.last_names'       => 'nullable|string|max:100',
+            'new_contacts.*.qualification'    => 'nullable|string|max:30',
+            'new_contacts.*.email'            => 'nullable|email|max:80',
+            'new_contacts.*.first_phone'      => 'nullable|string|max:20',
+            'new_contacts.*.second_phone'     => 'nullable|string|max:20',
+            'delete_contacts'                 => 'nullable|array',
+            'delete_contacts.*'               => 'integer|exists:contacts,id_contacts',
         ]);
 
         // Actualizar datos del cliente
         $client->update([
-            'name_client'    => $request->name_client,
-            'business_name'  => $request->business_name,
-            'tax_code'       => $request->tax_code,
-            'general_phone'  => $request->general_phone,
-            'general_email'  => $request->general_email,
+            'name_client'   => $request->name_client,
+            'business_name' => $request->business_name,
+            'tax_code'      => $request->tax_code,
+            'general_phone' => $request->general_phone,
+            'general_email' => $request->general_email,
+            'country_name'  => $request->country_name,
+            'city_name'     => $request->city_name,
+            'address'       => $request->address,
         ]);
 
         // Eliminar contactos marcados

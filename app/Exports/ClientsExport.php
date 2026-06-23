@@ -21,6 +21,10 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
     const GOLD2   = 'E8C97A';
     const ROW_ALT = 'F8F5EE';
 
+    // 12 columnas fijas: ID, Agencia, Razón Social, Código Tributario, Teléfono General,
+    // Email General, País, Ciudad, Dirección, Estado, Fecha Registro, Total Contactos
+    const FIXED_COLUMNS = 12;
+
     private int $totalRows;
     private int $maxContacts;
 
@@ -55,6 +59,9 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
                 'tax_code'       => $client->tax_code       ?? '',
                 'general_phone'  => $client->general_phone  ?? '',
                 'general_email'  => $client->general_email  ?? '',
+                'country_name'   => $client->country_name   ?? '',
+                'city_name'      => $client->city_name      ?? '',
+                'address'        => $client->address        ?? '',
                 'estado'         => 'Activo',
                 'fecha_registro' => $client->created_at->format('d/m/Y'),
                 'total_contactos'=> $client->contacts_count,
@@ -62,19 +69,18 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
 
             foreach ($client->contacts as $idx => $contact) {
                 $n = $idx + 1;
-                // ─── NOMBRE COMPLETO (name + last_names) ───
-                $row["contacto_{$n}__nombre"] = $contact->name ?? '';
-                $row["contacto_{$n}_last_names"] = $contact->last_names ?? '';  // ← NUEVO
-                $row["contacto_{$n}_cargo"]    = $contact->qualification ?? '';
-                $row["contacto_{$n}_email"]    = $contact->email         ?? '';
-                $row["contacto_{$n}_telefono"] = $contact->first_phone   ?? '';
-                $row["contacto_{$n}_telefono2"]= $contact->second_phone  ?? '';
+                $row["contacto_{$n}__nombre"]   = $contact->name ?? '';
+                $row["contacto_{$n}_last_names"]= $contact->last_names ?? '';
+                $row["contacto_{$n}_cargo"]     = $contact->qualification ?? '';
+                $row["contacto_{$n}_email"]     = $contact->email         ?? '';
+                $row["contacto_{$n}_telefono"]  = $contact->first_phone   ?? '';
+                $row["contacto_{$n}_telefono2"] = $contact->second_phone  ?? '';
             }
 
             // Rellenar columnas vacías
             for ($i = $client->contacts_count + 1; $i <= $this->maxContacts; $i++) {
                 $row["contacto_{$i}_nombre"]    = '';
-                $row["contacto_{$i}_last_names"] = '';  // ← NUEVO
+                $row["contacto_{$i}_last_names"]= '';
                 $row["contacto_{$i}_cargo"]     = '';
                 $row["contacto_{$i}_email"]     = '';
                 $row["contacto_{$i}_telefono"]  = '';
@@ -94,6 +100,9 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
             'Código Tributario',
             'Teléfono General',
             'Email General',
+            'País',
+            'Ciudad',
+            'Dirección',
             'Estado',
             'Fecha Registro',
             'Total Contactos',
@@ -101,7 +110,7 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
 
         for ($i = 1; $i <= $this->maxContacts; $i++) {
             $headings[] = "Contacto {$i}";
-            $headings[] = "Apellidos {$i}";      // ← NUEVO
+            $headings[] = "Apellidos {$i}";
             $headings[] = "Cargo {$i}";
             $headings[] = "Email {$i}";
             $headings[] = "Teléfono {$i}";
@@ -122,8 +131,8 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // 9 columnas fijas + 6 por contacto (ahora incluye last_names)
-                $totalColumns = 9 + ($this->maxContacts * 6);
+                // 12 columnas fijas + 6 por contacto
+                $totalColumns = self::FIXED_COLUMNS + ($this->maxContacts * 6);
                 $lastColumn   = $this->getColumnLetter($totalColumns);
                 $lastRow      = $this->totalRows + 4;
 
@@ -208,9 +217,12 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                 ]);
 
+                // Anchos de columnas fijas (12 columnas: ID, Agencia, Razón Social, Cód.Tributario,
+                // Tel.General, Email General, País, Ciudad, Dirección, Estado, Fecha, Total Contactos)
                 $fixedWidths = [
-                    'A' => 6, 'B' => 25, 'C' => 22, 'D' => 16,
-                    'E' => 16, 'F' => 22, 'G' => 10, 'H' => 14, 'I' => 10,
+                    'A' => 6,  'B' => 25, 'C' => 22, 'D' => 16,
+                    'E' => 16, 'F' => 22, 'G' => 16, 'H' => 18,
+                    'I' => 30, 'J' => 10, 'K' => 14, 'L' => 10,
                 ];
                 foreach ($fixedWidths as $col => $width) {
                     $sheet->getColumnDimension($col)->setWidth($width);
@@ -218,7 +230,7 @@ class ClientsExport implements FromCollection, WithHeadings, WithStyles, ShouldA
 
                 // 6 columnas por contacto: Nombre, Apellidos, Cargo, Email, Teléfono, Teléfono 2
                 $contactColWidths = [20, 20, 14, 22, 14, 14];
-                $startColIndex = 10;
+                $startColIndex = self::FIXED_COLUMNS + 1;
                 for ($i = 0; $i < $this->maxContacts; $i++) {
                     foreach ($contactColWidths as $j => $w) {
                         $colLetter = $this->getColumnLetter($startColIndex + ($i * 6) + $j);
