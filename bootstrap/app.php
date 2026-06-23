@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
 
+        $middleware->appendToGroup('web', \App\Http\Middleware\PreventBackHistory::class);
+
         // Para funcionamiento en redirecciones de puertos
         # $middleware->trustProxies(at: '*');
     })
