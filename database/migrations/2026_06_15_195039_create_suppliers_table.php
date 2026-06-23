@@ -17,6 +17,10 @@ return new class extends Migration
             $table->foreignId('id_categories_suppliers')->nullable()->constrained('categories_suppliers', 'id_categories_suppliers')->onDelete('cascade');
 
             $table->string('supplier_name', 100);
+            $table->string('business_name', 150)->nullable();
+            $table->string('tax_code', 20)->nullable();
+            $table->string('general_phone', 20)->nullable();
+            $table->string('general_email', 120)->nullable();
             $table->timestamps();
         });
     }

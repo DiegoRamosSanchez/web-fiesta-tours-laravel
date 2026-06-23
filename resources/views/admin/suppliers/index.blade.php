@@ -27,11 +27,16 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Proveedor</th>
-                    <th>Destino</th>
-                    <th>Categoría</th>
-                    <th>Registro</th>
-                    <th style="text-align:center">Acciones</th>
+                    <th>PROVEEDORES</th>
+                    <th>RAZÓN SOCIAL</th>
+                    <th>CÓDIGO TRIBUTARIO</th>
+                    <th>EMAIL</th>
+                    <th>TELÉFONO</th>
+                    <th>DESTINO</th>
+                    <th>CATEGORIA</th>
+                    <th>CUENTAS BANCARIAS</th>
+                    <th>REGISTRO</th>
+                    <th style="text-align:center">ACCIONES</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,6 +50,37 @@
                             </div>
                             <span style="font-weight:600">{{ $s->supplier_name }}</span>
                         </div>
+                    </td>
+                    <td>
+                        @if($s->business_name)
+                            <span style="font-weight:500;font-size:13px">{{ $s->business_name }}</span>
+                        @else
+                            <span style="color:#cbd5e1;font-size:12px">—</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($s->tax_code)
+                            <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:12px">
+                                <i class="ti ti-receipt" style="font-size:10px"></i>
+                                {{ $s->tax_code }}
+                            </span>
+                        @else
+                            <span style="color:#cbd5e1;font-size:12px">—</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($s->general_email)
+                            <span style="font-size:12px;color:#0f172a">{{ $s->general_email }}</span>
+                        @else
+                            <span style="color:#cbd5e1;font-size:12px">—</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($s->general_phone)
+                            <span style="font-size:12px;color:#0f172a">{{ $s->general_phone }}</span>
+                        @else
+                            <span style="color:#cbd5e1;font-size:12px">—</span>
+                        @endif
                     </td>
                     <td>
                         @if($s->destination)
@@ -62,6 +98,31 @@
                                 <i class="ti ti-tag" style="font-size:10px"></i>
                                 {{ $s->category->category_name }}
                             </span>
+                        @else
+                            <span style="color:#cbd5e1;font-size:12px">—</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($s->bankAccounts && $s->bankAccounts->count() > 0)
+                            <div style="display:flex;flex-direction:column;gap:4px">
+                                @foreach($s->bankAccounts as $account)
+                                    <div style="display:flex;align-items:center;gap:4px;font-size:11px;background:#f8fafc;padding:2px 8px;border-radius:4px;border:1px solid #e2e8f0">
+                                        <span style="font-weight:600;color:#0f172a">{{ $account->bank->bank_name ?? 'N/A' }}</span>
+                                        <span style="color:#94a3b8">|</span>
+                                        <span style="color:#475569">{{ $account->account_number }}</span>
+                                        @if($account->currency)
+                                            <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px;padding:0 6px">
+                                                {{ $account->currency }}
+                                            </span>
+                                        @endif
+                                        @if($account->cci)
+                                            <span style="color:#94a3b8;font-size:9px" title="CCI">
+                                                <i class="ti ti-key" style="font-size:9px"></i>
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         @else
                             <span style="color:#cbd5e1;font-size:12px">—</span>
                         @endif
