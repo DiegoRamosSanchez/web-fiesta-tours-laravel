@@ -25,7 +25,10 @@ function markDelete(id, btn) {
         row.classList.remove('is-deleted');
         btn.classList.remove('active');
         btn.title = 'Eliminar contacto';
-        row.querySelectorAll('input').forEach(i => i.disabled = false);
+        row.querySelectorAll('input[data-original-name]').forEach(i => {
+            i.name = i.dataset.originalName;
+            i.disabled = false;
+        });
     } else {
         if (!confirm('¿Eliminar este contacto al guardar?')) return;
         toDelete.add(id);
@@ -33,7 +36,8 @@ function markDelete(id, btn) {
         btn.classList.add('active');
         btn.title = 'Clic para deshacer';
         row.querySelectorAll('input').forEach(i => {
-            if (i.type !== 'hidden') i.disabled = true;
+            if (!i.dataset.originalName) i.dataset.originalName = i.name;
+            i.removeAttribute('name'); // <-- ya no se envía, en vez de disabled
         });
     }
     syncDeleteInputs();
