@@ -12,6 +12,10 @@ use App\Http\Controllers\Admin\CategorySupplierController;
 use App\Http\Controllers\Admin\SupplierController;
 use Illuminate\Support\Facades\Route;
 
+
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationUserCreate;
+
 Route::get('/', fn() => redirect()->route('login'));
 
 Route::middleware('guest')->group(function () {
@@ -92,8 +96,16 @@ Route::middleware('auth')->group(function () {
         Route::put('/{supplier}',         [SupplierController::class, 'update'])->name('update');
         Route::delete('/{supplier}',      [SupplierController::class, 'destroy'])->name('destroy');
         Route::get('/{supplier}/pdf',     [SupplierController::class, 'exportPdf'])->name('pdf');
+        
 
+        Route::get('/exportar/excel',     [SupplierController::class, 'exportExcel'])->name('export.excel');
+        
+        // ── RUTAS DE EXCEL PARA PROVEEDORES (dentro del grupo) ──
+        Route::get('/importar',           [SupplierController::class, 'importView'])->name('import.view');
+        Route::post('/importar',          [SupplierController::class, 'import'])->name('import');
+        Route::get('/plantilla',          [SupplierController::class, 'downloadTemplate'])->name('template');
     });
+
 
     // ── SOLO ADMIN: gestión de usuarios del sistema ──
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
@@ -106,5 +118,9 @@ Route::middleware('auth')->group(function () {
         Route::get('suppliers/{supplier}/pdf', [SupplierController::class, 'exportPdf'])
     ->name('admin.suppliers.pdf');
 
+    Route::get('/testmail', function () {
+        Mail::to("luistasayco3030@gmail.com")->send(new NotificationUserCreate());
+        
+    });
 
 });

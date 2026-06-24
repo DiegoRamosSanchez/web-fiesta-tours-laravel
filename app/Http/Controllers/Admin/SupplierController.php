@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\SuppliersExport;
 use App\Http\Controllers\Controller;
+use App\Imports\SuppliersImport;
 use App\Models\Bank;
 use App\Models\BankAccount;
 use App\Models\CategorySupplier;
@@ -12,6 +14,7 @@ use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SupplierController extends Controller
 {
@@ -186,28 +189,28 @@ class SupplierController extends Controller
     }
 
     public function edit(Supplier $supplier)
-{
-    $destinations = Destination::orderBy('destination_name')->get();
-    $categories = CategorySupplier::orderBy('category_name')->get();
-    $banks = Bank::orderBy('bank_name')->get();
-    $supplier->load('bankAccounts.bank');
+    {
+        $destinations = Destination::orderBy('destination_name')->get();
+        $categories = CategorySupplier::orderBy('category_name')->get();
+        $banks = Bank::orderBy('bank_name')->get();
+        $supplier->load('bankAccounts.bank');
 
-    // Preparar datos de contactos para JavaScript
-    $contactsData = $supplier->contacts->map(function($c) {
-        return [
-            'id' => $c->id_contacts,
-            'name' => $c->name,
-            'lastnames' => $c->last_names,
-            'email' => $c->email,
-            'qualification' => $c->qualification,
-            'phone1' => $c->first_phone,
-            'phone2' => $c->second_phone,
-            'principal' => (bool)$c->es_principal,
-        ];
-    })->values();
+        // Preparar datos de contactos para JavaScript
+        $contactsData = $supplier->contacts->map(function ($c) {
+            return [
+                'id' => $c->id_contacts,
+                'name' => $c->name,
+                'lastnames' => $c->last_names,
+                'email' => $c->email,
+                'qualification' => $c->qualification,
+                'phone1' => $c->first_phone,
+                'phone2' => $c->second_phone,
+                'principal' => (bool) $c->es_principal,
+            ];
+        })->values();
 
-    return view('admin.suppliers.edit', compact('supplier', 'destinations', 'categories', 'banks', 'contactsData'));
-}
+        return view('admin.suppliers.edit', compact('supplier', 'destinations', 'categories', 'banks', 'contactsData'));
+    }
 
     public function update(Request $request, Supplier $supplier)
     {
@@ -235,8 +238,7 @@ class SupplierController extends Controller
             'new_bank_currency' => 'nullable|string|max:40',
             'delete_bank_accounts' => 'nullable|array',
             'delete_bank_accounts.*' => 'exists:bank_account,id_bank_account',
-            
-            
+
             // Validaciones para contactos
             'contacts' => 'nullable|array',
             'contacts.*.id' => 'nullable|integer',
@@ -450,5 +452,110 @@ class SupplierController extends Controller
         $supplier->load('bankAccounts.bank');
 
         return view('admin.suppliers.bank_accounts', compact('supplier'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        if ($request->has('supplier_id') && ! empty($request->supplier_id)) {
+            $supplier = Supplier::with(['destination', 'category', 'contacts', 'bankAccounts.bank'])
+                ->find($request->supplier_id);
+            if (! $supplier) {
+                return back()->with('error', 'Proveedor no encontrado');
+            }
+            $suppliers = collect([$supplier]);
+            $filename = 'proveedor_'.str($supplier->supplier_name)->slug().'_'.now()->format('Ymd').'.xlsx';
+        } else {
+            $suppliers = Supplier::with(['destination', 'category', 'contacts', 'bankAccounts.bank'])
+                ->orderBy('supplier_name')
+                ->get();
+            $filename = 'proveedores_'.now()->format('Ymd').'.xlsx';
+        }
+
+        return Excel::download(new SuppliersExport($suppliers), $filename);
+    }
+
+    public function importView()
+    {
+        return view('admin.suppliers.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'archivo' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ], [
+            'archivo.required' => 'Debes seleccionar un archivo.',
+            'archivo.mimes' => 'Solo se aceptan archivos .xlsx, .xls o .csv.',
+            'archivo.max' => 'El archivo no puede superar los 5MB.',
+        ]);
+
+        $import = new SuppliersImport;
+
+        try {
+            Excel::import($import, $request->file('archivo'));
+        } catch (\Exception $e) {
+            return back()->withErrors(['archivo' => 'Error al procesar el archivo: '.$e->getMessage()]);
+        }
+
+        $msg = "Importación completada: {$import->imported} proveedor(es) procesado(s).";
+        if ($import->skipped > 0) {
+            $msg .= " {$import->skipped} fila(s) omitida(s).";
+        }
+        if (! empty($import->errors)) {
+            $msg .= ' Con errores: '.implode(' | ', $import->errors);
+        }
+
+        return redirect()->route('admin.suppliers.index')->with('success', $msg);
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="plantilla_proveedores.csv"',
+        ];
+
+        $columns = [
+            'supplier_name',
+            'business_name',
+            'tax_code',
+            'general_phone',
+            'general_email',
+            'country_name',
+            'city_name',
+            'address',
+            'category_name',
+            'contact_name',
+            'contact_last_names',
+            'contact_email',
+            'contact_qualification',
+            'contact_first_phone',
+            'contact_second_phone',
+        ];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            fputcsv($file, [
+                'Proveedor Ejemplo',
+                'Razón Social Ejemplo',
+                '20123456789',
+                '987654321',
+                'contacto@ejemplo.com',
+                'Perú',
+                'Lima',
+                'Av. Ejemplo 123',
+                'Hoteles',
+                'Juan',
+                'Pérez',
+                'juan@ejemplo.com',
+                'Gerente',
+                '987654321',
+                '987654322',
+            ]);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -8,11 +8,23 @@
         <div class="page-sub">Gestiona todos los proveedores del sistema</div>
     </div>
     <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-        <a href="#" id="btn-export-pdf-suppliers" 
+        <a href="{{ route('admin.suppliers.import.view') }}"
+           style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
+                  background:#fff;border:1px solid #e2e8f0;border-radius:8px;
+                  font-size:13px;font-weight:600;color:#6366f1;text-decoration:none">
+            <i class="ti ti-file-upload" style="font-size:16px"></i> Importar
+        </a>
+        <a href="#" id="btn-export-pdf-suppliers"
            style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
                   background:#fff;border:1px solid #e2e8f0;border-radius:8px;
                   font-size:13px;font-weight:600;color:#ef4444;text-decoration:none">
             <i class="ti ti-file-type-pdf" style="font-size:16px"></i> PDF
+        </a>
+        <a href="#" id="btn-export-excel-suppliers"
+           style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
+                  background:#fff;border:1px solid #e2e8f0;border-radius:8px;
+                  font-size:13px;font-weight:600;color:#16a34a;text-decoration:none">
+            <i class="ti ti-file-type-xls" style="font-size:16px"></i> Excel
         </a>
         <a href="{{ route('admin.suppliers.create') }}" class="btn btn-primary">
             <i class="ti ti-plus" style="font-size:15px"></i> Nuevo proveedor
@@ -163,14 +175,13 @@
             </tbody>
         </table>
         
-        {{-- ═══════ PAGINADOR IGUAL AL DE CLIENTES ═══════ --}}
+        {{-- ═══════ PAGINADOR ═══════ --}}
         <div class="table-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;padding:1rem 1.5rem;border-top:1px solid #e2e8f0">
             <span id="footer-count" style="font-size:13px;color:#64748b">
                 Mostrando {{ $suppliers->firstItem() }}–{{ $suppliers->lastItem() }} de {{ $suppliers->total() }} proveedor(es)
             </span>
             
             <div style="display:flex;align-items:center;gap:.4rem">
-                {{-- Anterior --}}
                 @if($suppliers->onFirstPage())
                     <span style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
                                 font-size:12px;color:#cbd5e1;cursor:default">
@@ -187,7 +198,6 @@
                     </a>
                 @endif
 
-                {{-- Números de página --}}
                 @foreach($suppliers->getUrlRange(1, $suppliers->lastPage()) as $page => $url)
                     @if($page == $suppliers->currentPage())
                         <span style="padding:.35rem .65rem;border:1px solid #6366f1;border-radius:7px;
@@ -209,7 +219,6 @@
                     @endif
                 @endforeach
 
-                {{-- Siguiente --}}
                 @if($suppliers->hasMorePages())
                     <a href="{{ $suppliers->nextPageUrl() }}"
                     style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
@@ -227,7 +236,6 @@
                 @endif
             </div>
             
-            {{-- Filtro activo (opcional) --}}
             @if($search)
                 <span id="footer-filter" style="color:#6366f1;font-size:12px;">
                     Resultados filtrados
@@ -291,15 +299,15 @@
                                 <div style="font-size:14px; color:#1e293b; font-weight:500">{{ $s->general_email ?? '—' }}</div>
                             </div>
                             <div>
-                                <label style="display:block; font-size:11px; font-weight:700; color: #94a3b8; text-transform:uppercase; margin-bottom:4px">Pais</label>
-                                <div style="font-size:14px; color: #1e293b; font-weight:500">{{ $s->country_name ? $s->country_name_data : '—' }}</div>
+                                <label style="display:block; font-size:11px; font-weight:700; color: #94a3b8; text-transform:uppercase; margin-bottom:4px">País</label>
+                                <div style="font-size:14px; color: #1e293b; font-weight:500">{{ $s->country_name ? $s->country_name : '—' }}</div>
                             </div>
-                             <div>
+                            <div>
                                 <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:4px">Ciudad</label>
                                 <div style="font-size:14px; color:#1e293b; font-weight:500">{{ $s->city_name ? $s->city_name : '—' }}</div>
                             </div>
                             <div>
-                                <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:4px">Ciudad</label>
+                                <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:4px">Dirección</label>
                                 <div style="font-size:14px; color:#1e293b; font-weight:500">{{ $s->address ? $s->address : '—' }}</div>
                             </div>
                             <div>
@@ -389,7 +397,7 @@
     @endforeach
 @endif
 
-{{-- ══════════ MODAL EXPORTAR PDF (ESTILO CLIENTES) ══════════ --}}
+{{-- ══════════ MODAL EXPORTAR (PDF Y EXCEL) ══════════ --}}
 <div id="modal-export-suppliers">
     <div class="modal-box">
         <button class="modal-close" onclick="closeExportSuppliersModal()">
@@ -399,18 +407,40 @@
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
             <div style="width:44px;height:44px;background:#f0fdf4;border-radius:50%;
                         display:flex;align-items:center;justify-content:center;font-size:22px">
-                <i class="ti ti-file-export" style="color:#16a34a"></i>
+                <i class="ti ti-file-export" id="export-modal-icon" style="color:#16a34a"></i>
             </div>
             <div>
                 <h2 style="font-size:17px;font-weight:700;color:#0f172a;margin:0">
-                    Exportar <span style="color:#16a34a">PDF</span>
+                    Exportar <span id="export-type-label" style="color:#16a34a">PDF</span>
                 </h2>
                 <p style="font-size:12px;color:#94a3b8;margin:0">Selecciona un proveedor para exportar</p>
             </div>
         </div>
 
-        {{-- Opción: Proveedor específico (estilo clientes) --}}
+
+
+
         <div class="export-by-id-wrapper">
+
+
+        <a href="{{ route('admin.suppliers.export.excel') }}" style="text-decoration:none;">
+        <div class="header">
+                <div class="icon">
+                     <i class="ti ti-file-type-xls" style="font-size:16px"></i>
+                </div>
+                <div style="flex:1">
+                    <div class="title">Todos los Proveedores</div>
+                    <div class="sub">Descargar toda la lista de proveedores</div>
+                </div>
+            </div>
+           
+        </div>
+         </a>
+        {{-- Opción: Proveedor específico --}}
+        <div class="export-by-id-wrapper">
+
+
+
             <div class="header">
                 <div class="icon">
                     <i class="ti ti-truck"></i>
@@ -611,8 +641,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// ══════════ EXPORTAR PDF (ESTILO CLIENTES) ══════════
+// ══════════ EXPORTAR (PDF Y EXCEL) ══════════
 let exportSupplierId = null;
+let exportType = 'pdf';
 
 // Datos de proveedores de la página actual
 const suppliersData = @json($suppliers->map(fn($s) => ['id' => $s->id_supplier, 'name' => $s->supplier_name, 'tax_code' => $s->tax_code]));
@@ -741,8 +772,24 @@ const suppliersData = @json($suppliers->map(fn($s) => ['id' => $s->id_supplier, 
     });
 })();
 
-function openExportSuppliersModal() {
+function openExportSuppliersModal(type = 'pdf') {
+    exportType = type;
     document.getElementById('modal-export-suppliers').classList.add('show');
+    
+    // Cambiar título según tipo
+    const label = document.getElementById('export-type-label');
+    const icon = document.getElementById('export-modal-icon');
+    
+    if (type === 'excel') {
+        label.textContent = 'Excel';
+        label.style.color = '#16a34a';
+        icon.style.color = '#16a34a';
+    } else {
+        label.textContent = 'PDF';
+        label.style.color = '#ef4444';
+        icon.style.color = '#ef4444';
+    }
+    
     const input = document.getElementById('export-supplier-search');
     const clear = document.getElementById('export-supplier-clear');
     const list  = document.getElementById('export-supplier-list');
@@ -766,14 +813,26 @@ function exportSelectedSupplier() {
         alert('Por favor, selecciona un proveedor primero.');
         return;
     }
-    window.location.href = `/proveedores/${exportSupplierId}/pdf`;
+    
+    // Redirigir según el tipo de exportación
+    if (exportType === 'excel') {
+        window.location.href = `/proveedores/exportar/excel?supplier_id=${exportSupplierId}`;
+    } else {
+        window.location.href = `/proveedores/${exportSupplierId}/pdf`;
+    }
     closeExportSuppliersModal();
 }
 
-// Botón header
+// Botón header PDF
 document.getElementById('btn-export-pdf-suppliers').addEventListener('click', function(e) {
     e.preventDefault();
-    openExportSuppliersModal();
+    openExportSuppliersModal('pdf');
+});
+
+// Botón header Excel
+document.getElementById('btn-export-excel-suppliers').addEventListener('click', function(e) {
+    e.preventDefault();
+    openExportSuppliersModal('excel');
 });
 
 // Cerrar con ESC
