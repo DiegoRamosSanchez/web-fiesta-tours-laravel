@@ -194,20 +194,30 @@ document.getElementById('form-client').addEventListener('submit', function(e) {
     document.querySelectorAll('input[name^="contacts"]').forEach(el => el.remove());
 
     contactos.forEach((contacto, index) => {
-        const fields = ['name', 'lastnames', 'email', 'qualification', 'phone1', 'phone2'];
-        fields.forEach(field => {
-            if (contacto[field]) {
+        // Mapeo: clave en el objeto JS -> nombre de campo que espera el controller
+        const fieldMap = {
+            name: 'name',
+            lastnames: 'last_names',
+            email: 'email',
+            qualification: 'qualification',
+            phone1: 'first_phone',
+            phone2: 'second_phone'
+        };
+
+        Object.entries(fieldMap).forEach(([jsKey, backendKey]) => {
+            if (contacto[jsKey]) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
-                input.name = `contacts[${index}][${field}]`;
-                input.value = contacto[field];
+                input.name = `contacts[${index}][${backendKey}]`;
+                input.value = contacto[jsKey];
                 this.appendChild(input);
             }
         });
+
         if (contacto.principal) {
             const principalInput = document.createElement('input');
             principalInput.type = 'hidden';
-            principalInput.name = `contacts[${index}][principal]`;
+            principalInput.name = `contacts[${index}][es_principal]`;
             principalInput.value = '1';
             this.appendChild(principalInput);
         }
