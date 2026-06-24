@@ -424,7 +424,26 @@ public function update(Request $request, Supplier $supplier)
             return back()->with('error', 'Error al eliminar el proveedor: '.$e->getMessage());
         }
     }
+public function exportPdfAll()
+{
+    $suppliers = Supplier::with(['destination', 'category', 'contacts', 'bankAccounts.bank'])
+        ->orderBy('supplier_name')
+        ->get();
+    
+    $pdf = Pdf::loadView('admin.suppliers.pdf', compact('suppliers'))
+        ->setPaper('a4', 'portrait')
+        ->setOptions([
+            'defaultFont' => 'Arial',
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'dpi' => 96,
+            'isPhpEnabled' => true,
+            'encoding' => 'UTF-8',
+        ]);
 
+    $filename = 'proveedores_' . now()->format('Ymd') . '.pdf';
+    return $pdf->stream($filename);
+}
     public function exportPdf(Request $request, ?Supplier $supplier = null)
     {
         // Si se pasa un ID por query string (para el modal)

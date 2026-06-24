@@ -413,34 +413,24 @@
                 <h2 style="font-size:17px;font-weight:700;color:#0f172a;margin:0">
                     Exportar <span id="export-type-label" style="color:#16a34a">PDF</span>
                 </h2>
-                <p style="font-size:12px;color:#94a3b8;margin:0">Selecciona un proveedor para exportar</p>
+                <p style="font-size:12px;color:#94a3b8;margin:0">Selecciona qué datos quieres exportar</p>
             </div>
         </div>
 
-
-
-
-        <div class="export-by-id-wrapper">
-
-
-        <a href="{{ route('admin.suppliers.export.excel') }}" style="text-decoration:none;">
-        <div class="header">
-                <div class="icon">
-                     <i class="ti ti-file-type-xls" style="font-size:16px"></i>
-                </div>
-                <div style="flex:1">
-                    <div class="title">Todos los Proveedores</div>
-                    <div class="sub">Descargar toda la lista de proveedores</div>
-                </div>
+        {{-- Opción 1: Todos los proveedores (PDF y Excel) --}}
+        <div class="export-option" onclick="exportAllSuppliers()">
+            <div class="icon green">
+                <i class="ti ti-list"></i>
             </div>
-           
+            <div style="flex:1">
+                <div class="title">Todos los proveedores</div>
+                <div class="sub">Exporta el listado completo de proveedores</div>
+            </div>
+            <i class="ti ti-chevron-right arrow"></i>
         </div>
-         </a>
-        {{-- Opción: Proveedor específico --}}
+
+        {{-- Opción 2: Proveedor específico --}}
         <div class="export-by-id-wrapper">
-
-
-
             <div class="header">
                 <div class="icon">
                     <i class="ti ti-truck"></i>
@@ -574,6 +564,37 @@
     margin-top: .4rem;
 }
 .btn-cancel-export:hover { background: #e2e8f0; }
+
+.export-option {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: .8rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.export-option:hover {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+.export-option .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.export-option .icon.green { background: #f0fdf4; color: #16a34a; }
+.export-option .icon.blue { background: #eff6ff; color: #3b82f6; }
+.export-option .title { font-size: 14px; font-weight: 600; color: #0f172a; }
+.export-option .sub { font-size: 12px; color: #94a3b8; }
+.export-option .arrow { color: #94a3b8; font-size: 18px; margin-left: auto; }
 </style>
 
 <script>
@@ -645,9 +666,97 @@ document.addEventListener('DOMContentLoaded', function () {
 let exportSupplierId = null;
 let exportType = 'pdf';
 
-// Datos de proveedores de la página actual
+// Rutas nombradas desde Laravel
+const EXPORT_PDF_ALL = '{{ route("admin.suppliers.export.pdf.all") }}';
+const EXPORT_EXCEL_ALL = '{{ route("admin.suppliers.export.excel") }}';
+const EXPORT_PDF_SINGLE = '{{ route("admin.suppliers.pdf", ["supplier" => "__ID__"]) }}';
+const EXPORT_EXCEL_SINGLE = '{{ route("admin.suppliers.export.excel") }}';
+
+// Datos de proveedores
 const suppliersData = @json($suppliers->map(fn($s) => ['id' => $s->id_supplier, 'name' => $s->supplier_name, 'tax_code' => $s->tax_code]));
 
+// ── FUNCIONES DE EXPORTACIÓN ──
+function exportAllSuppliers() {
+    const url = exportType === 'excel' ? EXPORT_EXCEL_ALL : EXPORT_PDF_ALL;
+    window.location.href = url;
+    closeExportSuppliersModal();
+}
+
+function exportSelectedSupplier() {
+    if (!exportSupplierId) {
+        alert('Por favor, selecciona un proveedor primero.');
+        return;
+    }
+    
+    if (exportType === 'excel') {
+        window.location.href = EXPORT_EXCEL_SINGLE + '?supplier_id=' + exportSupplierId;
+    } else {
+        const url = EXPORT_PDF_SINGLE.replace('__ID__', exportSupplierId);
+        window.location.href = url;
+    }
+    closeExportSuppliersModal();
+}
+
+// ── ABRIR MODAL ──
+function openExportSuppliersModal() {
+    document.getElementById('modal-export-suppliers').classList.add('show');
+    
+    // Cambiar título según tipo
+    const label = document.getElementById('export-type-label');
+    const icon = document.getElementById('export-modal-icon');
+    
+    if (exportType === 'excel') {
+        label.textContent = 'Excel';
+        label.style.color = '#16a34a';
+        icon.style.color = '#16a34a';
+    } else {
+        label.textContent = 'PDF';
+        label.style.color = '#ef4444';
+        icon.style.color = '#ef4444';
+    }
+    
+    const input = document.getElementById('export-supplier-search');
+    const clear = document.getElementById('export-supplier-clear');
+    const list  = document.getElementById('export-supplier-list');
+    const btn   = document.getElementById('export-supplier-btn');
+    input.value           = '';
+    input.style.borderColor = '#e2e8f0';
+    clear.style.display   = 'none';
+    list.style.display    = 'none';
+    btn.disabled          = true;
+    btn.style.opacity     = '.45';
+    btn.style.cursor      = 'default';
+    exportSupplierId      = null;
+}
+
+function closeExportSuppliersModal() {
+    document.getElementById('modal-export-suppliers').classList.remove('show');
+}
+
+// ── BOTONES HEADER ──
+document.getElementById('btn-export-pdf-suppliers').addEventListener('click', function(e) {
+    e.preventDefault();
+    exportType = 'pdf';
+    openExportSuppliersModal();
+});
+
+document.getElementById('btn-export-excel-suppliers').addEventListener('click', function(e) {
+    e.preventDefault();
+    exportType = 'excel';
+    openExportSuppliersModal();
+});
+
+// ── CERRAR CON ESC ──
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeExportSuppliersModal();
+});
+
+// ── CERRAR CLIC FUERA ──
+document.getElementById('modal-export-suppliers').addEventListener('click', function(e) {
+    if (e.target === this) closeExportSuppliersModal();
+});
+
+// ── COMBO BUSCADOR ──
 (function initExportCombo() {
     const input  = document.getElementById('export-supplier-search');
     const list   = document.getElementById('export-supplier-list');
@@ -771,79 +880,5 @@ const suppliersData = @json($suppliers->map(fn($s) => ['id' => $s->id_supplier, 
         }
     });
 })();
-
-function openExportSuppliersModal(type = 'pdf') {
-    exportType = type;
-    document.getElementById('modal-export-suppliers').classList.add('show');
-    
-    // Cambiar título según tipo
-    const label = document.getElementById('export-type-label');
-    const icon = document.getElementById('export-modal-icon');
-    
-    if (type === 'excel') {
-        label.textContent = 'Excel';
-        label.style.color = '#16a34a';
-        icon.style.color = '#16a34a';
-    } else {
-        label.textContent = 'PDF';
-        label.style.color = '#ef4444';
-        icon.style.color = '#ef4444';
-    }
-    
-    const input = document.getElementById('export-supplier-search');
-    const clear = document.getElementById('export-supplier-clear');
-    const list  = document.getElementById('export-supplier-list');
-    const btn   = document.getElementById('export-supplier-btn');
-    input.value           = '';
-    input.style.borderColor = '#e2e8f0';
-    clear.style.display   = 'none';
-    list.style.display    = 'none';
-    btn.disabled          = true;
-    btn.style.opacity     = '.45';
-    btn.style.cursor      = 'default';
-    exportSupplierId      = null;
-}
-
-function closeExportSuppliersModal() {
-    document.getElementById('modal-export-suppliers').classList.remove('show');
-}
-
-function exportSelectedSupplier() {
-    if (!exportSupplierId) {
-        alert('Por favor, selecciona un proveedor primero.');
-        return;
-    }
-    
-    // Redirigir según el tipo de exportación
-    if (exportType === 'excel') {
-        window.location.href = `/proveedores/exportar/excel?supplier_id=${exportSupplierId}`;
-    } else {
-        window.location.href = `/proveedores/${exportSupplierId}/pdf`;
-    }
-    closeExportSuppliersModal();
-}
-
-// Botón header PDF
-document.getElementById('btn-export-pdf-suppliers').addEventListener('click', function(e) {
-    e.preventDefault();
-    openExportSuppliersModal('pdf');
-});
-
-// Botón header Excel
-document.getElementById('btn-export-excel-suppliers').addEventListener('click', function(e) {
-    e.preventDefault();
-    openExportSuppliersModal('excel');
-});
-
-// Cerrar con ESC
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeExportSuppliersModal();
-});
-
-// Cerrar clic fuera del modal
-document.getElementById('modal-export-suppliers').addEventListener('click', function(e) {
-    if (e.target === this) closeExportSuppliersModal();
-});
 </script>
-
 @endsection
