@@ -6,6 +6,8 @@ use App\Models\Contact;
 use App\Models\Client;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ContactsExport;
 
 class ContactController extends Controller
 {
@@ -107,5 +109,18 @@ class ContactController extends Controller
 
         return redirect()->route('admin.contacts.index')
             ->with('success', "{$count} contacto(s) eliminado(s) correctamente.");
+    }
+
+    // ── EXPORTAR EXCEL CON OPCIONES ──────────────────────────
+    public function exportExcel(Request $request)
+    {
+        $clientId = $request->filled('client_id') ? (int) $request->client_id : null;
+
+        $export   = new ContactsExport($clientId);
+        $filename = $clientId
+            ? 'contactos_cliente_' . $clientId . '_' . now()->format('Ymd') . '.xlsx'
+            : 'contactos_' . now()->format('Ymd') . '.xlsx';
+
+        return Excel::download($export, $filename);
     }
 }

@@ -877,12 +877,12 @@ const comboCiudad = crearCombo({
 });
 
 function cargarPaises() {
-    fetch(`/api/geo/paises`)
+    fetch(`{{ url('api/geo/paises') }}`)
         .then(r => r.json())
         .then(paises => {
             const opciones = paises.map(p => ({ value: p.codigo, label: p.nombre }));
             comboPais.setOptions(opciones, 'Escribe para buscar país...');
-            
+
             const countryName = document.getElementById('edit-country-name').value;
             if (countryName) {
                 const pais = paises.find(p => p.nombre === countryName);
@@ -902,12 +902,12 @@ function cargarCiudades(countryCode) {
         comboCiudad.disable('Seleccione país primero');
         return;
     }
-    fetch(`/api/geo/ciudades?country=${countryCode}`)
+    fetch(`{{ url('api/geo/ciudades') }}?country=${countryCode}`)
         .then(r => r.json())
         .then(ciudades => {
             const opciones = ciudades.map(c => ({ value: c.nombre, label: c.nombre, geoNameId: c.geoNameId }));
             comboCiudad.setOptions(opciones, 'Escribe para buscar ciudad...');
-            
+
             const cityName = document.getElementById('edit-ciudad-name').value;
             if (cityName) {
                 const ciudad = ciudades.find(c => c.nombre === cityName);
@@ -1111,7 +1111,7 @@ function addNewContact() {
 
 function markDelete(contactId, button) {
     const row = button.closest('tr');
-    
+
     if (toDeleteContacts.has(contactId)) {
         // Deshacer eliminación
         toDeleteContacts.delete(contactId);
@@ -1157,7 +1157,7 @@ function updateContactCounter() {
     });
     const count = visibleRows.length;
     document.getElementById('contact-counter').textContent = count;
-    
+
     // Mostrar/ocultar mensaje de vacío
     const noNote = document.getElementById('no-contacts-note');
     if (count === 0 && !tbody.querySelector('tr.contact-row')) {

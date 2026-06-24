@@ -1013,7 +1013,7 @@
                 </div>
             </div>
 
-           
+
         </div>
 
         {{-- ══════════ COLUMNA DERECHA ══════════ --}}
@@ -1379,7 +1379,7 @@ const comboCiudad = crearCombo({
 });
 
 function cargarPaises() {
-    fetch(`/api/geo/paises`)
+    fetch(`{{ url('api/geo/paises') }}`)
         .then(r => r.json())
         .then(paises => {
             const opciones = paises.map(p => ({ value: p.codigo, label: p.nombre }));
@@ -1394,7 +1394,7 @@ function cargarCiudades(countryCode) {
         comboCiudad.disable('Seleccione país primero');
         return;
     }
-    fetch(`/api/geo/ciudades?country=${countryCode}`)
+    fetch(`{{ url('api/geo/ciudades') }}?country=${countryCode}`)
         .then(r => r.json())
         .then(ciudades => {
             const opciones = ciudades.map(c => ({ value: c.nombre, label: c.nombre, geoNameId: c.geoNameId }));

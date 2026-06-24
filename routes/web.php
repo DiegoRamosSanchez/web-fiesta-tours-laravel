@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{contact}', [ContactController::class, 'destroy'])->name('destroy');
         // Rutas adicionales para contactos
         Route::delete('/bulk-destroy', [ContactController::class, 'bulkDestroy'])->name('bulk-destroy');
+        Route::get('/export/excel', [ContactController::class, 'exportExcel']) ->name('export.excel');
     });
 
     // ── DESTINOS ──
@@ -98,11 +99,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/{supplier}',         [SupplierController::class, 'update'])->name('update');
         Route::delete('/{supplier}',      [SupplierController::class, 'destroy'])->name('destroy');
         Route::get('/{supplier}/pdf',     [SupplierController::class, 'exportPdf'])->name('pdf');
-        
+
         // ── RUTAS DE EXPORTACIÓN ──
         Route::get('/exportar/pdf',       [SupplierController::class, 'exportPdfAll'])->name('export.pdf.all');  // 👈 ESTA FALTA
         Route::get('/exportar/excel',     [SupplierController::class, 'exportExcel'])->name('export.excel');
-        
+
         // ── RUTAS DE IMPORTACIÓN ──
         Route::get('/importar',           [SupplierController::class, 'importView'])->name('import.view');
         Route::post('/importar',          [SupplierController::class, 'import'])->name('import');

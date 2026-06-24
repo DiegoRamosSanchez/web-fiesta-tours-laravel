@@ -282,7 +282,7 @@ const comboCiudad = crearCombo({
 });
 
 function cargarPaisesEdit() {
-    fetch('/api/geo/paises')
+    fetch(window.geoPaisesUrl)
         .then(r => r.json())
         .then(paises => {
             const opciones = paises.map(p => ({ value: p.codigo, label: p.nombre }));
@@ -309,7 +309,7 @@ function cargarCiudadesEdit(countryCode, selectedCity) {
         return;
     }
 
-    fetch(`/api/geo/ciudades?country=${countryCode}`)
+    fetch(`${window.geoCiudadesUrl}?country=${countryCode}`)
         .then(r => r.json())
         .then(ciudades => {
             const opciones = ciudades.map(c => ({ value: c.nombre, label: c.nombre, geoNameId: c.geoNameId }));

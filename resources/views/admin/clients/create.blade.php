@@ -250,6 +250,10 @@
 </div>
 
 @push('scripts')
+<script>
+    window.geoPaisesUrl = "{{ url('api/geo/paises') }}";
+    window.geoCiudadesUrl = "{{ url('api/geo/ciudades') }}";
+</script>
 <script src="{{ asset('js/clients-create.js') }}"></script>
 @endpush
 @endsection

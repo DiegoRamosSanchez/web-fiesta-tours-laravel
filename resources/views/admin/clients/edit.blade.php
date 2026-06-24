@@ -240,9 +240,10 @@
 
 @push('scripts')
 <script>
-    // Variables para el JS (preselección de país/ciudad)
     window.clientCountryName = @json(old('country_name', $client->country_name));
     window.clientCityName = @json(old('city_name', $client->city_name));
+    window.geoPaisesUrl = "{{ url('api/geo/paises') }}";
+    window.geoCiudadesUrl = "{{ url('api/geo/ciudades') }}";
 </script>
 <script src="{{ asset('js/clients-edit.js') }}"></script>
 @endpush

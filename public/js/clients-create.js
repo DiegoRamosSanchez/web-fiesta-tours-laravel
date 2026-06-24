@@ -364,7 +364,7 @@ const comboCiudad = crearCombo({
 });
 
 function cargarPaises() {
-    fetch(`/api/geo/paises`)
+    fetch(window.geoPaisesUrl)
         .then(r => r.json())
         .then(paises => comboPais.setOptions(paises.map(p => ({ value: p.codigo, label: p.nombre })), 'Escribe para buscar país...'))
         .catch(() => comboPais.setOptions([], 'No se pudo cargar'));
@@ -376,7 +376,7 @@ function cargarCiudades(countryCode) {
         comboCiudad.disable('Seleccione país primero');
         return;
     }
-    fetch(`/api/geo/ciudades?country=${countryCode}`)
+    fetch(`${window.geoCiudadesUrl}?country=${countryCode}`)
         .then(r => r.json())
         .then(ciudades => comboCiudad.setOptions(ciudades.map(c => ({ value: c.nombre, label: c.nombre, geoNameId: c.geoNameId })), 'Escribe para buscar ciudad...'))
         .catch(() => comboCiudad.setOptions([], 'No se pudo cargar'));

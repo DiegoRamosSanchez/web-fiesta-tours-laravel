@@ -141,10 +141,18 @@
         <div class="page-title">Contactos</div>
         <div class="page-sub">Gestiona todos los contactos registrados</div>
     </div>
-    <a href="{{ route('admin.contacts.create') }}" class="btn btn-primary"
-        style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
-        <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Contacto
-    </a>
+    <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+        <a href="{{ route('admin.contacts.export.excel') }}"
+           style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
+                  background:#fff;border:1px solid #e2e8f0;border-radius:8px;
+                  font-size:13px;font-weight:600;color:#16a34a;text-decoration:none">
+            <i class="ti ti-file-type-xls" style="font-size:16px"></i> Excel
+        </a>
+        <a href="{{ route('admin.contacts.create') }}" class="btn btn-primary"
+            style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+            <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Contacto
+        </a>
+    </div>
 </div>
 
 {{-- BARRA DE FILTROS --}}
