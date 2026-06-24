@@ -12,8 +12,13 @@ class ContactController extends Controller
     public function index()
     {
         $contacts = Contact::with(['client', 'supplier'])
-            ->orderBy('created_at', 'desc')->get();
-        return view('admin.contacts.index', compact('contacts'));
+            ->orderBy('id_contacts', 'asc')
+            ->paginate(10); // Cambiado a paginate para la paginación
+
+        // Obtener clientes para el filtro
+        $clients = Client::orderBy('name_client')->get();
+
+        return view('admin.contacts.index', compact('contacts', 'clients'));
     }
 
     public function create()
@@ -88,5 +93,19 @@ class ContactController extends Controller
     {
         $contact->delete();
         return back()->with('success', 'Contacto eliminado correctamente.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:contacts,id_contacts',
+        ]);
+
+        $count = Contact::whereIn('id_contacts', $request->ids)->count();
+        Contact::whereIn('id_contacts', $request->ids)->delete();
+
+        return redirect()->route('admin.contacts.index')
+            ->with('success', "{$count} contacto(s) eliminado(s) correctamente.");
     }
 }

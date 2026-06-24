@@ -65,6 +65,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/{contact}/editar', [ContactController::class, 'edit'])->name('edit');
         Route::put('/{contact}',    [ContactController::class, 'update'])->name('update');
         Route::delete('/{contact}', [ContactController::class, 'destroy'])->name('destroy');
+        // Rutas adicionales para contactos
+        Route::delete('/bulk-destroy', [ContactController::class, 'bulkDestroy'])->name('bulk-destroy');
     });
 
     // ── DESTINOS ──
@@ -96,10 +98,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/{supplier}',         [SupplierController::class, 'update'])->name('update');
         Route::delete('/{supplier}',      [SupplierController::class, 'destroy'])->name('destroy');
         Route::get('/{supplier}/pdf',     [SupplierController::class, 'exportPdf'])->name('pdf');
-        
+
 
         Route::get('/exportar/excel',     [SupplierController::class, 'exportExcel'])->name('export.excel');
-        
+
         // ── RUTAS DE EXCEL PARA PROVEEDORES (dentro del grupo) ──
         Route::get('/importar',           [SupplierController::class, 'importView'])->name('import.view');
         Route::post('/importar',          [SupplierController::class, 'import'])->name('import');
@@ -120,7 +122,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/testmail', function () {
         Mail::to("luistasayco3030@gmail.com")->send(new NotificationUserCreate());
-        
+
     });
 
 });
