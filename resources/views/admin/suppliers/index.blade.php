@@ -14,12 +14,12 @@
                   font-size:13px;font-weight:600;color:#6366f1;text-decoration:none">
             <i class="ti ti-file-upload" style="font-size:16px"></i> Importar
         </a>
-        <a href="#" id="btn-export-pdf-suppliers"
+        {{-- <a href="#" id="btn-export-pdf-suppliers"
            style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
                   background:#fff;border:1px solid #e2e8f0;border-radius:8px;
                   font-size:13px;font-weight:600;color:#ef4444;text-decoration:none">
             <i class="ti ti-file-type-pdf" style="font-size:16px"></i> PDF
-        </a>
+        </a> --}}
         <a href="#" id="btn-export-excel-suppliers"
            style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
                   background:#fff;border:1px solid #e2e8f0;border-radius:8px;
@@ -155,6 +155,13 @@
                                     data-target="modal-{{ $s->id_supplier }}">
                                 <i class="ti ti-eye" style="font-size:13px"></i>
                             </button>
+                            <a href="{{ route('admin.suppliers.pdf', $s->id_supplier) }}" 
+                                target="_blank"
+                        
+                                style=" display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;text-decoration:none;color: #fff;background: #ef4444b7;border:1px solid #be6868;"
+                                title="Exportar PDF">
+                                    <i class="ti ti-file-type-pdf" style="font-size:13px"></i>
+                            </a>
 
                             <a href="{{ route('admin.suppliers.edit', $s->id_supplier) }}" class="btn btn-secondary btn-sm">
                                 <i class="ti ti-edit" style="font-size:13px"></i>

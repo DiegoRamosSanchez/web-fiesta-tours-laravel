@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Puritan:ital,wght@0,400;0,700;1,400;1,700&family=Raleway:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <title>Proveedores</title>
 <style>
     @page {
@@ -13,7 +16,8 @@
     }
 
     body {
-        font-family: 'DejaVu Sans', sans-serif;
+       font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
         color: #1e293b;
         font-size: 12px;
         margin: 0;
@@ -40,7 +44,7 @@
     }
     .doc-title {
         font-size: 30px;
-        font-weight: 500;
+        font-weight: 800;
         color: #30533c;
         margin: 0;
     }
@@ -113,12 +117,12 @@
         background-color: #f8fafc;
     }
     .info-label {
-        color: #64748b;
+        color: #595f68;
+        font-weight:600;
         width: 38%;
     }
     .info-value {
-        color: #0f172a;
-        font-weight: 700;
+        color: #201e1e;
     }
 
     /* ── CONTACTS TABLE ── */
@@ -216,8 +220,12 @@
                         <td class="info-value">{{ $supplier->general_email ?? '—' }}</td>
                     </tr>
                     <tr>
-                        <td class="info-label">Destino / Ubicación</td>
-                        <td class="info-value">{{ $supplier->destination->destination_name ?? '—' }}</td>
+                        <td class="info-label">Pais - Ciudad</td>
+                        <td class="info-value">{{ $supplier->country_name ?? '—' }} ({{ $supplier->city_name ?? '—' }}) </td>
+                    </tr>
+                     <tr>
+                        <td class="info-label">Direccion</td>
+                        <td class="info-value">{{ $supplier->address ?? '—' }}</td>
                     </tr>
                     <tr>
                         <td class="info-label">Categoría</td>
