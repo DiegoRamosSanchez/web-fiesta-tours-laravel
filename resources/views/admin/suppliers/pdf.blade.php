@@ -240,11 +240,12 @@
                     <table class="contacts-table">
                         <thead>
                             <tr>
-                                <th style="width:20%">Nombre</th>
-                                <th style="width:18%">Apellidos</th>
+                                <th style="width:15%">Nombre</th>
+                                <th style="width:17%">Apellidos</th>
                                 <th style="width:22%">Email</th>
-                                <th style="width:18%">Cargo</th>
-                                <th style="width:22%">Teléfono(s)</th>
+                                <th style="width:16%">Cargo</th>
+                                <th style="width:24%">Teléfono</th>
+                                <th style="width:24%">Teléfono 2</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -259,12 +260,8 @@
                                     <td>{{ $contact->last_names ?? '—' }}</td>
                                     <td>{{ $contact->email ?? '—' }}</td>
                                     <td>{{ $contact->qualification ?? '—' }}</td>
-                                    <td>
-                                        {{ $contact->first_phone ?? '—' }}
-                                        @if($contact->second_phone)
-                                            / {{ $contact->second_phone }}
-                                        @endif
-                                    </td>
+                                    <td>{{ $contact->first_phone ?? '—' }}</td>
+                                    <td>{{ $contact->second_phone ?? '—' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

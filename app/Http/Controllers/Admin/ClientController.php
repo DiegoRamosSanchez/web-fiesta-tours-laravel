@@ -24,7 +24,6 @@ class ClientController extends Controller
             ->orderBy('id_client', 'asc')
             ->paginate(8);
 
-        // Obtener países y ciudades únicos para los filtros
         $countries = Client::whereNotNull('country_name')
             ->distinct()
             ->pluck('country_name')

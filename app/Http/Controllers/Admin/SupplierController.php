@@ -212,183 +212,201 @@ class SupplierController extends Controller
         return view('admin.suppliers.edit', compact('supplier', 'destinations', 'categories', 'banks', 'contactsData'));
     }
 
-    public function update(Request $request, Supplier $supplier)
-    {
-        $request->validate([
-            'supplier_name' => 'required|string|max:100',
-            'business_name' => 'nullable|string|max:150',
-            'tax_code' => 'nullable|string|max:20',
-            'general_phone' => 'nullable|string|max:20',
-            'general_email' => 'nullable|email|max:120',
-            'country_name' => 'nullable|string|max:100',
-            'city_name' => 'nullable|string|max:150',
-            'address' => 'nullable|string|max:255',
-            'id_destinations' => 'nullable|exists:destinations,id_destinations',
-            'id_categories_suppliers' => 'nullable|exists:categories_suppliers,id_categories_suppliers',
-            'new_destination_name' => 'nullable|string|max:100',
-            'new_category_name' => 'nullable|string|max:100',
-            'bank_accounts' => 'nullable|array',
-            'bank_accounts.*.id_bank' => 'nullable|exists:bank,id_bank',
-            'bank_accounts.*.account_number' => 'nullable|string|max:100',
-            'bank_accounts.*.cci' => 'nullable|string|max:100',
-            'bank_accounts.*.currency' => 'nullable|string|max:40',
-            'new_bank_name' => 'nullable|string|max:50',
-            'new_bank_account_number' => 'nullable|string|max:100',
-            'new_bank_cci' => 'nullable|string|max:100',
-            'new_bank_currency' => 'nullable|string|max:40',
-            'delete_bank_accounts' => 'nullable|array',
-            'delete_bank_accounts.*' => 'exists:bank_account,id_bank_account',
+public function update(Request $request, Supplier $supplier)
+{
+    $request->validate([
+        'supplier_name' => 'required|string|max:100',
+        'business_name' => 'nullable|string|max:150',
+        'tax_code' => 'nullable|string|max:20',
+        'general_phone' => 'nullable|string|max:20',
+        'general_email' => 'nullable|email|max:120',
+        'country_name' => 'nullable|string|max:100',
+        'city_name' => 'nullable|string|max:150',
+        'address' => 'nullable|string|max:255',
+        'id_destinations' => 'nullable|exists:destinations,id_destinations',
+        'id_categories_suppliers' => 'nullable|exists:categories_suppliers,id_categories_suppliers',
+        'new_destination_name' => 'nullable|string|max:100',
+        'new_category_name' => 'nullable|string|max:100',
+        'bank_accounts' => 'nullable|array',
+        'bank_accounts.*.id_bank' => 'nullable|exists:bank,id_bank',
+        'bank_accounts.*.account_number' => 'nullable|string|max:100',
+        'bank_accounts.*.cci' => 'nullable|string|max:100',
+        'bank_accounts.*.currency' => 'nullable|string|max:40',
+        'new_bank_name' => 'nullable|string|max:50',
+        'new_bank_account_number' => 'nullable|string|max:100',
+        'new_bank_cci' => 'nullable|string|max:100',
+        'new_bank_currency' => 'nullable|string|max:40',
+        'delete_bank_accounts' => 'nullable|array',
+        'delete_bank_accounts.*' => 'exists:bank_account,id_bank_account',
+        'contacts' => 'nullable|array',
+        'contacts.*.id' => 'nullable|integer',
+        'contacts.*.name' => 'required_with:contacts|string|max:100',
+        'contacts.*.last_names' => 'nullable|string|max:100',
+        'contacts.*.email' => 'nullable|email|max:120',
+        'contacts.*.qualification' => 'nullable|string|max:100',
+        'contacts.*.first_phone' => 'nullable|string|max:20',
+        'contacts.*.second_phone' => 'nullable|string|max:20',
+        'delete_contacts' => 'nullable|array',
+        'delete_contacts.*' => 'integer|exists:contacts,id_contacts',
+    ]);
 
-            // Validaciones para contactos
-            'contacts' => 'nullable|array',
-            'contacts.*.id' => 'nullable|integer',
-            'contacts.*.name' => 'required_with:contacts|string|max:100',
-            'contacts.*.last_names' => 'nullable|string|max:100',
-            'contacts.*.email' => 'nullable|email|max:120',
-            'contacts.*.qualification' => 'nullable|string|max:100',
-            'contacts.*.first_phone' => 'nullable|string|max:20',
-            'contacts.*.second_phone' => 'nullable|string|max:20',
-            'delete_contacts' => 'nullable|array',
-            'delete_contacts.*' => 'integer|exists:contacts,id_contacts',
+    try {
+        DB::beginTransaction();
+
+        // Crear destino al vuelo
+        $destinationId = $request->id_destinations;
+        if ($request->filled('new_destination_name')) {
+            $dest = Destination::create(['destination_name' => $request->new_destination_name]);
+            $destinationId = $dest->id_destinations;
+        }
+
+        // Crear categoría al vuelo
+        $categoryId = $request->id_categories_suppliers;
+        if ($request->filled('new_category_name')) {
+            $cat = CategorySupplier::create(['category_name' => $request->new_category_name]);
+            $categoryId = $cat->id_categories_suppliers;
+        }
+
+        // Actualizar proveedor
+        $supplier->update([
+            'supplier_name' => $request->supplier_name,
+            'business_name' => $request->business_name,
+            'tax_code' => $request->tax_code,
+            'general_phone' => $request->general_phone,
+            'general_email' => $request->general_email,
+            'country_name' => $request->country_name,
+            'city_name' => $request->city_name,
+            'address' => $request->address,
+            'id_destinations' => $destinationId ?: null,
+            'id_categories_suppliers' => $categoryId ?: null,
         ]);
 
-        try {
-            DB::beginTransaction();
+        // ── PROCESAR CONTACTOS ──
+        // 1. ELIMINAR contactos marcados
+        if ($request->has('delete_contacts') && !empty($request->delete_contacts)) {
+            $deleted = Contact::whereIn('id_contacts', $request->delete_contacts)
+                ->where('id_supplier', $supplier->id_supplier)
+                ->delete();
+        }
 
-            // Crear destino al vuelo
-            $destinationId = $request->id_destinations;
-            if ($request->filled('new_destination_name')) {
-                $dest = Destination::create(['destination_name' => $request->new_destination_name]);
-                $destinationId = $dest->id_destinations;
-            }
+        // 2. ACTUALIZAR o CREAR contactos
+        if ($request->has('contacts')) {
+            // Obtener lista de IDs a eliminar para evitar actualizarlos
+            $deleteIds = $request->input('delete_contacts', []);
+            
+            foreach ($request->contacts as $contactData) {
+                // Saltar si no tiene nombre
+                if (empty($contactData['name'])) {
+                    continue;
+                }
 
-            // Crear categoría al vuelo
-            $categoryId = $request->id_categories_suppliers;
-            if ($request->filled('new_category_name')) {
-                $cat = CategorySupplier::create(['category_name' => $request->new_category_name]);
-                $categoryId = $cat->id_categories_suppliers;
-            }
-
-            // Actualizar proveedor
-            $supplier->update([
-                'supplier_name' => $request->supplier_name,
-                'business_name' => $request->business_name,
-                'tax_code' => $request->tax_code,
-                'general_phone' => $request->general_phone,
-                'general_email' => $request->general_email,
-                'country_name' => $request->country_name,
-                'city_name' => $request->city_name,
-                'address' => $request->address,
-                'id_destinations' => $destinationId ?: null,
-                'id_categories_suppliers' => $categoryId ?: null,
-            ]);
-
-            // ── PROCESAR CONTACTOS ──
-            // Eliminar contactos marcados
-            if ($request->has('delete_contacts')) {
-                Contact::whereIn('id_contacts', $request->delete_contacts)
-                    ->where('id_supplier', $supplier->id_supplier)
-                    ->delete();
-            }
-
-            // Actualizar o crear contactos
-            if ($request->has('contacts')) {
-                foreach ($request->contacts as $contactData) {
-                    if (empty($contactData['name'])) {
-                        continue;
+                // Si tiene ID, actualizar contacto existente
+                if (isset($contactData['id']) && !empty($contactData['id'])) {
+                    // Verificar que NO esté marcado para eliminar
+                    if (in_array($contactData['id'], $deleteIds)) {
+                        continue; // Saltar este contacto porque será eliminado
                     }
-
-                    if (isset($contactData['id']) && ! empty($contactData['id'])) {
-                        // Actualizar contacto existente
-                        $contact = Contact::where('id_contacts', $contactData['id'])
-                            ->where('id_supplier', $supplier->id_supplier)
-                            ->first();
-                        if ($contact) {
-                            $contact->update([
-                                'name' => $contactData['name'],
-                                'last_names' => $contactData['last_names'] ?? null,
-                                'email' => $contactData['email'] ?? null,
-                                'qualification' => $contactData['qualification'] ?? null,
-                                'first_phone' => $contactData['first_phone'] ?? null,
-                                'second_phone' => $contactData['second_phone'] ?? null,
-                            ]);
-                        }
-                    } else {
-                        // Crear nuevo contacto
-                        Contact::create([
-                            'id_supplier' => $supplier->id_supplier,
-                            'id_client' => null,
+                    
+                    $contact = Contact::where('id_contacts', $contactData['id'])
+                        ->where('id_supplier', $supplier->id_supplier)
+                        ->first();
+                    
+                    if ($contact) {
+                        $contact->update([
                             'name' => $contactData['name'],
                             'last_names' => $contactData['last_names'] ?? null,
                             'email' => $contactData['email'] ?? null,
                             'qualification' => $contactData['qualification'] ?? null,
                             'first_phone' => $contactData['first_phone'] ?? null,
                             'second_phone' => $contactData['second_phone'] ?? null,
-                            'es_principal' => false,
-                            'Date_of_birth' => null,
+                            'es_principal' => isset($contactData['es_principal']) && $contactData['es_principal'] == 1,
                         ]);
                     }
+                } else {
+                    // Crear nuevo contacto
+                    Contact::create([
+                        'id_supplier' => $supplier->id_supplier,
+                        'id_client' => null,
+                        'name' => $contactData['name'],
+                        'last_names' => $contactData['last_names'] ?? null,
+                        'email' => $contactData['email'] ?? null,
+                        'qualification' => $contactData['qualification'] ?? null,
+                        'first_phone' => $contactData['first_phone'] ?? null,
+                        'second_phone' => $contactData['second_phone'] ?? null,
+                        'es_principal' => isset($contactData['es_principal']) && $contactData['es_principal'] == 1,
+                        'Date_of_birth' => null,
+                    ]);
                 }
             }
+        }
 
-            // ── PROCESAR CUENTAS BANCARIAS ──
-            // Eliminar cuentas bancarias marcadas
-            if ($request->has('delete_bank_accounts')) {
-                BankAccount::whereIn('id_bank_account', $request->delete_bank_accounts)->delete();
-            }
+        // ── PROCESAR CUENTAS BANCARIAS ──
+        if ($request->has('delete_bank_accounts')) {
+            BankAccount::whereIn('id_bank_account', $request->delete_bank_accounts)->delete();
+        }
 
-            // Actualizar o crear cuentas bancarias existentes
-            if ($request->has('bank_accounts')) {
-                foreach ($request->bank_accounts as $account) {
-                    if (empty($account['id_bank']) || empty($account['account_number'])) {
-                        continue;
-                    }
+        if ($request->has('bank_accounts')) {
+            foreach ($request->bank_accounts as $account) {
+                if (empty($account['id_bank']) || empty($account['account_number'])) {
+                    continue;
+                }
 
-                    if (isset($account['id_bank_account']) && ! empty($account['id_bank_account'])) {
-                        $bankAccount = BankAccount::find($account['id_bank_account']);
-                        if ($bankAccount) {
-                            $bankAccount->update([
-                                'id_bank' => $account['id_bank'],
-                                'account_number' => $account['account_number'],
-                                'cci' => $account['cci'] ?? null,
-                                'currency' => $account['currency'] ?? null,
-                            ]);
-                        }
-                    } else {
-                        BankAccount::create([
-                            'id_supplier' => $supplier->id_supplier,
+                if (isset($account['id_bank_account']) && !empty($account['id_bank_account'])) {
+                    $bankAccount = BankAccount::find($account['id_bank_account']);
+                    if ($bankAccount) {
+                        $bankAccount->update([
                             'id_bank' => $account['id_bank'],
                             'account_number' => $account['account_number'],
                             'cci' => $account['cci'] ?? null,
                             'currency' => $account['currency'] ?? null,
                         ]);
                     }
+                } else {
+                    BankAccount::create([
+                        'id_supplier' => $supplier->id_supplier,
+                        'id_bank' => $account['id_bank'],
+                        'account_number' => $account['account_number'],
+                        'cci' => $account['cci'] ?? null,
+                        'currency' => $account['currency'] ?? null,
+                    ]);
                 }
             }
-
-            if ($request->filled('new_bank_name') && $request->filled('new_bank_account_number')) {
-                $bank = Bank::create(['bank_name' => $request->new_bank_name]);
-                BankAccount::create([
-                    'id_supplier' => $supplier->id_supplier,
-                    'id_bank' => $bank->id_bank,
-                    'account_number' => $request->new_bank_account_number,
-                    'cci' => $request->new_bank_cci,
-                    'currency' => $request->new_bank_currency,
-                ]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('admin.suppliers.index')
-                ->with('success', 'Proveedor actualizado correctamente.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return back()->with('error', 'Error al actualizar el proveedor: '.$e->getMessage())
-                ->withInput();
         }
+
+        if ($request->filled('new_bank_name') && $request->filled('new_bank_account_number')) {
+            $bank = Bank::create(['bank_name' => $request->new_bank_name]);
+            BankAccount::create([
+                'id_supplier' => $supplier->id_supplier,
+                'id_bank' => $bank->id_bank,
+                'account_number' => $request->new_bank_account_number,
+                'cci' => $request->new_bank_cci,
+                'currency' => $request->new_bank_currency,
+            ]);
+        }
+
+        // ── ASEGURAR QUE SOLO UN CONTACTO SEA PRINCIPAL ──
+        $principales = Contact::where('id_supplier', $supplier->id_supplier)
+            ->where('es_principal', true)
+            ->get();
+
+        if ($principales->count() > 1) {
+            $principales->skip(1)->each(function ($contact) {
+                $contact->update(['es_principal' => false]);
+            });
+        }
+
+        DB::commit();
+
+        return redirect()->route('admin.suppliers.index')
+            ->with('success', 'Proveedor actualizado correctamente.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return back()->with('error', 'Error al actualizar el proveedor: '.$e->getMessage())
+            ->withInput();
     }
+}
 
     public function destroy(Supplier $supplier)
     {

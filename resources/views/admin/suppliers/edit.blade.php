@@ -353,6 +353,8 @@
 <form action="{{ route('admin.suppliers.update', $supplier->id_supplier) }}" method="POST" id="form-supplier">
     @csrf @method('PUT')
 
+{{-- Campos ocultos para contactos a eliminar --}}
+<div id="delete-contacts-inputs"></div>
     {{-- Campos ocultos para cuentas a eliminar --}}
     <div id="delete-inputs"></div>
 
