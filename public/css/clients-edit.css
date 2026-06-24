@@ -131,7 +131,8 @@
 }
 
 .field-group input[type="text"],
-.field-group input[type="email"] {
+.field-group input[type="email"],
+.field-group select {
     width: 100%;
     padding: .62rem .8rem;
     border: 1px solid #e2e8f0;

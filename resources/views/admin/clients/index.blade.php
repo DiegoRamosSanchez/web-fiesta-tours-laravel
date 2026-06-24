@@ -143,6 +143,7 @@
                     <th>ID</th>
                     <th>AGENCIA</th>
                     <th>CODIGO TRIBUTARIO</th>
+                    <th>TIPO DE CLIENTE</th>
                     <th>EMAIL EMPRESARIAL</th>
                     <th>TELÉFONO EMPRESARIAL</th>
                     <th>UBICACIÓN</th>
@@ -156,6 +157,7 @@
                         data-id="{{ $c->id_client }}"
                         data-name="{{ strtolower($c->name_client) }}"
                         data-code="{{ strtolower($c->tax_code ?? '') }}"
+                        data-type="{{ strtolower($c->type_client) ?? '' }}"
                         data-email="{{ strtolower($c->general_email ?? '') }}"
                         data-phone="{{ $c->general_phone ?? '' }}"
                         data-country="{{ $c->country_name ?? '' }}"
@@ -173,6 +175,7 @@
                             <div style="font-weight:600;color:#0f172a;font-size:13px">{{ $c->name_client }}</div>
                         </td>
                         <td style="font-size:12px;color:#64748b">{{ $c->tax_code ?? '—' }}</td>
+                        <td style="font-size:12px;color:#64748b"> {{ strtoupper($c->type_client ?? '—') }}</td>
                         <td style="font-size:12px;color:#64748b">{{ $c->general_email ?? '—' }}</td>
                         <td style="font-size:12px;color:#64748b">{{ $c->general_phone ?? '—' }}</td>
                         <td style="color:#94a3b8;font-size:12px">

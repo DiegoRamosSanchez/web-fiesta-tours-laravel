@@ -86,6 +86,15 @@
                         value="{{ old('general_email', $client->general_email) }}"
                         maxlength="120" placeholder="contacto@empresa.com">
                 </div>
+
+                <div class="field-group">
+                    <label>Tipo de Cliente</label>
+                    <select name="type_client">
+                        <option value="">— Seleccionar —</option>
+                        <option value="cliente" {{ old('type_client', $client->type_client) == 'cliente' ? 'selected' : '' }}>Cliente</option>
+                        <option value="prospecto" {{ old('type_client', $client->type_client) == 'prospecto' ? 'selected' : '' }}>Prospecto</option>
+                    </select>
+                </div>
             </div>
 
             {{-- ── UBICACIÓN ── --}}
