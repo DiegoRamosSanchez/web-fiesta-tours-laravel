@@ -20,10 +20,26 @@ class ClientController extends Controller
 {
     public function index()
     {
-        $clients = Client::with(['contacts' => fn($q) => $q->where('es_principal', true)])
-            ->withCount('contacts')
-            ->orderBy('id_client', 'asc')->paginate(8);
-        return view('admin.clients.index', compact('clients'));
+        $clients = Client::withCount('contacts')
+            ->orderBy('id_client', 'asc')
+            ->paginate(8);
+
+        // Obtener países y ciudades únicos para los filtros
+        $countries = Client::whereNotNull('country_name')
+            ->distinct()
+            ->pluck('country_name')
+            ->filter()
+            ->values()
+            ->toArray();
+
+        $cities = Client::whereNotNull('city_name')
+            ->distinct()
+            ->pluck('city_name')
+            ->filter()
+            ->values()
+            ->toArray();
+
+        return view('admin.clients.index', compact('clients', 'countries', 'cities'));
     }
 
     public function store(Request $request)
@@ -71,6 +87,11 @@ class ClientController extends Controller
 
         return redirect()->route('admin.clients.index')
             ->with('success', 'Cliente creado correctamente.');
+    }
+
+    public function create()
+    {
+        return view('admin.clients.create');
     }
 
     public function edit(Client $client)

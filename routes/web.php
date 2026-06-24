@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/bulk',         [ClientController::class, 'bulkDestroy'])->name('bulk-destroy');
 
         // Rutas con parámetro DESPUÉS
+        Route::get('/crear',           [ClientController::class, 'create'])->name('create');
         Route::get('/{client}/editar', [ClientController::class, 'edit'])->name('edit');
         Route::put('/{client}',        [ClientController::class, 'update'])->name('update');
         Route::delete('/{client}',     [ClientController::class, 'destroy'])->name('destroy');
