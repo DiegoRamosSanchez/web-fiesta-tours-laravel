@@ -30,10 +30,18 @@
         vertical-align: top;
         padding: 0;
     }
+    .header-table .logo-cell {
+        text-align: right;
+        width: 200px;
+    }
+    .header-table .logo-img {
+        max-width: 300px;
+        max-height: 160px;
+    }
     .doc-title {
-        font-size: 26px;
-        font-weight: 700;
-        color: #0f172a;
+        font-size: 30px;
+        font-weight: 500;
+        color: #30533c;
         margin: 0;
     }
     .doc-sub {
@@ -41,9 +49,7 @@
         color: #64748b;
         margin: 2px 0 0;
     }
-    .logo-cell {
-        text-align: right;
-    }
+
     .logo-fiesta {
         font-size: 13px;
         font-weight: 700;
@@ -122,8 +128,8 @@
         margin-top: 4px;
     }
     .contacts-table thead th {
-        background-color: #8fb89e;
-        color: #0f2419;
+        background-color: #6c8a77;
+        color: #18201d;
         font-size: 10.5px;
         text-transform: uppercase;
         font-weight: 700;
@@ -169,9 +175,15 @@
                 <p class="doc-sub">Generado el {{ now()->format('d/m/Y, h:i A') }}</p>
             </td>
             <td class="logo-cell">
-                <div class="logo-fiesta">FIESTA<br><span class="accent">TOURS PERU</span></div>
-                <div class="logo-peru">PERU LU<span class="accentx">X</span>URY</div>
-                <div class="logo-sub">J&nbsp;&nbsp;O&nbsp;&nbsp;U&nbsp;&nbsp;R&nbsp;&nbsp;N&nbsp;&nbsp;E&nbsp;&nbsp;Y&nbsp;&nbsp;S</div>
+                {{-- ═══════ IMAGEN DEL LOGO ═══════ --}}
+                <img src="https://res.cloudinary.com/dlgeap8h0/image/upload/v1776726875/Group_22_vtvrk3.png" 
+                     alt="Logo" 
+                     class="logo-img">
+                <div style="display:none">
+                    <div class="logo-fiesta">FIESTA<br><span class="accent">TOURS PERU</span></div>
+                    <div class="logo-peru">PERU LU<span class="accentx">X</span>URY</div>
+                    <div class="logo-sub">J&nbsp;&nbsp;O&nbsp;&nbsp;U&nbsp;&nbsp;R&nbsp;&nbsp;N&nbsp;&nbsp;E&nbsp;&nbsp;Y&nbsp;&nbsp;S</div>
+                </div>
             </td>
         </tr>
     </table>
@@ -240,9 +252,9 @@
                                 <tr>
                                     <td>
                                         {{ $contact->name }}
-                                        @if($contact->es_principal)
+                                        {{-- @if($contact->es_principal)
                                             <span class="badge-principal">Principal</span>
-                                        @endif
+                                        @endif --}}
                                     </td>
                                     <td>{{ $contact->last_names ?? '—' }}</td>
                                     <td>{{ $contact->email ?? '—' }}</td>

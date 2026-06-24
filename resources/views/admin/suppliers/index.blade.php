@@ -8,7 +8,7 @@
         <div class="page-sub">Gestiona todos los proveedores del sistema</div>
     </div>
     <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-        <a href="#" id="btn-export-pdf-suppliers"
+        <a href="#" id="btn-export-pdf-suppliers" 
            style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
                   background:#fff;border:1px solid #e2e8f0;border-radius:8px;
                   font-size:13px;font-weight:600;color:#ef4444;text-decoration:none">
@@ -69,7 +69,7 @@
                     <th>CÓDIGO TRIBUTARIO</th>
                     <th>EMAIL</th>
                     <th>TELÉFONO</th>
-                    <th>DESTINO</th>
+                    <th>PAIS</th>
                     <th>CATEGORIA</th>
                     <th>REGISTRO</th>
                     <th style="text-align:center">ACCIONES</th>
@@ -113,10 +113,10 @@
                         @endif
                     </td>
                     <td>
-                        @if($s->destination)
-                            <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:4px 8px;border-radius:6px">
+                        @if($s->country_name)
+                            <span class="badge" style="background: #b4d6e6;color: #4b6080;border:1px solid #8acffd;padding:4px 8px;border-radius:6px">
                                 <i class="ti ti-map-pin" style="font-size:10px"></i>
-                                {{ $s->destination->destination_name }}
+                                {{ $s->country_name }}
                             </span>
                         @else
                             <span style="color:#cbd5e1;font-size:12px">—</span>
@@ -163,23 +163,77 @@
             </tbody>
         </table>
         
-        {{-- PAGINADOR --}}
-        @if($suppliers->hasPages())
-            <div class="table-footer" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem 1.5rem;border-top:1px solid #e2e8f0">
-                <span style="font-size:13px;color:#64748b">
-                    Mostrando {{ $suppliers->firstItem() }}–{{ $suppliers->lastItem() }} de {{ $suppliers->total() }} proveedor(es)
-                </span>
-                <div>
-                    {{ $suppliers->appends(['search' => $search])->links('pagination::bootstrap-4') }}
-                </div>
+        {{-- ═══════ PAGINADOR IGUAL AL DE CLIENTES ═══════ --}}
+        <div class="table-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;padding:1rem 1.5rem;border-top:1px solid #e2e8f0">
+            <span id="footer-count" style="font-size:13px;color:#64748b">
+                Mostrando {{ $suppliers->firstItem() }}–{{ $suppliers->lastItem() }} de {{ $suppliers->total() }} proveedor(es)
+            </span>
+            
+            <div style="display:flex;align-items:center;gap:.4rem">
+                {{-- Anterior --}}
+                @if($suppliers->onFirstPage())
+                    <span style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
+                                font-size:12px;color:#cbd5e1;cursor:default">
+                        <i class="ti ti-chevron-left"></i>
+                    </span>
+                @else
+                    <a href="{{ $suppliers->previousPageUrl() }}"
+                    style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
+                            font-size:12px;color:#374151;text-decoration:none;background:#fff;
+                            transition:border-color .15s"
+                    onmouseover="this.style.borderColor='#6366f1'"
+                    onmouseout="this.style.borderColor='#e2e8f0'">
+                        <i class="ti ti-chevron-left"></i>
+                    </a>
+                @endif
+
+                {{-- Números de página --}}
+                @foreach($suppliers->getUrlRange(1, $suppliers->lastPage()) as $page => $url)
+                    @if($page == $suppliers->currentPage())
+                        <span style="padding:.35rem .65rem;border:1px solid #6366f1;border-radius:7px;
+                                    font-size:12px;font-weight:700;color:#fff;background:#6366f1;min-width:32px;
+                                    text-align:center">
+                            {{ $page }}
+                        </span>
+                    @elseif($page == 1 || $page == $suppliers->lastPage() || abs($page - $suppliers->currentPage()) <= 1)
+                        <a href="{{ $url }}"
+                        style="padding:.35rem .65rem;border:1px solid #e2e8f0;border-radius:7px;
+                                font-size:12px;color:#374151;text-decoration:none;background:#fff;min-width:32px;
+                                text-align:center;transition:border-color .15s"
+                        onmouseover="this.style.borderColor='#6366f1'"
+                        onmouseout="this.style.borderColor='#e2e8f0'">
+                            {{ $page }}
+                        </a>
+                    @elseif(abs($page - $suppliers->currentPage()) == 2)
+                        <span style="font-size:12px;color:#94a3b8;padding:0 .2rem">…</span>
+                    @endif
+                @endforeach
+
+                {{-- Siguiente --}}
+                @if($suppliers->hasMorePages())
+                    <a href="{{ $suppliers->nextPageUrl() }}"
+                    style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
+                            font-size:12px;color:#374151;text-decoration:none;background:#fff;
+                            transition:border-color .15s"
+                    onmouseover="this.style.borderColor='#6366f1'"
+                    onmouseout="this.style.borderColor='#e2e8f0'">
+                        <i class="ti ti-chevron-right"></i>
+                    </a>
+                @else
+                    <span style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
+                                font-size:12px;color:#cbd5e1;cursor:default">
+                        <i class="ti ti-chevron-right"></i>
+                    </span>
+                @endif
             </div>
-        @else
-            <div class="table-footer" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem 1.5rem;border-top:1px solid #e2e8f0">
-                <span style="font-size:13px;color:#64748b">
-                    Mostrando {{ $suppliers->firstItem() }}–{{ $suppliers->lastItem() }} de {{ $suppliers->total() }} proveedor(es)
+            
+            {{-- Filtro activo (opcional) --}}
+            @if($search)
+                <span id="footer-filter" style="color:#6366f1;font-size:12px;">
+                    Resultados filtrados
                 </span>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 
     @foreach($suppliers as $s)
@@ -237,8 +291,16 @@
                                 <div style="font-size:14px; color:#1e293b; font-weight:500">{{ $s->general_email ?? '—' }}</div>
                             </div>
                             <div>
-                                <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:4px">Destino / Ubicación</label>
-                                <div style="font-size:14px; color:#1e293b; font-weight:500">{{ $s->destination ? $s->destination->destination_name : '—' }}</div>
+                                <label style="display:block; font-size:11px; font-weight:700; color: #94a3b8; text-transform:uppercase; margin-bottom:4px">Pais</label>
+                                <div style="font-size:14px; color: #1e293b; font-weight:500">{{ $s->country_name ? $s->country_name_data : '—' }}</div>
+                            </div>
+                             <div>
+                                <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:4px">Ciudad</label>
+                                <div style="font-size:14px; color:#1e293b; font-weight:500">{{ $s->city_name ? $s->city_name : '—' }}</div>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:4px">Ciudad</label>
+                                <div style="font-size:14px; color:#1e293b; font-weight:500">{{ $s->address ? $s->address : '—' }}</div>
                             </div>
                             <div>
                                 <label style="display:block; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:4px">Categoría</label>
@@ -581,7 +643,6 @@ const suppliersData = @json($suppliers->map(fn($s) => ['id' => $s->id_supplier, 
                       style="padding:.55rem .8rem;font-size:13px;color:#0f172a;cursor:pointer;
                              transition:background .1s">
                     <span style="color:#94a3b8;font-size:11px;margin-right:6px">#${s.id}</span>${s.name}
-                    ${s.tax_code ? `<span style="color:#94a3b8;font-size:11px;margin-left:6px">· ${s.tax_code}</span>` : ''}
                 </div>`
             ).join('');
         }
@@ -682,7 +743,6 @@ const suppliersData = @json($suppliers->map(fn($s) => ['id' => $s->id_supplier, 
 
 function openExportSuppliersModal() {
     document.getElementById('modal-export-suppliers').classList.add('show');
-    // Resetear estado
     const input = document.getElementById('export-supplier-search');
     const clear = document.getElementById('export-supplier-clear');
     const list  = document.getElementById('export-supplier-list');
@@ -706,7 +766,7 @@ function exportSelectedSupplier() {
         alert('Por favor, selecciona un proveedor primero.');
         return;
     }
-    window.location.href = `/admin/suppliers/${exportSupplierId}/pdf`;
+    window.location.href = `/proveedores/${exportSupplierId}/pdf`;
     closeExportSuppliersModal();
 }
 

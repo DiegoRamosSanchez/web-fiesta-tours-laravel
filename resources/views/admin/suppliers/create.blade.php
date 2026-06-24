@@ -13,16 +13,16 @@
 </div>
 
 @if($errors->any())
-    <div class="alert alert-error" style="margin-bottom:1.5rem;padding:1rem;border-radius:10px">
+    <div class="alert alert-error" style="margin-bottom:1.5rem;padding:1rem;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b">
         <i class="ti ti-alert-circle"></i>
-        <ul style="list-style:none;margin-left:.5rem">
+        <ul style="list-style:none;margin-left:.5rem;padding:0">
             @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
         </ul>
     </div>
 @endif
 
 @if(session('error'))
-    <div class="alert alert-error" style="margin-bottom:1.5rem;padding:1rem;border-radius:10px">
+    <div class="alert alert-error" style="margin-bottom:1.5rem;padding:1rem;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b">
         <i class="ti ti-alert-circle"></i>
         {{ session('error') }}
     </div>
@@ -239,9 +239,9 @@
     /* ── Botones de acción ── */
     .btn-actions {
         display:flex;
+        justify-content: end;
+        align-items:center;
         gap:1rem;
-        margin-top:1.5rem;
-        padding-top:1.5rem;
         border-top:2px solid #f1f5f9;
     }
     .btn-primary {
@@ -822,11 +822,51 @@
             grid-template-columns:1fr;
         }
     }
+
+    /* ── COMBOS BUSCABLES (País / Ciudad) ── */
+    .combo-wrap{ position:relative; }
+    .combo-input{
+        width:100%; padding:.62rem .8rem; border:1.5px solid #e2e8f0; border-radius:10px;
+        font-size:14px; color:#0f172a; outline:none; transition:border-color .15s, background .15s;
+        background:#fafbfc; box-sizing:border-box;
+    }
+    .combo-input:focus{ border-color:#6366f1; background:#fff; box-shadow:0 0 0 4px rgba(99,102,241,0.08); }
+    .combo-input[disabled]{ background:#f8fafc; color:#94a3b8; cursor:not-allowed; }
+    .combo-list{
+        position:absolute; top:calc(100% + 4px); left:0; right:0;
+        background:#fff; border:1.5px solid #e2e8f0; border-radius:10px;
+        max-height:220px; overflow-y:auto; z-index:50;
+        box-shadow:0 10px 25px -5px rgba(0,0,0,.1);
+        display:none;
+    }
+    .combo-list.show{ display:block; }
+    .combo-item{
+        padding:.55rem .8rem; font-size:13px; color:#0f172a; cursor:pointer;
+    }
+    .combo-item:hover, .combo-item.active{ background:#eef2ff; color:#4338ca; }
+    .combo-empty{ padding:.6rem .8rem; font-size:12.5px; color:#94a3b8; }
+    .combo-clear{
+        position:absolute; right:.6rem; top:50%; transform:translateY(-50%);
+        background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:14px;
+        display:none; padding:2px; line-height:1;
+    }
+    .combo-clear.show{ display:block; }
+    .combo-clear:hover{ color:#ef4444; }
+
+    .form-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+    @media (max-width: 640px){ .form-grid-2{ grid-template-columns:1fr; } }
 </style>
 
 <form action="{{ route('admin.suppliers.store') }}" method="POST" id="form-supplier">
     @csrf
-
+            <div class="btn-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="ti ti-plus"></i> Crear proveedor
+                </button>
+                <a href="{{ route('admin.suppliers.index') }}" class="btn-secondary">
+                    <i class="ti ti-x"></i> Cancelar
+                </a>
+            </div>
     <div class="edit-supplier-layout">
 
         {{-- ══════════ COLUMNA IZQUIERDA ══════════ --}}
@@ -884,6 +924,53 @@
                 </div>
             </div>
 
+            {{-- ══════════ UBICACIÓN (NUEVO) ══════════ --}}
+            <div class="card-modern">
+                <div class="card-header-custom">
+                    <div>
+                        <div class="card-title-custom">
+                            <i class="ti ti-map-pin"></i> Ubicación
+                        </div>
+                        <div class="card-sub-custom">Escribe para buscar el país y la ciudad</div>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="field-group">
+                        <label>País</label>
+                        <div class="combo-wrap" id="combo-pais">
+                            <input type="text" class="combo-input" id="create-pais-input"
+                                   placeholder="Cargando países..." autocomplete="off" disabled>
+                            <button type="button" class="combo-clear" id="create-pais-clear" tabindex="-1">
+                                <i class="ti ti-x"></i>
+                            </button>
+                            <div class="combo-list" id="create-pais-list"></div>
+                        </div>
+                        <input type="hidden" name="country_name" id="create-country-name">
+                        <input type="hidden" id="create-country-code">
+                    </div>
+
+                    <div class="field-group">
+                        <label>Ciudad</label>
+                        <div class="combo-wrap" id="combo-ciudad">
+                            <input type="text" class="combo-input" id="create-ciudad-input"
+                                   placeholder="Seleccione país primero" autocomplete="off" disabled>
+                            <button type="button" class="combo-clear" id="create-ciudad-clear" tabindex="-1">
+                                <i class="ti ti-x"></i>
+                            </button>
+                            <div class="combo-list" id="create-ciudad-list"></div>
+                        </div>
+                        <input type="hidden" name="city_name" id="create-ciudad-name">
+                    </div>
+                </div>
+
+                <div class="field-group" style="margin-top:.9rem">
+                    <label>Dirección</label>
+                    <input type="text" name="address" value="{{ old('address') }}"
+                           placeholder="Ej: Avenida Suecia, calle 124, primera casa">
+                </div>
+            </div>
+
             {{-- Categoría --}}
             <div class="inline-create-block">
                 <div class="block-label">
@@ -926,15 +1013,7 @@
                 </div>
             </div>
 
-            {{-- Botones de acción --}}
-            <div class="btn-actions">
-                <button type="submit" class="btn-primary">
-                    <i class="ti ti-plus"></i> Crear proveedor
-                </button>
-                <a href="{{ route('admin.suppliers.index') }}" class="btn-secondary">
-                    <i class="ti ti-x"></i> Cancelar
-                </a>
-            </div>
+           
         </div>
 
         {{-- ══════════ COLUMNA DERECHA ══════════ --}}
@@ -1141,11 +1220,196 @@
 
 @push('scripts')
 <script>
+// ── COMBOS BUSCABLES (País / Ciudad) ──────────────────────────
+function crearCombo({ inputId, listId, clearId, onSelect, onClear }) {
+    const input = document.getElementById(inputId);
+    const list  = document.getElementById(listId);
+    const clear = document.getElementById(clearId);
+    let options = [];
+    let activeIndex = -1;
+
+    function normalizar(str) {
+        return (str || '').toString()
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function render(filtro) {
+        const term = normalizar(filtro);
+        const filtradas = term
+            ? options.filter(o => normalizar(o.label).includes(term))
+            : options;
+
+        if (filtradas.length === 0) {
+            list.innerHTML = '<div class="combo-empty">Sin resultados</div>';
+        } else {
+            list.innerHTML = filtradas.map((o, idx) =>
+                `<div class="combo-item" data-idx="${idx}">${o.label}</div>`
+            ).join('');
+        }
+        list._filtradas = filtradas;
+        activeIndex = -1;
+        list.classList.add('show');
+    }
+
+    function cerrar() {
+        list.classList.remove('show');
+        activeIndex = -1;
+    }
+
+    function seleccionar(opt) {
+        input.value = opt.label;
+        clear.classList.add('show');
+        cerrar();
+        onSelect(opt);
+    }
+
+    function actualizarActivo() {
+        list.querySelectorAll('.combo-item').forEach(el => el.classList.remove('active'));
+        const el = list.querySelector(`[data-idx="${activeIndex}"]`);
+        if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest' }); }
+    }
+
+    input.addEventListener('focus', () => {
+        if (!input.disabled) render(input.value);
+    });
+
+    input.addEventListener('input', () => {
+        if (input.value === '') {
+            clear.classList.remove('show');
+        } else {
+            clear.classList.add('show');
+        }
+        render(input.value);
+        onClear && onClear(false);
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const filtradas = list._filtradas || [];
+        if (!list.classList.contains('show')) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIndex = Math.min(activeIndex + 1, filtradas.length - 1);
+            actualizarActivo();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIndex = Math.max(activeIndex - 1, 0);
+            actualizarActivo();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeIndex >= 0 && filtradas[activeIndex]) {
+                seleccionar(filtradas[activeIndex]);
+            }
+        } else if (e.key === 'Escape') {
+            cerrar();
+        }
+    });
+
+    list.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const item = e.target.closest('.combo-item');
+        if (!item) return;
+        const idx = parseInt(item.dataset.idx);
+        seleccionar(list._filtradas[idx]);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !list.contains(e.target)) cerrar();
+    });
+
+    clear.addEventListener('click', () => {
+        input.value = '';
+        clear.classList.remove('show');
+        cerrar();
+        onClear && onClear(true);
+        input.focus();
+    });
+
+    return {
+        setOptions(nuevasOpciones, placeholder) {
+            options = nuevasOpciones || [];
+            input.value = '';
+            clear.classList.remove('show');
+            input.disabled = false;
+            input.placeholder = placeholder || 'Escribe para buscar...';
+            cerrar();
+        },
+        disable(placeholder) {
+            input.disabled = true;
+            input.value = '';
+            clear.classList.remove('show');
+            input.placeholder = placeholder || '';
+            options = [];
+            cerrar();
+        }
+    };
+}
+
+// ── Instancias combos País → Ciudad ──────────────────────────
+const comboPais = crearCombo({
+    inputId: 'create-pais-input',
+    listId:  'create-pais-list',
+    clearId: 'create-pais-clear',
+    onSelect: (opt) => {
+        document.getElementById('create-country-name').value = opt.label;
+        document.getElementById('create-country-code').value = opt.value;
+        cargarCiudades(opt.value);
+    },
+    onClear: (full) => {
+        document.getElementById('create-country-name').value = '';
+        document.getElementById('create-country-code').value = '';
+        if (full) {
+            comboCiudad.disable('Seleccione país primero');
+            document.getElementById('create-ciudad-name').value = '';
+        }
+    }
+});
+
+const comboCiudad = crearCombo({
+    inputId: 'create-ciudad-input',
+    listId:  'create-ciudad-list',
+    clearId: 'create-ciudad-clear',
+    onSelect: (opt) => {
+        document.getElementById('create-ciudad-name').value = opt.label;
+    },
+    onClear: () => {
+        document.getElementById('create-ciudad-name').value = '';
+    }
+});
+
+function cargarPaises() {
+    fetch(`/api/geo/paises`)
+        .then(r => r.json())
+        .then(paises => {
+            const opciones = paises.map(p => ({ value: p.codigo, label: p.nombre }));
+            comboPais.setOptions(opciones, 'Escribe para buscar país...');
+        })
+        .catch(() => comboPais.setOptions([], 'No se pudo cargar'));
+}
+
+function cargarCiudades(countryCode) {
+    comboCiudad.disable('Cargando...');
+    if (!countryCode) {
+        comboCiudad.disable('Seleccione país primero');
+        return;
+    }
+    fetch(`/api/geo/ciudades?country=${countryCode}`)
+        .then(r => r.json())
+        .then(ciudades => {
+            const opciones = ciudades.map(c => ({ value: c.nombre, label: c.nombre, geoNameId: c.geoNameId }));
+            comboCiudad.setOptions(opciones, 'Escribe para buscar ciudad...');
+        })
+        .catch(() => comboCiudad.setOptions([], 'No se pudo cargar'));
+}
+
+cargarPaises();
+
+// ── Banco ──
 let accountIndex = 1;
 let contactos = [];
 let editandoId = null;
 
-// ── Banco ──
 function addBankAccount() {
     const container = document.getElementById('bank-accounts-container');
     const row = document.createElement('div');
@@ -1235,10 +1499,8 @@ function agregarContactoATabla(contacto) {
 
     empty.style.display = 'none';
 
-    // Verificar si ya existe una fila con este ID (para edición)
     const existingRow = document.getElementById(`contact-row-${contacto.id}`);
     if (existingRow) {
-        // Actualizar fila existente
         actualizarFilaContacto(contacto);
         return;
     }
@@ -1274,7 +1536,6 @@ function generarFilaContacto(contacto) {
 function actualizarFilaContacto(contacto) {
     const row = document.getElementById(`contact-row-${contacto.id}`);
     if (row) {
-        // Actualizar solo el contenido de la fila manteniendo el ID
         row.innerHTML = generarFilaContacto(contacto);
     }
 }
@@ -1303,7 +1564,6 @@ function editarContacto(id) {
     document.getElementById('modal-contact-save-btn').innerHTML = '<i class="ti ti-check"></i> Actualizar contacto';
     document.getElementById('modal-contact-edit-id').value = id;
 
-    // Cargar datos en el modal
     document.getElementById('modal-contact-name').value = contacto.name || '';
     document.getElementById('modal-contact-lastnames').value = contacto.lastnames || '';
     document.getElementById('modal-contact-email').value = contacto.email || '';
@@ -1357,7 +1617,6 @@ function guardarContactoModal() {
     const editId = parseInt(document.getElementById('modal-contact-edit-id').value);
 
     if (editId) {
-        // Modo edición - Actualizar contacto existente
         const index = contactos.findIndex(c => c.id === editId);
         if (index !== -1) {
             contactos[index] = {
@@ -1372,7 +1631,6 @@ function guardarContactoModal() {
             actualizarFilaContacto(contactos[index]);
         }
     } else {
-        // Modo nuevo - Crear contacto
         const contacto = {
             id: contactos.length + 1,
             name: name,
@@ -1416,28 +1674,38 @@ document.getElementById('modal-contacto').addEventListener('click', function(e) 
     }
 });
 
-// ── Enviar formulario - Agregar contactos como inputs ocultos ──
+// ════════════════════════════════════════════════════════════════
+// ── ENVIAR FORMULARIO - Mapeo correcto de campos ──
+// ════════════════════════════════════════════════════════════════
 document.getElementById('form-supplier').addEventListener('submit', function(e) {
+    // Eliminar inputs de contactos anteriores
     document.querySelectorAll('input[name^="contacts"]').forEach(el => el.remove());
 
     contactos.forEach((contacto, index) => {
-        const fields = ['name', 'lastnames', 'email', 'qualification', 'phone1', 'phone2'];
+        // Mapeo de campos: el nombre en el objeto → nombre esperado por el controlador
+        const fields = [
+            { key: 'name', value: contacto.name },
+            { key: 'last_names', value: contacto.lastnames },
+            { key: 'email', value: contacto.email },
+            { key: 'qualification', value: contacto.qualification },
+            { key: 'first_phone', value: contacto.phone1 },
+            { key: 'second_phone', value: contacto.phone2 }
+        ];
+
         fields.forEach(field => {
-            if (contacto[field]) {
+            if (field.value) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
-                input.name = `contacts[${index}][${field}]`;
-                input.value = contacto[field];
+                input.name = `contacts[${index}][${field.key}]`;
+                input.value = field.value;
                 this.appendChild(input);
             }
         });
     });
 });
 
-// ── Inicializar ──
 document.addEventListener('DOMContentLoaded', function () {
-    // No se agrega contacto inicial automáticamente
-    // El usuario debe agregarlos manualmente
+    // Inicialización si es necesaria
 });
 </script>
 @endpush

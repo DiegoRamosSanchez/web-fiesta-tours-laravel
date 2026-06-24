@@ -91,6 +91,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/{supplier}/editar',  [SupplierController::class, 'edit'])->name('edit');
         Route::put('/{supplier}',         [SupplierController::class, 'update'])->name('update');
         Route::delete('/{supplier}',      [SupplierController::class, 'destroy'])->name('destroy');
+        Route::get('/{supplier}/pdf',     [SupplierController::class, 'exportPdf'])->name('pdf');
+
     });
 
     // ── SOLO ADMIN: gestión de usuarios del sistema ──
