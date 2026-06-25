@@ -204,8 +204,12 @@
 
     <div class="sb-foot">
         <div class="sb-user">
-            <div class="sb-av">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
-            <div>
+             @if(Auth::user()->avatar)
+                <div class="sb-av"><img class="sb-av" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
+            @else
+                <div class="sb-av">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+            @endif
+                        <div>
                 <div class="sb-uname">{{ Str::limit(auth()->user()->name, 16) }}</div>
                 <div class="sb-urole">{{ ucfirst(auth()->user()->role) }}</div>
             </div>
@@ -233,7 +237,13 @@
             {{-- DROPDOWN PERFIL --}}
             <div class="u-menu" id="userMenu">
                 <div class="u-trigger" onclick="toggleMenu()">
-                    <div class="u-av">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+                    @if(Auth::user()->avatar)
+                        <div class="u-av"><img class="u-av" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
+                    @else
+                        <div class="u-av">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+                        
+                    @endif
+
                     <div>
                         <div class="u-name">{{ Str::limit(auth()->user()->name, 14) }}</div>
                         <div class="u-role">{{ ucfirst(auth()->user()->role) }}</div>

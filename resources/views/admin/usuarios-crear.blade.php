@@ -30,14 +30,24 @@
             </a>
         </div>
 
-        <form action="{{ route('admin.usuarios.store') }}" method="POST">
+        <form action="{{ route('admin.usuarios.store') }}" enctype="multipart/form-data" method="POST">
             @csrf
             <div class="form-grid" style="margin-bottom:1.1rem">
+
+
+                <div class="form-field">
+                    <label for="avatar">Sube tu foto de perfil: *</label>
+                    <input type="file" name="avatar" id="avatar" accept="image/*">
+                    @error('avatar')
+                        <span style="color: red; font-size: 0.85rem;">{{ $message }}</span>
+                    @enderror
+                </div>
                 <div class="form-field">
                     <label>Nombre completo *</label>
                     <input type="text" name="name" value="{{ old('name') }}"
                            placeholder="Nombre del usuario" required>
                 </div>
+                
                 <div class="form-field">
                     <label>Correo electrónico *</label>
                     <input type="email" name="email" value="{{ old('email') }}"

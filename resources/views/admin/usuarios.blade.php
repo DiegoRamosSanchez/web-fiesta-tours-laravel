@@ -30,9 +30,14 @@
                     <td style="color:#cbd5e1;font-size:12px">{{ $u->id }}</td>
                     <td>
                         <div style="display:flex;align-items:center;gap:10px">
-                            <div class="avatar-sm" style="background:{{ $u->isAdmin() ? '#ede9fe' : '#dcfce7' }};color:{{ $u->isAdmin() ? '#6d28d9' : '#166534' }}">
-                                {{ strtoupper(substr($u->name, 0, 2)) }}
-                            </div>
+
+                             @if($u->avatar)
+                                <div class="avatar-sm"><img class="avatar-sm" src="{{ asset('storage/' . $u->avatar) }}" /></div>
+                            @else
+                                <div class="avatar-sm" style="background:{{ $u->isAdmin() ? '#ede9fe' : '#dcfce7' }};color:{{ $u->isAdmin() ? '#6d28d9' : '#166534' }}">
+                                    {{ strtoupper(substr($u->name, 0, 2)) }}
+                                </div>
+                            @endif
                             <div>
                                 <div style="font-weight:600;font-size:13px">{{ $u->name }}</div>
                                 @if($u->id === auth()->id())

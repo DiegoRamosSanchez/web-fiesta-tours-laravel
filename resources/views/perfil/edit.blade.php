@@ -46,6 +46,13 @@
     font-size: 22px; color: #fff; font-weight: 700;
     margin-bottom: 1rem;
 }
+.pc-avatar_feature {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: 3px solid rgba(255,255,255,.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #fff; font-weight: 700;
+}
 .pc-name { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.3; }
 .pc-email { font-size: .75rem; color: rgba(255,255,255,.5); margin-top: 3px; }
 .pc-role {
@@ -227,7 +234,12 @@
 
             <div class="pc-inner">
                 <div class="pc-eyebrow">Vista previa del perfil</div>
+                
+                @if(Auth::user()->avatar)
+                    <div class="pc-avatar"><img class="pc-avatar_feature" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
+                @else
                 <div class="pc-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+                @endif
                 <div class="pc-name">{{ auth()->user()->name }}</div>
                 <div class="pc-email">{{ auth()->user()->email }}</div>
                 <span class="pc-role" style="{{ auth()->user()->isAdmin() ? 'background:rgba(109,40,217,.3);color:#c4b5fd' : 'background:rgba(22,101,52,.3);color:#86efac' }}">
@@ -286,7 +298,11 @@
                 </div>
                 <div class="ec-body">
                     <div class="avatar-preview">
-                        <div class="ap-circle">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+                        @if(Auth::user()->avatar)
+                            <div class="ap-circle"><img class="ap-circle" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
+                        @else
+                            <div class="ap-circle">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+                        @endif
                         <div>
                             <div class="ap-name">{{ auth()->user()->name }}</div>
                             <div class="ap-email">{{ auth()->user()->email }}</div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -20,17 +21,25 @@ class UserController extends Controller
         return view('admin.usuarios-crear');
     }
 
-    public function store(Request $request)
+     public function store(Request $request)
     {
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
             'role'     => 'required|in:admin,usuario',
+            'avatar'   => 'required|max:10240', 
         ]);
+
+        $avatarPath = null;
+
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+        }
 
         User::create([
             'name'     => $request->name,
+            'avatar'   => $avatarPath, 
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'role'     => $request->role,
@@ -38,6 +47,7 @@ class UserController extends Controller
 
         return redirect()->route('admin.usuarios')->with('success', 'Usuario creado correctamente.');
     }
+
 
     public function destroy(User $user)
     {

@@ -51,6 +51,15 @@
     font-size: 22px; color: #fff; font-weight: 700;
     margin-bottom: 1rem;
 }
+
+
+.ph-avatar_image {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: 3px solid rgba(255,255,255,.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #fff; font-weight: 700;
+}
 .ph-name { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.3; }
 .ph-role {
     display: inline-flex; align-items: center; gap: 4px;
@@ -209,7 +218,12 @@
 
             <div class="ph-inner">
                 <div class="ph-eyebrow">Fiesta Tours · Mi cuenta</div>
-                <div class="ph-avatar">{{ strtoupper(substr($user->name, 0, 2)) }}</div>
+               
+                @if(Auth::user()->avatar)
+                    <div class="ph-avatar"><img class="ph-avatar_image" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
+                @else
+                    <div class="ph-avatar">{{ strtoupper(substr($user->name, 0, 2)) }}</div>
+                @endif
                 <div class="ph-name">{{ $user->name }}</div>
                 <span class="ph-role" style="{{ $user->isAdmin() ? 'background:rgba(109,40,217,.3);color:#c4b5fd' : 'background:rgba(22,101,52,.3);color:#86efac' }}">
                     <i class="ti {{ $user->isAdmin() ? 'ti-shield-check' : 'ti-user' }}" style="font-size:10px"></i>
