@@ -16,35 +16,45 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
     /**
      * Headers reales del archivo (fila 1):
-     * NOMBRE | PAIS | Contacto | Mail | Telefono
-     * Maatwebsite normaliza esto a: nombre, pais, contacto, mail, telefono
+     * NOMBRE | PAIS | Contacto | Mail | Direccion | Telefono
+     * Maatwebsite normaliza esto a: nombre, pais, contacto, mail, direccion, telefono
+     * (Nota: el ORDEN de las columnas no afecta nada, porque WithHeadingRow
+     * mapea por NOMBRE de encabezado, no por posición de columna).
      */
     public function headingRow(): int
     {
         return 1;
     }
 
+    // Límites de longitud según la migración de la BD
+    private const MAX_GENERAL_PHONE = 20;
+    private const MAX_PHONE         = 20;
+    private const MAX_ADDRESS       = 255;
+
     public function collection(Collection $rows)
     {
         $grouped = [];
-        $currentAgencia = null;
-        $currentPais = null;
+        $currentAgencia  = null;
+        $currentPais     = null;
         $currentTelefono = null;
+        $currentDireccion = null;
 
         foreach ($rows as $row) {
             // ─── Soporta nombres de columnas alternativos por si cambia el export ───
-            $nombreRaw   = trim((string) ($row['nombre'] ?? $row['agencia_cliente'] ?? ''));
-            $pais        = trim((string) ($row['pais'] ?? $row['country_name'] ?? ''));
-            $contacto    = trim((string) ($row['contacto'] ?? $row['contacto_1'] ?? ''));
-            $mail        = trim((string) ($row['mail'] ?? $row['email_1'] ?? ''));
-            $telefonoRaw = trim((string) ($row['telefono'] ?? $row['telefono_1'] ?? ''));
+            $nombreRaw    = trim((string) ($row['nombre'] ?? $row['agencia_cliente'] ?? ''));
+            $pais         = trim((string) ($row['pais'] ?? $row['country_name'] ?? ''));
+            $contacto     = trim((string) ($row['contacto'] ?? $row['contacto_1'] ?? ''));
+            $mail         = trim((string) ($row['mail'] ?? $row['email_1'] ?? ''));
+            $telefonoRaw  = trim((string) ($row['telefono'] ?? $row['telefono_1'] ?? ''));
+            $direccionRaw = trim((string) ($row['direccion'] ?? $row['address'] ?? ''));
 
             // ─── Las celdas combinadas (merge) de Excel solo traen valor en la ───
             // ─── primera fila del grupo; el resto llega vacío. Hacemos forward-fill. ───
             if ($nombreRaw !== '') {
-                $currentAgencia = $nombreRaw;
-                $currentPais = $pais !== '' ? $pais : $currentPais;
-                $currentTelefono = $telefonoRaw !== '' ? $telefonoRaw : null;
+                $currentAgencia   = $nombreRaw;
+                $currentPais      = $pais !== '' ? $pais : $currentPais;
+                $currentTelefono  = $telefonoRaw !== '' ? $telefonoRaw : null;
+                $currentDireccion = $direccionRaw !== '' ? $direccionRaw : null;
             }
 
             // Si no hay agencia activa (fila de cierre/footer/vacía), se omite
@@ -53,11 +63,10 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 continue;
             }
 
-            // Fila sin contacto (ej. nombre de agencia sin datos de contacto) se omite del detalle
-            // pero igual permite crear el cliente si es la única fila del grupo
             $grouped[$currentAgencia] ??= [
-                'pais'     => $currentPais,
-                'telefono' => $currentTelefono,
+                'pais'      => $currentPais,
+                'telefono'  => $currentTelefono,
+                'direccion' => $currentDireccion,
                 'contactos' => [],
             ];
 
@@ -73,6 +82,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
         foreach ($grouped as $agencia => $data) {
             try {
                 $countryName = $data['pais'] ?: null;
+                $address     = $this->safeTruncate($data['direccion'] ?? null, self::MAX_ADDRESS);
 
                 $client = Client::firstOrCreate(
                     ['name_client' => $agencia],
@@ -83,7 +93,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                         'general_email' => $data['contactos'][0]['email'] ?? null,
                         'country_name'  => $countryName,
                         'city_name'     => null,
-                        'address'       => null,
+                        'address'       => $address,
                     ]
                 );
 
@@ -97,6 +107,9 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 }
                 if (empty($client->general_email) && !empty($data['contactos'][0]['email'] ?? null)) {
                     $clientUpdates['general_email'] = $data['contactos'][0]['email'];
+                }
+                if (empty($client->address) && !empty($address)) {
+                    $clientUpdates['address'] = $address;
                 }
                 if (!empty($clientUpdates)) {
                     $client->update($clientUpdates);
@@ -139,7 +152,8 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
     }
 
     /**
-     * Divide un string de teléfono(s) separado por "/" en dos valores.
+     * Divide un string de teléfono(s) separado por "/" en dos valores,
+     * y los recorta para que nunca superen el límite de la columna en BD.
      * Ej: "55 51 3408 2198 / 55 51 98299 2137" -> ["55 51 3408 2198", "55 51 98299 2137"]
      */
     private function splitPhones(?string $telefono): array
@@ -154,19 +168,45 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
         if (str_contains($telefono, '/')) {
             $parts = array_map('trim', explode('/', $telefono, 2));
-            return [$parts[0] ?: null, $parts[1] ?: null];
+            $tel1 = $parts[0] ?: null;
+            $tel2 = $parts[1] ?: null;
+        } else {
+            $tel1 = $telefono;
+            $tel2 = null;
         }
 
-        return [$telefono, null];
+        return [
+            $this->safeTruncate($tel1, self::MAX_PHONE),
+            $this->safeTruncate($tel2, self::MAX_PHONE),
+        ];
     }
 
     /**
-     * Obtiene solo el primer teléfono de un string que puede traer varios separados por "/".
-     * Usado para el campo general_phone del cliente.
+     * Obtiene solo el primer teléfono de un string que puede traer varios separados por "/",
+     * ya recortado al límite permitido por la columna general_phone.
      */
     private function firstPhone(?string $telefono): ?string
     {
         [$tel1, ] = $this->splitPhones($telefono);
         return $tel1;
+    }
+
+    /**
+     * Recorta un valor de forma segura para que nunca supere el límite de
+     * la columna en BD (evita el error SQLSTATE[22001] "Data too long").
+     */
+    private function safeTruncate(?string $value, int $maxLength): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        return mb_substr($value, 0, $maxLength);
     }
 }

@@ -52,14 +52,14 @@ class ClientController extends Controller
             };
         }
 
-        // Orden
+
         match ($request->input('sort', 'newest')) {
-            'oldest' => $query->orderBy('created_at', 'asc'),
-            'az'     => $query->orderBy('name_client', 'asc'),
-            'za'     => $query->orderBy('name_client', 'desc'),
-            'tax-az' => $query->orderBy('tax_code', 'asc'),
-            'tax-za' => $query->orderBy('tax_code', 'desc'),
-            default  => $query->orderBy('created_at', 'desc'),
+            'oldest' => $query->orderBy('created_at', 'asc')->orderBy('id_client', 'asc'),
+            'az'     => $query->orderBy('name_client', 'asc')->orderBy('id_client', 'asc'),
+            'za'     => $query->orderBy('name_client', 'desc')->orderBy('id_client', 'desc'),
+            'tax-az' => $query->orderBy('tax_code', 'asc')->orderBy('id_client', 'asc'),
+            'tax-za' => $query->orderBy('tax_code', 'desc')->orderBy('id_client', 'desc'),
+            default  => $query->orderBy('created_at', 'asc')->orderBy('id_client', 'asc'),
         };
 
         $clients = $query->paginate(8)->withQueryString(); // 👈 conserva los filtros en los links de paginación
