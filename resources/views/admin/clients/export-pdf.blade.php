@@ -6,81 +6,229 @@
     <title>Listado de Clientes</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Arial', sans-serif; font-size: 12px; color: #1a1a2e; background: #fff; padding: 20px 25px; line-height: 1.5; }
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 9.5px;
+            color: #333333;
+            background: #ffffff;
+            padding: 12px 18px;
+            line-height: 1.5;
+        }
         .container { max-width: 100%; margin: 0 auto; }
 
-        /* ── FRANJA DORADA ── */
-        .gold-strip { background-color: #C9A84C; height: 5px; border-radius: 8px 8px 0 0; }
+        /* ── HEADER ── */
+        .header {
+            border-bottom: 3px solid #1a1a2e;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .header h1 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .header .subtitle {
+            font-size: 8px;
+            color: #888888;
+            text-align: right;
+            line-height: 1.4;
+        }
 
-        /* ── ENCABEZADO ── */
-        .header { background: #0B1F3A; padding: 18px 25px; border-radius: 0 0 8px 8px; margin-bottom: 20px; }
-        .header h1 { font-size: 20px; font-weight: 700; color: #C9A84C; margin: 0; letter-spacing: 0.5px; }
-        .header .subtitle { font-size: 9px; color: #94A3B8; font-style: italic; margin-top: 4px; }
-
-        /* ── RESUMEN HORIZONTAL CON TABLA ── */
-        .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 22px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
-        .summary-table td { padding: 12px 16px; text-align: center; vertical-align: middle; border-right: 1px solid #e2e8f0; }
+        /* ── RESUMEN EN UNA SOLA FILA ── */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            border: 1px solid #e0e0e0;
+        }
+        .summary-table td {
+            padding: 8px 12px;
+            text-align: center;
+            vertical-align: middle;
+            border-right: 1px solid #e8e8e8;
+        }
         .summary-table td:last-child { border-right: none; }
-        .summary-table .label { display: block; font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-        .summary-table .value { display: block; font-size: 20px; font-weight: 700; color: #0B1F3A; margin-top: 2px; }
-        .summary-table .value.gold { color: #C9A84C; }
+        .summary-table .label {
+            display: block;
+            font-size: 7.5px;
+            font-weight: 700;
+            color: #888888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .summary-table .value {
+            display: block;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-top: 2px;
+        }
 
-        /* ── DETALLE DE CONTACTOS ── */
-        .section-title { font-size: 16px; font-weight: 700; color: #0B1F3A; margin: 20px 0 14px 0; padding-bottom: 8px; border-bottom: 3px solid #C9A84C; }
+        /* ── TARJETA DE CLIENTE ── */
+        .client-card {
+            border: 1px solid #e0e0e0;
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+        }
+        .client-card .card-header {
+            background: #f5f5f5;
+            padding: 6px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #1a1a2e;
+        }
+        .client-card .card-header .client-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: 0.5px;
+        }
+        .client-card .card-header .contact-badge {
+            font-size: 9px;
+            color: #555555;
+            font-weight: 600;
+        }
 
-        .client-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 16px; padding: 16px 20px; page-break-inside: avoid; }
-        .client-card .client-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; }
-        .client-card .client-name { font-size: 15px; font-weight: 700; color: #0B1F3A; }
-        .client-card .client-count { font-size: 11px; color: #64748b; background: #f1f5f9; padding: 2px 14px; border-radius: 20px; font-weight: 600; }
+        /* ── TABLA DE DATOS DE EMPRESA ── */
+        .company-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+        .company-table td {
+            padding: 4px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        .company-table tr:last-child td { border-bottom: none; }
+        .company-table .label {
+            font-weight: 700;
+            color: #666666;
+            width: 10%;
+            min-width: 70px;
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .company-table .value {
+            color: #333333;
+            font-weight: 400;
+        }
+        .company-table .value.empty { color: #cccccc; }
 
-        .client-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 10.5px; }
-        .client-info-grid .info-item { display: flex; gap: 4px; }
-        .client-info-grid .info-label { color: #94a3b8; font-weight: 600; min-width: 90px; }
-        .client-info-grid .info-value { color: #0f172a; font-weight: 500; }
-
-        {{-- NUEVO: Bloque de ubicación separado (Dirección puede ser larga, va a ancho completo) --}}
-        .client-location { background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 10.5px; border-top: 1px dashed #e2e8f0; }
-        .client-location .location-row { display: flex; gap: 4px; flex-wrap: wrap; }
-        .client-location .location-row + .location-row { margin-top: 4px; }
-        .client-location .info-label { color: #94a3b8; font-weight: 600; min-width: 90px; }
-        .client-location .info-value { color: #0f172a; font-weight: 500; }
-
-        .contacts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .contact-item { background: #fafafa; border: 1px solid #e8ecf0; border-radius: 8px; padding: 10px 14px; }
-        .contact-item.principal { background: #FFF8E7; border-color: #C9A84C; }
-        .contact-item .contact-name { font-size: 13px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .contact-item .badge-principal { background: #C9A84C; color: #0B1F3A; font-size: 7px; font-weight: 700; padding: 1px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .contact-item .contact-detail { font-size: 10.5px; color: #475569; margin-top: 4px; display: flex; flex-direction: column; gap: 1px; }
-        .contact-item .contact-detail .row { display: flex; align-items: baseline; gap: 4px; }
-        .contact-item .contact-detail .label { color: #94a3b8; font-weight: 600; min-width: 60px; }
-        .contact-item .contact-detail .value { color: #0f172a; }
-
-        /* ── PIE DE PÁGINA ── */
-        .footer { background-color: #E8C97A; color: #0B1F3A; text-align: center; padding: 10px 20px; font-size: 9px; font-style: italic; border-radius: 8px; margin-top: 25px; }
-
-        /* ── RESPONSIVE ── */
-        @media print { body { padding: 15px 20px; } .contacts-grid { grid-template-columns: 1fr; } .client-card { break-inside: avoid; page-break-inside: avoid; } }
-
-        @page { margin: 12mm 10mm 12mm 10mm; }
+        /* ── TABLA DE CONTACTOS ── */
+        .contacts-table-wrap {
+            padding: 0 12px 10px 12px;
+        }
+        .contacts-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.5px;
+            margin-top: 4px;
+        }
+        .contacts-table th {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            text-align: left;
+            font-size: 7px;
+            font-weight: 700;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e8e8e8;
+        }
+        .contacts-table td {
+            padding: 3px 8px;
+            border-bottom: 1px solid #f2f2f2;
+            vertical-align: middle;
+            font-size: 8.5px;
+            color: #333333;
+        }
+        .contacts-table tr:last-child td { border-bottom: none; }
+        .contacts-table .contact-name {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .contacts-table .principal-badge {
+            display: inline-block;
+            background: #1a1a2e;
+            color: #ffffff;
+            font-size: 6.5px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        .contacts-table .principal-badge.no {
+            background: transparent;
+            color: #cccccc;
+            font-weight: 400;
+        }
+        .contacts-table .text-muted { color: #aaaaaa; }
+        .contacts-table .empty-cell {
+            text-align: center;
+            color: #aaaaaa;
+            font-style: italic;
+            padding: 10px 0;
+        }
 
         /* ── SIN REGISTROS ── */
-        .empty-state { text-align: center; padding: 40px; color: #94a3b8; border: 2px dashed #e2e8f0; border-radius: 12px; }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999999;
+            border: 1px solid #e8e8e8;
+        }
+        .empty-state .icon { font-size: 28px; margin-bottom: 6px; }
+        .empty-state .title { font-size: 14px; font-weight: 600; color: #666666; }
+        .empty-state .sub { font-size: 10px; color: #999999; margin-top: 2px; }
+
+        /* ── FOOTER ── */
+        .footer {
+            text-align: center;
+            font-size: 7px;
+            color: #999999;
+            border-top: 1px solid #e8e8e8;
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+
+        /* ── PRINT ── */
+        @media print {
+            body { padding: 8px 12px; }
+            .client-card { break-inside: avoid; page-break-inside: avoid; }
+            .card-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .summary-table { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .contacts-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .principal-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+
+        @page {
+            margin: 8mm 8mm 8mm 8mm;
+            size: A4 portrait;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Franja dorada -->
-        <div class="gold-strip"></div>
-
-        <!-- Encabezado -->
+        <!-- HEADER -->
         <div class="header">
-            <h1>FIESTA TOURS PERU · Listado de Clientes</h1>
+            <h1>FIESTA TOURS PERU</h1>
             <div class="subtitle">
-                Generado: {{ now()->format('d/m/Y H:i') }} hrs · Documento confidencial · Uso interno · www.fiestatoursperu.com
+                Listado de Clientes<br>
+                {{ now()->format('d/m/Y H:i') }} hrs
             </div>
         </div>
 
-        <!-- Resumen Horizontal con TABLA (más compatible) -->
+        <!-- RESUMEN EN UNA SOLA FILA -->
         <table class="summary-table">
             <tr>
                 <td>
@@ -89,11 +237,11 @@
                 </td>
                 <td>
                     <span class="label">Total Contactos</span>
-                    <span class="value gold">{{ $clients->sum('contacts_count') }}</span>
+                    <span class="value">{{ $clients->sum('contacts_count') }}</span>
                 </td>
                 <td>
-                    <span class="label">Clientes Activos</span>
-                    <span class="value">{{ $clients->count() }}</span>
+                    <span class="label">Promedio</span>
+                    <span class="value">{{ $clients->count() > 0 ? number_format($clients->sum('contacts_count') / $clients->count(), 1) : 0 }}</span>
                 </td>
                 <td>
                     <span class="label">Fecha Generación</span>
@@ -102,106 +250,104 @@
             </tr>
         </table>
 
-        <!-- Detalle de Contactos por Cliente -->
-        <div class="section-title">
-            Detalle de Contactos por Cliente
-        </div>
-
+        <!-- TARJETAS DE CLIENTES -->
         @forelse($clients as $client)
             <div class="client-card">
-                <div class="client-header">
-                    <div class="client-name">{{ $client->name_client }}</div>
-                    <div class="client-count">{{ $client->contacts_count }} contacto(s)</div>
+                <!-- Header de la tarjeta -->
+                <div class="card-header">
+                    <span class="client-name">{{ $client->name_client }}</span>
+                    <span class="contact-badge">{{ $client->contacts_count }} contacto(s)</span>
                 </div>
 
-                {{-- Información del cliente --}}
-                <div class="client-info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Razón Social:</span>
-                        <span class="info-value">{{ $client->business_name ?? '—' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Código Tributario:</span>
-                        <span class="info-value">{{ $client->tax_code ?? '—' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Teléfono General:</span>
-                        <span class="info-value">{{ $client->general_phone ?? '—' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Email General:</span>
-                        <span class="info-value">{{ $client->general_email ?? '—' }}</span>
-                    </div>
-                </div>
+                <!-- Tabla de datos de la empresa -->
+                <table class="company-table">
+                    <tr>
+                        <td class="label">Empresa:</td>
+                        <td class="value">{{ $client->name_client }}</td>
+                        <td class="label" style="width:8%;">RUC:</td>
+                        <td class="value" style="width:25%;">{{ $client->tax_code ?? '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Teléfono:</td>
+                        <td class="value">{{ $client->general_phone ?? '—' }}</td>
+                        <td class="label">Email:</td>
+                        <td class="value" style="font-size:8px;">{{ $client->general_email ?? '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Ubicación:</td>
+                        <td class="value">{{ $client->country_name ?? '' }}{{ $client->country_name && $client->city_name ? ', ' : '' }}{{ $client->city_name ?? ' ' }}</td>
+                        <td class="label">Dirección:</td>
+                        <td class="value" style="font-size:8px;">{{ $client->address ?? '—' }}</td>
+                    </tr>
+                    @if($client->business_name)
+                    <tr>
+                        <td class="label">Razón Social:</td>
+                        <td class="value" colspan="3">{{ $client->business_name }}</td>
+                    </tr>
+                    @endif
+                </table>
 
-                {{-- NUEVO: Ubicación (País, Ciudad, Dirección) --}}
-                @if($client->country_name || $client->city_name || $client->address)
-                    <div class="client-location">
-                        <div class="location-row">
-                            <span class="info-label">País:</span>
-                            <span class="info-value">{{ $client->country_name ?? '—' }}</span>
-                            <span style="width:18px"></span>
-                            <span class="info-label">Ciudad:</span>
-                            <span class="info-value">{{ $client->city_name ?? '—' }}</span>
-                        </div>
-                        @if($client->address)
-                            <div class="location-row">
-                                <span class="info-label">Dirección:</span>
-                                <span class="info-value">{{ $client->address }}</span>
-                            </div>
-                        @endif
-                    </div>
-                @endif
-
-                @if($client->contacts->isNotEmpty())
-                    <div class="contacts-grid">
-                        @foreach($client->contacts as $contact)
-                            <div class="contact-item {{ $contact->es_principal ? 'principal' : '' }}">
-                                <div class="contact-name">
-                                    {{ trim($contact->name . ' ' . $contact->last_names) }}
-                                    @if($contact->es_principal)
-                                        <span class="badge-principal">Principal</span>
-                                    @endif
-                                </div>
-                                <div class="contact-detail">
-                                    <div class="row">
-                                        <span class="label">Cargo:</span>
-                                        <span class="value">{{ $contact->qualification ?? '—' }}</span>
-                                    </div>
-                                    <div class="row">
-                                        <span class="label">Email:</span>
-                                        <span class="value">{{ $contact->email ?? '—' }}</span>
-                                    </div>
-                                    <div class="row">
-                                        <span class="label">Teléfonos:</span>
-                                        <span class="value">
-                                            {{ $contact->first_phone ?? '—' }}
-                                            @if($contact->second_phone)
-                                                | {{ $contact->second_phone }}
+                <!-- Tabla de contactos -->
+                <div class="contacts-table-wrap">
+                    @if($client->contacts->isNotEmpty())
+                        <table class="contacts-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:22%;">Contacto</th>
+                                    <th style="width:12%;">Principal</th>
+                                    <th style="width:18%;">Cargo</th>
+                                    <th style="width:28%;">Email</th>
+                                    <th style="width:20%;">Teléfonos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($client->contacts as $contact)
+                                    <tr>
+                                        <td class="contact-name">
+                                            {{ trim($contact->name . ' ' . $contact->last_names) }}
+                                        </td>
+                                        <td>
+                                            @if($contact->es_principal)
+                                                <span class="principal-badge">Principal</span>
+                                            @else
+                                                <span class="principal-badge no">—</span>
                                             @endif
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div style="text-align:center;padding:8px;color:#94a3b8;font-size:11px;font-style:italic;">
-                        No hay contactos registrados
-                    </div>
-                @endif
+                                        </td>
+                                        <td>{{ $contact->qualification ?? '—' }}</td>
+                                        <td style="font-size:8px;">{{ $contact->email ?? '—' }}</td>
+                                        <td>
+                                            @if($contact->first_phone)
+                                                {{ $contact->first_phone }}
+                                                @if($contact->second_phone)
+                                                    <span style="color:#cccccc;padding:0 3px;">|</span>
+                                                    {{ $contact->second_phone }}
+                                                @endif
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <div style="text-align:center;color:#aaaaaa;font-style:italic;font-size:9px;padding:6px 0;">
+                            No hay contactos registrados para este cliente
+                        </div>
+                    @endif
+                </div>
             </div>
         @empty
             <div class="empty-state">
-                <div style="font-size:28px;margin-bottom:8px;">📭</div>
-                <div style="font-size:14px;font-weight:600;color:#64748b;">No hay clientes registrados</div>
-                <div style="font-size:11px;margin-top:4px;color:#94a3b8;">Comienza creando tu primer cliente</div>
+                <div class="icon">📭</div>
+                <div class="title">No hay clientes registrados</div>
+                <div class="sub">Comienza creando tu primer contacto</div>
             </div>
         @endforelse
 
-        <!-- Pie de página -->
+        <!-- FOOTER -->
         <div class="footer">
-            Fiesta Tours Peru &copy; {{ now()->format('Y') }} · Lima, Peru · Sistema de Gestion Interna
+            Fiesta Tours Peru &copy; {{ now()->format('Y') }} · Lima, Peru · Sistema de Gestión Interna
         </div>
     </div>
 </body>
