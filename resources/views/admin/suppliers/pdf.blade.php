@@ -231,10 +231,7 @@
                         <td class="info-label">Categoría</td>
                         <td class="info-value">{{ $supplier->category->category_name ?? '—' }}</td>
                     </tr>
-                    <tr>
-                        <td class="info-label">Fecha de Registro</td>
-                        <td class="info-value">{{ $supplier->created_at->format('d/m/Y, h:i A') }}</td>
-                    </tr>
+                  
                 </table>
             </div>
 

@@ -18,34 +18,80 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class SupplierController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search = $request->input('search');
+// En SupplierController.php, modifica el método index:
 
-        $suppliers = Supplier::with(['destination', 'category', 'bankAccounts.bank', 'contacts'])
-            ->when($search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('supplier_name', 'like', "%{$search}%")
-                        ->orWhere('business_name', 'like', "%{$search}%")
-                        ->orWhere('tax_code', 'like', "%{$search}%")
-                        ->orWhere('general_email', 'like', "%{$search}%")
-                        ->orWhere('general_phone', 'like', "%{$search}%")
-                        ->orWhere('country_name', 'like', "%{$search}%")
-                        ->orWhere('city_name', 'like', "%{$search}%")
-                        ->orWhere('address', 'like', "%{$search}%")
-                        ->orWhereHas('destination', function ($dq) use ($search) {
-                            $dq->where('destination_name', 'like', "%{$search}%");
-                        })
-                        ->orWhereHas('category', function ($cq) use ($search) {
-                            $cq->where('category_name', 'like', "%{$search}%");
-                        });
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->withQueryString();
+public function index(Request $request)
+{
+    $search = $request->input('search');
+    $country = $request->input('country');
+    $category = $request->input('category');
+    $sort = $request->input('sort', 'newest');
 
-        return view('admin.suppliers.index', compact('suppliers', 'search'));
+    // Obtener países y categorías para los filtros
+    $countries = Supplier::whereNotNull('country_name')
+        ->distinct()
+        ->pluck('country_name')
+        ->filter()
+        ->values()
+        ->toArray();
+
+    $categories = CategorySupplier::orderBy('category_name')
+        ->pluck('category_name', 'id_categories_suppliers')
+        ->toArray();
+
+    $suppliers = Supplier::with(['destination', 'category', 'bankAccounts.bank', 'contacts'])
+        ->when($search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('supplier_name', 'like', "%{$search}%")
+                    ->orWhere('business_name', 'like', "%{$search}%")
+                    ->orWhere('tax_code', 'like', "%{$search}%")
+                    ->orWhere('general_email', 'like', "%{$search}%")
+                    ->orWhere('general_phone', 'like', "%{$search}%")
+                    ->orWhere('country_name', 'like', "%{$search}%")
+                    ->orWhere('city_name', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhereHas('destination', function ($dq) use ($search) {
+                        $dq->where('destination_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('category', function ($cq) use ($search) {
+                        $cq->where('category_name', 'like', "%{$search}%");
+                    });
+            });
+        })
+        ->when($country, function ($query, $country) {
+            $query->where('country_name', $country);
+        })
+        ->when($category, function ($query, $category) {
+            $query->where('id_categories_suppliers', $category);
+        })
+        ->when($sort, function ($query, $sort) {
+            switch ($sort) {
+                case 'newest':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                case 'oldest':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'az':
+                    $query->orderBy('supplier_name', 'asc');
+                    break;
+                case 'za':
+                    $query->orderBy('supplier_name', 'desc');
+                    break;
+                case 'tax-az':
+                    $query->orderBy('tax_code', 'asc');
+                    break;
+                case 'tax-za':
+                    $query->orderBy('tax_code', 'desc');
+                    break;
+                default:
+                    $query->orderBy('created_at', 'desc');
+            }
+        })
+        ->paginate(10)
+        ->withQueryString();
+
+    return view('admin.suppliers.index', compact('suppliers', 'search', 'country', 'category', 'sort', 'countries', 'categories'));
     }
 
     public function create()

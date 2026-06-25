@@ -238,7 +238,11 @@
 
     /* ── Botones de acción ── */
     .btn-actions {
+
+        position:absolute;
         display:flex;
+        top:107px;
+        right:150px;
         justify-content: end;
         align-items:center;
         gap:1rem;
@@ -861,11 +865,8 @@
     @csrf
             <div class="btn-actions">
                 <button type="submit" class="btn-primary">
-                    <i class="ti ti-plus"></i> Crear proveedor
+                    <i class="ti ti-plus"></i> Guardar proveedor
                 </button>
-                <a href="{{ route('admin.suppliers.index') }}" class="btn-secondary">
-                    <i class="ti ti-x"></i> Cancelar
-                </a>
             </div>
     <div class="edit-supplier-layout">
 
@@ -884,7 +885,7 @@
                 </div>
 
                 <div class="field-group">
-                    <label>Nombre del proveedor <span class="req">*</span></label>
+                    <label>Nombre Comercial <span class="req">*</span></label>
                     <input type="text" name="supplier_name"
                            value="{{ old('supplier_name') }}"
                            placeholder="Ej: Agencia de Viajes Andina"

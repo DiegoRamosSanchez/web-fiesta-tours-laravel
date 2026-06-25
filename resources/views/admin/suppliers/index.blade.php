@@ -14,12 +14,6 @@
                   font-size:13px;font-weight:600;color:#6366f1;text-decoration:none">
             <i class="ti ti-file-upload" style="font-size:16px"></i> Importar
         </a>
-        {{-- <a href="#" id="btn-export-pdf-suppliers"
-           style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
-                  background:#fff;border:1px solid #e2e8f0;border-radius:8px;
-                  font-size:13px;font-weight:600;color:#ef4444;text-decoration:none">
-            <i class="ti ti-file-type-pdf" style="font-size:16px"></i> PDF
-        </a> --}}
         <a href="#" id="btn-export-excel-suppliers"
            style="display:inline-flex;align-items:center;gap:6px;padding:.5rem .9rem;
                   background:#fff;border:1px solid #e2e8f0;border-radius:8px;
@@ -32,34 +26,69 @@
     </div>
 </div>
 
-<div style="margin-bottom:1.2rem">
-    <form method="GET" action="{{ route('admin.suppliers.index') }}" style="display:flex;gap:8px;max-width:420px">
-        <div style="position:relative;flex:1">
-            <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:14px"></i>
-            <input
-                type="text"
-                name="search"
-                value="{{ $search }}"
-                placeholder="Buscar por nombre, RUC, email, destino..."
-                style="width:100%;padding:9px 12px 9px 34px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#0f172a"
-            >
-        </div>
-        <button type="submit" class="btn btn-secondary btn-sm">Buscar</button>
-        @if($search)
-            <a href="{{ route('admin.suppliers.index') }}" class="btn btn-light btn-sm" style="display:flex;align-items:center">
-                <i class="ti ti-x" style="font-size:13px"></i>
-            </a>
-        @endif
-    </form>
-</div>
+{{-- BARRA DE FILTROS --}}
+<div style="margin-bottom:1.2rem; display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#fff; padding:.8rem 1rem; border-radius:10px; border:1px solid #e2e8f0;">
+    {{-- Búsqueda --}}
+    <div style="position:relative;flex:1;min-width:200px">
+        <i class="ti ti-search" style="position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px"></i>
+        <input type="text" id="f-search" class="filter-input"
+               placeholder="Buscar por nombre, RUC, email, destino..."
+               style="width:100%;padding:.5rem .7rem .5rem 2.2rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#0f172a;outline:none;transition:border-color .15s;box-sizing:border-box">
+    </div>
 
+    <div style="width:1px;height:32px;background:#e2e8f0;flex-shrink:0"></div>
+
+    {{-- Filtro País --}}
+    <select id="f-country" class="filter-input" style="min-width:160px;padding:.5rem .7rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#0f172a;background:#fff;outline:none;transition:border-color .15s;box-sizing:border-box">
+        <option value="">Todos los países</option>
+        @foreach($countries as $countryName)
+            <option value="{{ $countryName }}" {{ $country == $countryName ? 'selected' : '' }}>
+                {{ $countryName }}
+            </option>
+        @endforeach
+    </select>
+
+    {{-- Filtro Categoría --}}
+    <select id="f-category" class="filter-input" style="min-width:160px;padding:.5rem .7rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#0f172a;background:#fff;outline:none;transition:border-color .15s;box-sizing:border-box">
+        <option value="">Todas las categorías</option>
+        @foreach($categories as $id => $catName)
+            <option value="{{ $id }}" {{ $category == $id ? 'selected' : '' }}>
+                {{ $catName }}
+            </option>
+        @endforeach
+    </select>
+
+    {{-- Ordenamiento --}}
+    <select id="f-sort" class="filter-input" style="min-width:170px;padding:.5rem .7rem;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#0f172a;background:#fff;outline:none;transition:border-color .15s;box-sizing:border-box">
+        <option value="newest" {{ $sort == 'newest' ? 'selected' : '' }}>Más recientes</option>
+        <option value="oldest" {{ $sort == 'oldest' ? 'selected' : '' }}>Más antiguos</option>
+        <option value="az" {{ $sort == 'az' ? 'selected' : '' }}>Proveedor A → Z</option>
+        <option value="za" {{ $sort == 'za' ? 'selected' : '' }}>Proveedor Z → A</option>
+        <option value="tax-az" {{ $sort == 'tax-az' ? 'selected' : '' }}>Código Tributario A → Z</option>
+        <option value="tax-za" {{ $sort == 'tax-za' ? 'selected' : '' }}>Código Tributario Z → A</option>
+    </select>
+
+    <div style="width:1px;height:32px;background:#e2e8f0;flex-shrink:0"></div>
+
+    {{-- Botón Limpiar --}}
+    <button onclick="clearFilters()"
+            style="padding:.5rem .9rem;background:none;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s"
+            onmouseover="this.style.background='#f1f5f9'"
+            onmouseout="this.style.background='none'">
+        <i class="ti ti-filter-off" style="font-size:14px"></i> Limpiar
+    </button>
+</div>
 
 @if($suppliers->isEmpty())
     <div style="text-align:center;padding:4rem;background:#fff;border-radius:14px;border:1px solid #e2e8f0">
         <i class="ti ti-truck-off" style="font-size:48px;color:#cbd5e1;display:block;margin-bottom:1rem"></i>
-        @if($search)
+        @if($search || $country || $category)
             <p style="font-size:15px;font-weight:600;color:#0f172a;margin-bottom:.4rem">No se encontraron proveedores</p>
-            <p style="font-size:13px;color:#94a3b8;margin-bottom:1.2rem">No hay resultados para "{{ $search }}"</p>
+            <p style="font-size:13px;color:#94a3b8;margin-bottom:1.2rem">
+                @if($search) No hay resultados para "{{ $search }}" @endif
+                @if($country) en {{ $country }} @endif
+                @if($category) en la categoría seleccionada @endif
+            </p>
             <a href="{{ route('admin.suppliers.index') }}" class="btn btn-secondary btn-sm">
                 <i class="ti ti-arrow-left"></i> Ver todos los proveedores
             </a>
@@ -81,8 +110,8 @@
                     <th>CÓDIGO TRIBUTARIO</th>
                     <th>EMAIL</th>
                     <th>TELÉFONO</th>
-                    <th>PAIS</th>
-                    <th>CATEGORIA</th>
+                    <th><i class="ti ti-map-pin" style="font-size:10px"></i>PAIS</th>
+                    <th><i class="ti ti-tag" style="font-size:10px"></i>CATEGORIA</th>
                     <th>REGISTRO</th>
                     <th style="text-align:center">ACCIONES</th>
                 </tr>
@@ -102,8 +131,7 @@
                     
                     <td>
                         @if($s->tax_code)
-                            <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:12px;padding:4px 8px;border-radius:6px">
-                                <i class="ti ti-receipt" style="font-size:10px"></i>
+                            <span class="badge" style="background: #fef3c7;color: #92400e;border:1px solid #fde68a;font-size:12px;padding:4px 8px;border-radius:6px">
                                 {{ $s->tax_code }}
                             </span>
                         @else
@@ -127,7 +155,6 @@
                     <td>
                         @if($s->country_name)
                             <span class="badge" style="background: #b4d6e6;color: #4b6080;border:1px solid #8acffd;padding:4px 8px;border-radius:6px">
-                                <i class="ti ti-map-pin" style="font-size:10px"></i>
                                 {{ $s->country_name }}
                             </span>
                         @else
@@ -137,7 +164,6 @@
                     <td>
                         @if($s->category)
                             <span class="badge" style="background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;padding:4px 8px;border-radius:6px">
-                                <i class="ti ti-tag" style="font-size:10px"></i>
                                 {{ $s->category->category_name }}
                             </span>
                         @else
@@ -147,7 +173,6 @@
                     
                     <td style="color:#94a3b8;font-size:12px">{{ $s->created_at->format('d/m/Y') }}</td>
                     <td>
-                        
                         <div style="display:flex;justify-content:center;gap:6px">
                             <button type="button" 
                                     class="btn btn-info btn-sm btn-open-modal" 
@@ -157,13 +182,13 @@
                             </button>
                             <a href="{{ route('admin.suppliers.pdf', $s->id_supplier) }}" 
                                 target="_blank"
-                        
-                                style=" display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;text-decoration:none;color: #fff;background: #ef4444b7;border:1px solid #be6868;"
+                                style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;text-decoration:none;color: #fff;background: #a34747fd;border:1px solid #be6868;"
                                 title="Exportar PDF">
-                                    <i class="ti ti-file-type-pdf" style="font-size:13px"></i>
+                                <i class="ti ti-file-type-pdf" style="font-size:13px"></i>
                             </a>
 
-                            <a href="{{ route('admin.suppliers.edit', $s->id_supplier) }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ route('admin.suppliers.edit', $s->id_supplier) }}" 
+                                style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;text-decoration:none;color: #ffffff;background: #b9c7d6fd;border:1px solid #98b8ce;">
                                 <i class="ti ti-edit" style="font-size:13px"></i>
                             </a>
                             
@@ -243,7 +268,7 @@
                 @endif
             </div>
             
-            @if($search)
+            @if($search || $country || $category)
                 <span id="footer-filter" style="color:#6366f1;font-size:12px;">
                     Resultados filtrados
                 </span>
@@ -251,6 +276,7 @@
         </div>
     </div>
 
+    {{-- MODALES --}}
     @foreach($suppliers as $s)
     <div id="modal-{{ $s->id_supplier }}" class="custom-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(15, 23, 42, 0.6); backdrop-filter:blur(4px); z-index:9999; justify-content:center; align-items:center; padding:1rem;">
         
@@ -404,7 +430,7 @@
     @endforeach
 @endif
 
-{{-- ══════════ MODAL EXPORTAR (PDF Y EXCEL) ══════════ --}}
+{{-- ══════════ MODAL EXPORTAR ══════════ --}}
 <div id="modal-export-suppliers">
     <div class="modal-box">
         <button class="modal-close" onclick="closeExportSuppliersModal()">
@@ -418,13 +444,12 @@
             </div>
             <div>
                 <h2 style="font-size:17px;font-weight:700;color:#0f172a;margin:0">
-                    Exportar <span id="export-type-label" style="color:#16a34a">PDF</span>
+                    Exportar <span id="export-type-label" style="color:#16a34a">Excel</span>
                 </h2>
                 <p style="font-size:12px;color:#94a3b8;margin:0">Selecciona qué datos quieres exportar</p>
             </div>
         </div>
 
-        {{-- Opción 1: Todos los proveedores (PDF y Excel) --}}
         <div class="export-option" onclick="exportAllSuppliers()">
             <div class="icon green">
                 <i class="ti ti-list"></i>
@@ -436,10 +461,9 @@
             <i class="ti ti-chevron-right arrow"></i>
         </div>
 
-        {{-- Opción 2: Proveedor específico --}}
         <div class="export-by-id-wrapper">
             <div class="header">
-                <div class="icon">
+                <div class="icon blue">
                     <i class="ti ti-truck"></i>
                 </div>
                 <div style="flex:1">
@@ -552,9 +576,8 @@
     justify-content: center;
     font-size: 18px;
     flex-shrink: 0;
-    background: #eff6ff;
-    color: #3b82f6;
 }
+.export-by-id-wrapper .icon.blue { background: #eff6ff; color: #3b82f6; }
 .export-by-id-wrapper .title { font-size: 14px; font-weight: 600; color: #0f172a; }
 .export-by-id-wrapper .sub { font-size: 12px; color: #94a3b8; }
 
@@ -598,10 +621,14 @@
     flex-shrink: 0;
 }
 .export-option .icon.green { background: #f0fdf4; color: #16a34a; }
-.export-option .icon.blue { background: #eff6ff; color: #3b82f6; }
 .export-option .title { font-size: 14px; font-weight: 600; color: #0f172a; }
 .export-option .sub { font-size: 12px; color: #94a3b8; }
 .export-option .arrow { color: #94a3b8; font-size: 18px; margin-left: auto; }
+
+.filter-input:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
 </style>
 
 <script>
@@ -667,24 +694,84 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    // 4. FILTROS EN TIEMPO REAL
+    const searchInput = document.getElementById('f-search');
+    const countrySelect = document.getElementById('f-country');
+    const categorySelect = document.getElementById('f-category');
+    const sortSelect = document.getElementById('f-sort');
+
+    function applyFilters() {
+        const search = searchInput.value;
+        const country = countrySelect.value;
+        const category = categorySelect.value;
+        const sort = sortSelect.value;
+        
+        let url = '{{ route("admin.suppliers.index") }}';
+        let params = new URLSearchParams();
+        
+        if (search) params.set('search', search);
+        if (country) params.set('country', country);
+        if (category) params.set('category', category);
+        if (sort && sort !== 'newest') params.set('sort', sort);
+        
+        const queryString = params.toString();
+        if (queryString) {
+            window.location.href = url + '?' + queryString;
+        } else {
+            window.location.href = url;
+        }
+    }
+
+    // Delay para búsqueda (debounce)
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(applyFilters, 400);
+    });
+
+    countrySelect.addEventListener('change', applyFilters);
+    categorySelect.addEventListener('change', applyFilters);
+    sortSelect.addEventListener('change', applyFilters);
+
+    // Enter en búsqueda
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(searchTimeout);
+            applyFilters();
+        }
+    });
 });
 
-// ══════════ EXPORTAR (PDF Y EXCEL) ══════════
-let exportSupplierId = null;
-let exportType = 'pdf';
+// 5. LIMPIAR FILTROS
+function clearFilters() {
+    const searchInput = document.getElementById('f-search');
+    const countrySelect = document.getElementById('f-country');
+    const categorySelect = document.getElementById('f-category');
+    const sortSelect = document.getElementById('f-sort');
+    
+    searchInput.value = '';
+    countrySelect.value = '';
+    categorySelect.value = '';
+    sortSelect.value = 'newest';
+    
+    window.location.href = '{{ route("admin.suppliers.index") }}';
+}
 
-// Rutas nombradas desde Laravel
-const EXPORT_PDF_ALL = '{{ route("admin.suppliers.export.pdf.all") }}';
+// ══════════ EXPORTAR ══════════
+let exportSupplierId = null;
+let exportType = 'excel';
+
+// Rutas desde Laravel
 const EXPORT_EXCEL_ALL = '{{ route("admin.suppliers.export.excel") }}';
-const EXPORT_PDF_SINGLE = '{{ route("admin.suppliers.pdf", ["supplier" => "__ID__"]) }}';
 const EXPORT_EXCEL_SINGLE = '{{ route("admin.suppliers.export.excel") }}';
 
-// Datos de proveedores
+// Datos de proveedores desde PHP
 const suppliersData = @json($suppliers->map(fn($s) => ['id' => $s->id_supplier, 'name' => $s->supplier_name, 'tax_code' => $s->tax_code]));
 
-// ── FUNCIONES DE EXPORTACIÓN ──
 function exportAllSuppliers() {
-    const url = exportType === 'excel' ? EXPORT_EXCEL_ALL : EXPORT_PDF_ALL;
+    const url = EXPORT_EXCEL_ALL;
     window.location.href = url;
     closeExportSuppliersModal();
 }
@@ -694,58 +781,37 @@ function exportSelectedSupplier() {
         alert('Por favor, selecciona un proveedor primero.');
         return;
     }
-    
-    if (exportType === 'excel') {
-        window.location.href = EXPORT_EXCEL_SINGLE + '?supplier_id=' + exportSupplierId;
-    } else {
-        const url = EXPORT_PDF_SINGLE.replace('__ID__', exportSupplierId);
-        window.location.href = url;
-    }
+    window.location.href = EXPORT_EXCEL_SINGLE + '?supplier_id=' + exportSupplierId;
     closeExportSuppliersModal();
 }
 
-// ── ABRIR MODAL ──
 function openExportSuppliersModal() {
     document.getElementById('modal-export-suppliers').classList.add('show');
     
-    // Cambiar título según tipo
     const label = document.getElementById('export-type-label');
     const icon = document.getElementById('export-modal-icon');
     
-    if (exportType === 'excel') {
-        label.textContent = 'Excel';
-        label.style.color = '#16a34a';
-        icon.style.color = '#16a34a';
-    } else {
-        label.textContent = 'PDF';
-        label.style.color = '#ef4444';
-        icon.style.color = '#ef4444';
-    }
+    label.textContent = 'Excel';
+    label.style.color = '#16a34a';
+    icon.style.color = '#16a34a';
     
     const input = document.getElementById('export-supplier-search');
     const clear = document.getElementById('export-supplier-clear');
-    const list  = document.getElementById('export-supplier-list');
-    const btn   = document.getElementById('export-supplier-btn');
-    input.value           = '';
+    const list = document.getElementById('export-supplier-list');
+    const btn = document.getElementById('export-supplier-btn');
+    input.value = '';
     input.style.borderColor = '#e2e8f0';
-    clear.style.display   = 'none';
-    list.style.display    = 'none';
-    btn.disabled          = true;
-    btn.style.opacity     = '.45';
-    btn.style.cursor      = 'default';
-    exportSupplierId      = null;
+    clear.style.display = 'none';
+    list.style.display = 'none';
+    btn.disabled = true;
+    btn.style.opacity = '.45';
+    btn.style.cursor = 'default';
+    exportSupplierId = null;
 }
 
 function closeExportSuppliersModal() {
     document.getElementById('modal-export-suppliers').classList.remove('show');
 }
-
-// ── BOTONES HEADER ──
-document.getElementById('btn-export-pdf-suppliers').addEventListener('click', function(e) {
-    e.preventDefault();
-    exportType = 'pdf';
-    openExportSuppliersModal();
-});
 
 document.getElementById('btn-export-excel-suppliers').addEventListener('click', function(e) {
     e.preventDefault();
@@ -753,24 +819,22 @@ document.getElementById('btn-export-excel-suppliers').addEventListener('click', 
     openExportSuppliersModal();
 });
 
-// ── CERRAR CON ESC ──
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeExportSuppliersModal();
 });
 
-// ── CERRAR CLIC FUERA ──
 document.getElementById('modal-export-suppliers').addEventListener('click', function(e) {
     if (e.target === this) closeExportSuppliersModal();
 });
 
-// ── COMBO BUSCADOR ──
+// ── COMBO BUSCADOR PARA EXPORTAR ──
 (function initExportCombo() {
-    const input  = document.getElementById('export-supplier-search');
-    const list   = document.getElementById('export-supplier-list');
-    const clear  = document.getElementById('export-supplier-clear');
-    const btn    = document.getElementById('export-supplier-btn');
+    const input = document.getElementById('export-supplier-search');
+    const list = document.getElementById('export-supplier-list');
+    const clear = document.getElementById('export-supplier-clear');
+    const btn = document.getElementById('export-supplier-btn');
     let activeIdx = -1;
-    let filtered  = [];
+    let filtered = [];
 
     function normalizeStr(str) {
         return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -798,24 +862,24 @@ document.getElementById('modal-export-suppliers').addEventListener('click', func
     }
 
     function selectSupplier(s) {
-        input.value    = s.name + (s.tax_code ? ' · ' + s.tax_code : '');
+        input.value = s.name + (s.tax_code ? ' · ' + s.tax_code : '');
         exportSupplierId = s.id;
-        clear.style.display  = 'block';
-        btn.disabled         = false;
-        btn.style.opacity    = '1';
-        btn.style.cursor     = 'pointer';
-        list.style.display   = 'none';
+        clear.style.display = 'block';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        list.style.display = 'none';
         input.style.borderColor = '#6366f1';
     }
 
     function clearSelection() {
-        input.value    = '';
+        input.value = '';
         exportSupplierId = null;
-        clear.style.display  = 'none';
-        btn.disabled         = true;
-        btn.style.opacity    = '.45';
-        btn.style.cursor     = 'default';
-        list.style.display   = 'none';
+        clear.style.display = 'none';
+        btn.disabled = true;
+        btn.style.opacity = '.45';
+        btn.style.cursor = 'default';
+        list.style.display = 'none';
         input.style.borderColor = '#e2e8f0';
         input.focus();
     }
@@ -839,7 +903,7 @@ document.getElementById('modal-export-suppliers').addEventListener('click', func
         exportSupplierId = null;
         btn.disabled = true;
         btn.style.opacity = '.45';
-        btn.style.cursor  = 'default';
+        btn.style.cursor = 'default';
         input.style.borderColor = '#e2e8f0';
         clear.style.display = input.value ? 'block' : 'none';
         renderList(input.value);
