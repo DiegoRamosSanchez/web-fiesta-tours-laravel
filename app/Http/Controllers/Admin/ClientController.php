@@ -18,27 +18,59 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class ClientController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $clients = Client::withCount('contacts')
-            ->orderBy('id_client', 'asc')
-            ->paginate(8);
+        $query = Client::withCount('contacts');
 
-        $countries = Client::whereNotNull('country_name')
-            ->distinct()
-            ->pluck('country_name')
-            ->filter()
-            ->values()
-            ->toArray();
+        // Búsqueda
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name_client', 'like', "%{$search}%")
+                ->orWhere('tax_code', 'like', "%{$search}%")
+                ->orWhere('general_email', 'like', "%{$search}%")
+                ->orWhere('general_phone', 'like', "%{$search}%");
+            });
+        }
 
-        $cities = Client::whereNotNull('city_name')
-            ->distinct()
-            ->pluck('city_name')
-            ->filter()
-            ->values()
-            ->toArray();
+        // País / Ciudad
+        if ($country = $request->input('country')) {
+            $query->where('country_name', $country);
+        }
+        if ($city = $request->input('city')) {
+            $query->where('city_name', $city);
+        }
 
-        return view('admin.clients.index', compact('clients', 'countries', 'cities'));
+        // Fecha
+        if ($date = $request->input('date')) {
+            $now = now();
+            match ($date) {
+                'today' => $query->whereDate('created_at', $now->toDateString()),
+                'week'  => $query->whereDate('created_at', '>=', $now->copy()->startOfWeek()->toDateString()),
+                'month' => $query->whereDate('created_at', '>=', $now->copy()->startOfMonth()->toDateString()),
+                'year'  => $query->whereDate('created_at', '>=', $now->copy()->startOfYear()->toDateString()),
+                default => null,
+            };
+        }
+
+        // Orden
+        match ($request->input('sort', 'newest')) {
+            'oldest' => $query->orderBy('created_at', 'asc'),
+            'az'     => $query->orderBy('name_client', 'asc'),
+            'za'     => $query->orderBy('name_client', 'desc'),
+            'tax-az' => $query->orderBy('tax_code', 'asc'),
+            'tax-za' => $query->orderBy('tax_code', 'desc'),
+            default  => $query->orderBy('created_at', 'desc'),
+        };
+
+        $clients = $query->paginate(8)->withQueryString(); // 👈 conserva los filtros en los links de paginación
+
+        $countries = Client::whereNotNull('country_name')->distinct()->pluck('country_name')->filter()->values();
+        $cities    = Client::whereNotNull('city_name')->distinct()->pluck('city_name')->filter()->values();
+
+        // Para el buscador del modal "Exportar cliente específico" (todos los clientes, no solo la página)
+        $allClientsForExport = Client::orderBy('name_client')->get(['id_client', 'name_client']);
+
+        return view('admin.clients.index', compact('clients', 'countries', 'cities', 'allClientsForExport'));
     }
 
     public function store(Request $request)

@@ -101,7 +101,7 @@
         .btn-sm { padding: 6px 14px; font-size: 12px; }
 
         /* TABLA */
-        .table-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .table-wrap { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 0.5rem; }
         table { width: 100%; border-collapse: collapse; }
         thead tr { background: #f8fafc; }
         th { padding: .85rem 1.1rem; text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid #e2e8f0; }

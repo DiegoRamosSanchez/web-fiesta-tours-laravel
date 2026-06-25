@@ -1,5 +1,4 @@
 
-const rows = Array.from(document.querySelectorAll('.client-row'));
 let exportType = 'excel';
 let exportClientId = null;
 const clientsData = window.clientsData || [];
@@ -7,111 +6,35 @@ const clientsData = window.clientsData || [];
 // ============================================================
 // FILTROS Y PAGINACIÓN
 // ============================================================
+let searchDebounce;
+
+function buildFilterURL() {
+    const params = new URLSearchParams(window.location.search);
+    const setOrDelete = (key, value, skipIf) => {
+        if (value && value !== skipIf) params.set(key, value);
+        else params.delete(key);
+    };
+
+    setOrDelete('search', document.getElementById('f-search').value.trim());
+    setOrDelete('country', document.getElementById('f-country').value);
+    setOrDelete('city', document.getElementById('f-city').value);
+    setOrDelete('date', document.getElementById('f-date').value);
+    setOrDelete('sort', document.getElementById('f-sort').value, 'newest');
+
+    params.delete('page'); // al cambiar un filtro, volvemos a la página 1
+
+    return window.location.pathname + '?' + params.toString();
+}
+
 function applyFilters() {
-    const search = document.getElementById('f-search').value.toLowerCase().trim();
-    const country = document.getElementById('f-country').value;
-    const city = document.getElementById('f-city').value;
-    const date = document.getElementById('f-date').value;
-    const sort = document.getElementById('f-sort').value;
-
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay());
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const yearStart = new Date(now.getFullYear(), 0, 1);
-
-    let visible = rows.filter(row => {
-        const name = row.dataset.name || '';
-        const code = row.dataset.code || '';
-        const email = row.dataset.email || '';
-        const phone = row.dataset.phone || '';
-        const rowCountry = row.dataset.country || '';
-        const rowCity = row.dataset.city || '';
-        const rowDate = new Date(row.dataset.date);
-
-        if (search) {
-            const searchable = `${name} ${code} ${email} ${phone}`.toLowerCase();
-            if (!searchable.includes(search)) return false;
-        }
-
-        if (country && rowCountry !== country) return false;
-        if (city && rowCity !== city) return false;
-
-        if (date === 'today' && row.dataset.date !== today) return false;
-        if (date === 'week' && rowDate < weekStart) return false;
-        if (date === 'month' && rowDate < monthStart) return false;
-        if (date === 'year' && rowDate < yearStart) return false;
-
-        return true;
-    });
-
-    visible.sort((a, b) => {
-        switch (sort) {
-            case 'oldest':
-                return parseInt(a.dataset.ts) - parseInt(b.dataset.ts);
-            case 'az':
-                return (a.dataset.name || '').localeCompare(b.dataset.name || '');
-            case 'za':
-                return (b.dataset.name || '').localeCompare(a.dataset.name || '');
-            case 'tax-az':
-                return (a.dataset.code || '').localeCompare(b.dataset.code || '');
-            case 'tax-za':
-                return (b.dataset.code || '').localeCompare(a.dataset.code || '');
-            default:
-                return parseInt(b.dataset.ts) - parseInt(a.dataset.ts);
-        }
-    });
-
-    const tbody = document.getElementById('tabla-body');
-    rows.forEach(r => r.style.display = 'none');
-    visible.forEach(r => {
-        r.style.display = '';
-        tbody.appendChild(r);
-    });
-
-    const noResults = document.getElementById('no-results');
-    const tableContainer = document.getElementById('table-container');
-    if (visible.length === 0) {
-        noResults.style.display = 'block';
-        tableContainer.style.display = 'none';
-    } else {
-        noResults.style.display = 'none';
-        tableContainer.style.display = 'block';
-    }
-
-    const count = visible.length;
-    const resultsCount = document.getElementById('results-count');
-    if (resultsCount) resultsCount.textContent = count + ' resultado(s)';
-
-    const footerCount = document.getElementById('footer-count');
-    if (footerCount) {
-        if (count === rows.length) {
-            footerCount.textContent = window.originalPaginationText || footerCount.textContent;
-        } else {
-            footerCount.textContent = `Mostrando ${count} de ${count} cliente(s) filtrados`;
-        }
-    }
-
-    const footerFilter = document.getElementById('footer-filter');
-    const hasFilters = search || country || city || date || sort !== 'newest';
-    if (footerFilter) footerFilter.style.display = hasFilters ? 'block' : 'none';
-
-    const paginationControls = document.querySelector('.pagination-controls');
-    if (paginationControls) {
-        paginationControls.style.display = hasFilters ? 'none' : 'flex';
-    }
-
-    deselectAll();
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+        window.location.href = buildFilterURL();
+    }, 400); // debounce para no recargar en cada tecla
 }
 
 function clearFilters() {
-    document.getElementById('f-search').value = '';
-    document.getElementById('f-country').value = '';
-    document.getElementById('f-city').value = '';
-    document.getElementById('f-date').value = '';
-    document.getElementById('f-sort').value = 'newest';
-    applyFilters();
+    window.location.href = window.location.pathname;
 }
 
 // ============================================================

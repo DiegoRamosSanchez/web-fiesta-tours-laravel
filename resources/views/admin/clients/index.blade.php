@@ -7,6 +7,11 @@
 
 @section('content')
 
+@php
+    $hayFiltros = request()->anyFilled(['search','country','city','date'])
+        || (request('sort') && request('sort') !== 'newest');
+@endphp
+
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem">
     <div>
         <div class="page-title">Clientes</div>
@@ -43,6 +48,7 @@
     <div style="position:relative;flex:1;min-width:200px">
         <i class="ti ti-search" style="position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px"></i>
         <input type="text" id="f-search" class="filter-input"
+               value="{{ request('search') }}"
                placeholder="Buscar por agencia, código tributario, email, teléfono..."
                style="width:100%;padding-left:2.2rem">
     </div>
@@ -52,32 +58,32 @@
     <select id="f-country" class="filter-input" style="min-width:160px">
         <option value="">Todos los países</option>
         @foreach($countries as $country)
-            <option value="{{ $country }}">{{ $country }}</option>
+            <option value="{{ $country }}" {{ request('country') == $country ? 'selected' : '' }}>{{ $country }}</option>
         @endforeach
     </select>
 
     <select id="f-city" class="filter-input" style="min-width:150px">
         <option value="">Todas las ciudades</option>
         @foreach($cities as $city)
-            <option value="{{ $city }}">{{ $city }}</option>
+            <option value="{{ $city }}" {{ request('city') == $city ? 'selected' : '' }}>{{ $city }}</option>
         @endforeach
     </select>
 
     <select id="f-date" class="filter-input" style="min-width:150px">
         <option value="">Cualquier fecha</option>
-        <option value="today">Hoy</option>
-        <option value="week">Esta semana</option>
-        <option value="month">Este mes</option>
-        <option value="year">Este año</option>
+        <option value="today" {{ request('date') == 'today' ? 'selected' : '' }}>Hoy</option>
+        <option value="week"  {{ request('date') == 'week'  ? 'selected' : '' }}>Esta semana</option>
+        <option value="month" {{ request('date') == 'month' ? 'selected' : '' }}>Este mes</option>
+        <option value="year"  {{ request('date') == 'year'  ? 'selected' : '' }}>Este año</option>
     </select>
 
     <select id="f-sort" class="filter-input" style="min-width:170px">
-        <option value="newest">Más recientes</option>
-        <option value="oldest">Más antiguos</option>
-        <option value="az">Agencia A → Z</option>
-        <option value="za">Agencia Z → A</option>
-        <option value="tax-az">Código Tributario A → Z</option>
-        <option value="tax-za">Código Tributario Z → A</option>
+        <option value="newest" {{ request('sort', 'newest') == 'newest' ? 'selected' : '' }}>Más recientes</option>
+        <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Más antiguos</option>
+        <option value="az"     {{ request('sort') == 'az'     ? 'selected' : '' }}>Agencia A → Z</option>
+        <option value="za"     {{ request('sort') == 'za'     ? 'selected' : '' }}>Agencia Z → A</option>
+        <option value="tax-az" {{ request('sort') == 'tax-az' ? 'selected' : '' }}>Código Tributario A → Z</option>
+        <option value="tax-za" {{ request('sort') == 'tax-za' ? 'selected' : '' }}>Código Tributario Z → A</option>
     </select>
 
     <div class="filter-sep"></div>
@@ -89,7 +95,7 @@
         <i class="ti ti-filter-off" style="font-size:14px"></i> Limpiar
     </button>
 
-    <span class="results-count" id="results-count"></span>
+    <span class="results-count" id="results-count">{{ $clients->total() }} resultado(s)</span>
 </div>
 
 {{-- BARRA DE ACCIONES MASIVAS --}}
@@ -124,13 +130,23 @@
 </form>
 
 @if($clients->isEmpty())
-    <div style="text-align:center;padding:4rem;background:#fff;border-radius:14px;border:1px solid #e2e8f0">
-        <i class="ti ti-building-off" style="font-size:48px;color:#cbd5e1;display:block;margin-bottom:1rem"></i>
-        <p style="font-size:15px;font-weight:600;color:#0f172a;margin-bottom:.4rem">No hay clientes aún</p>
-        <a href="{{ route('admin.clients.create') }}" class="btn btn-primary btn-sm" style="text-decoration:none">
-            <i class="ti ti-plus"></i> Crear primer cliente
-        </a>
-    </div>
+
+    @if($hayFiltros)
+        <div style="text-align:center;padding:3rem;background:#fff;border-radius:14px;border:1px solid #e2e8f0">
+            <i class="ti ti-search-off" style="font-size:40px;color:#cbd5e1;display:block;margin-bottom:.7rem"></i>
+            <p style="font-size:14px;font-weight:600;color:#475569">Sin resultados para tu búsqueda</p>
+            <p style="font-size:12px;color:#94a3b8;margin-top:.3rem">Prueba con otros filtros</p>
+        </div>
+    @else
+        <div style="text-align:center;padding:4rem;background:#fff;border-radius:14px;border:1px solid #e2e8f0">
+            <i class="ti ti-building-off" style="font-size:48px;color:#cbd5e1;display:block;margin-bottom:1rem"></i>
+            <p style="font-size:15px;font-weight:600;color:#0f172a;margin-bottom:.4rem">No hay clientes aún</p>
+            <a href="{{ route('admin.clients.create') }}" class="btn btn-primary btn-sm" style="text-decoration:none">
+                <i class="ti ti-plus"></i> Crear primer cliente
+            </a>
+        </div>
+    @endif
+
 @else
     <div class="table-wrap" id="table-container">
         <table id="tabla-clientes">
@@ -153,18 +169,7 @@
             </thead>
             <tbody id="tabla-body">
                 @foreach($clients as $c)
-                    <tr class="client-row"
-                        data-id="{{ $c->id_client }}"
-                        data-name="{{ strtolower($c->name_client) }}"
-                        data-code="{{ strtolower($c->tax_code ?? '') }}"
-                        data-type="{{ strtolower($c->type_client) ?? '' }}"
-                        data-email="{{ strtolower($c->general_email ?? '') }}"
-                        data-phone="{{ $c->general_phone ?? '' }}"
-                        data-country="{{ $c->country_name ?? '' }}"
-                        data-city="{{ $c->city_name ?? '' }}"
-                        data-date="{{ $c->created_at->format('Y-m-d') }}"
-                        data-ts="{{ $c->created_at->timestamp }}">
-
+                    <tr class="client-row" data-id="{{ $c->id_client }}">
                         <td class="cb-wrap">
                             <input type="checkbox" class="row-check"
                                 value="{{ $c->id_client }}"
@@ -222,7 +227,7 @@
                 Mostrando {{ $clients->firstItem() }}–{{ $clients->lastItem() }}
                 de {{ $clients->total() }} cliente(s)
             </span>
-            <div style="display:flex;align-items:center;gap:.4rem">
+            <div class="pagination-controls" style="display:flex;align-items:center;gap:.4rem">
                 @if($clients->onFirstPage())
                     <span style="padding:.35rem .7rem;border:1px solid #e2e8f0;border-radius:7px;
                                 font-size:12px;color:#cbd5e1;cursor:default">
@@ -276,17 +281,10 @@
                     </span>
                 @endif
             </div>
-            <span id="footer-filter" style="color:#6366f1;font-size:12px;display:none">
+            <span id="footer-filter" style="color:#6366f1;font-size:12px;{{ $hayFiltros ? '' : 'display:none' }}">
                 Mostrando resultados filtrados
             </span>
         </div>
-    </div>
-
-    <div id="no-results" style="display:none;text-align:center;padding:3rem;
-         background:#fff;border-radius:14px;border:1px solid #e2e8f0;margin-top:.5rem">
-        <i class="ti ti-search-off" style="font-size:40px;color:#cbd5e1;display:block;margin-bottom:.7rem"></i>
-        <p style="font-size:14px;font-weight:600;color:#475569">Sin resultados para tu búsqueda</p>
-        <p style="font-size:12px;color:#94a3b8;margin-top:.3rem">Prueba con otros filtros</p>
     </div>
 
     {{-- MODALES VER CLIENTE --}}
@@ -478,8 +476,8 @@
 
 @push('scripts')
 <script>
-    // Variables para el JS
-    window.clientsData = @json($clients->map(fn($c) => ['id' => $c->id_client, 'name' => $c->name_client]));
+    // IMPORTANTE: ahora se usa $allClientsForExport (TODOS los clientes), no $clients (solo la página actual)
+    window.clientsData = @json($allClientsForExport->map(fn($c) => ['id' => $c->id_client, 'name' => $c->name_client]));
     window.exportExcelUrl = '{{ route("admin.clients.export.excel") }}';
     window.exportPdfUrl = '{{ route("admin.clients.export.pdf") }}';
 </script>
