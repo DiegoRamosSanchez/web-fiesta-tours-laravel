@@ -11,13 +11,54 @@ use App\Exports\ContactsExport;
 
 class ContactController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $contacts = Contact::with(['client', 'supplier'])
-            ->orderBy('id_contacts', 'asc')
-            ->paginate(10); // Cambiado a paginate para la paginación
+        $query = Contact::with(['client', 'supplier']);
 
-        // Obtener clientes para el filtro
+        // Búsqueda
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('last_names', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('first_phone', 'like', "%{$search}%")
+                  ->orWhere('qualification', 'like', "%{$search}%");
+            });
+        }
+
+        // Cliente
+        if ($client = $request->input('client')) {
+            $query->where('id_client', $client);
+        }
+
+        // Principal
+        if ($principal = $request->input('principal')) {
+            $query->where('es_principal', $principal);
+        }
+
+        // Fecha
+        if ($date = $request->input('date')) {
+            $now = now();
+            match ($date) {
+                'today' => $query->whereDate('created_at', $now->toDateString()),
+                'week'  => $query->whereDate('created_at', '>=', $now->copy()->startOfWeek()->toDateString()),
+                'month' => $query->whereDate('created_at', '>=', $now->copy()->startOfMonth()->toDateString()),
+                'year'  => $query->whereDate('created_at', '>=', $now->copy()->startOfYear()->toDateString()),
+                default => null,
+            };
+        }
+
+        // Orden
+        match ($request->input('sort', 'newest')) {
+            'oldest' => $query->orderBy('created_at', 'asc'),
+            'az'     => $query->orderBy('name', 'asc'),
+            'za'     => $query->orderBy('name', 'desc'),
+            default  => $query->orderBy('created_at', 'desc'),
+        };
+
+        $contacts = $query->paginate(8)->withQueryString();
+
+        // Para filtros
         $clients = Client::orderBy('name_client')->get();
 
         return view('admin.contacts.index', compact('contacts', 'clients'));

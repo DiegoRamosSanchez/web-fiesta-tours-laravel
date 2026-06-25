@@ -289,12 +289,19 @@ function cargarPaisesEdit() {
             comboPais.setOptions(opciones, 'Escribe para buscar país...');
 
             if (clientCountryName) {
-                const match = opciones.find(o => o.label === clientCountryName);
+                const match = opciones.find(o =>
+                    o.label.toUpperCase() === clientCountryName.toUpperCase()
+                );
+
                 if (match) {
                     document.getElementById('edit-pais-input').value = match.label;
                     document.getElementById('edit-country-code').value = match.value;
                     document.getElementById('edit-pais-clear').classList.add('show');
                     cargarCiudadesEdit(match.value, clientCityName);
+                } else {
+                    // Si no encuentra, mostrar el valor guardado
+                    document.getElementById('edit-pais-input').value = clientCountryName;
+                    document.getElementById('edit-pais-clear').classList.add('show');
                 }
             }
         })

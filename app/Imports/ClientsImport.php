@@ -14,159 +14,120 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
     public int $skipped  = 0;
     public array $errors = [];
 
+    /**
+     * Headers reales del archivo (fila 1):
+     * NOMBRE | PAIS | Contacto | Mail | Telefono
+     * Maatwebsite normaliza esto a: nombre, pais, contacto, mail, telefono
+     */
     public function headingRow(): int
     {
-        return 4;
+        return 1;
     }
 
     public function collection(Collection $rows)
     {
         $grouped = [];
+        $currentAgencia = null;
+        $currentPais = null;
+        $currentTelefono = null;
 
-        // Convertir a array para saber el total de filas
-        $rowsArray = $rows->toArray();
-        $totalRows = count($rowsArray);
+        foreach ($rows as $row) {
+            // ─── Soporta nombres de columnas alternativos por si cambia el export ───
+            $nombreRaw   = trim((string) ($row['nombre'] ?? $row['agencia_cliente'] ?? ''));
+            $pais        = trim((string) ($row['pais'] ?? $row['country_name'] ?? ''));
+            $contacto    = trim((string) ($row['contacto'] ?? $row['contacto_1'] ?? ''));
+            $mail        = trim((string) ($row['mail'] ?? $row['email_1'] ?? ''));
+            $telefonoRaw = trim((string) ($row['telefono'] ?? $row['telefono_1'] ?? ''));
 
-        foreach ($rowsArray as $index => $row) {
-            // Saltar las últimas 2 filas (footer)
-            if ($index >= $totalRows - 2) {
+            // ─── Las celdas combinadas (merge) de Excel solo traen valor en la ───
+            // ─── primera fila del grupo; el resto llega vacío. Hacemos forward-fill. ───
+            if ($nombreRaw !== '') {
+                $currentAgencia = $nombreRaw;
+                $currentPais = $pais !== '' ? $pais : $currentPais;
+                $currentTelefono = $telefonoRaw !== '' ? $telefonoRaw : null;
+            }
+
+            // Si no hay agencia activa (fila de cierre/footer/vacía), se omite
+            if (empty($currentAgencia)) {
                 $this->skipped++;
                 continue;
             }
 
-            $agencia = trim($row['agencia_cliente'] ?? '');
-
-            if (empty($agencia)) {
-                $this->skipped++;
-                continue;
-            }
-
-            // ─── USAR LOS HEADERS CORRECTOS DEL EXPORT ───
-            $businessName = trim($row['razon_social'] ?? '');
-            $taxCode = trim($row['codigo_tributario'] ?? '');
-            $generalPhone = trim($row['telefono_general'] ?? '');
-            $generalEmail = trim($row['email_general'] ?? '');
-            $countryName = trim($row['pais'] ?? '');
-            $cityName = trim($row['ciudad'] ?? '');
-            $address = trim($row['direccion'] ?? '');
-
-            // Si no hay datos de empresa, intentar con los nombres alternativos
-            if (empty($businessName)) {
-                $businessName = trim($row['business_name'] ?? '');
-            }
-            if (empty($taxCode)) {
-                $taxCode = trim($row['tax_code'] ?? $row['ruc'] ?? '');
-            }
-            if (empty($generalPhone)) {
-                $generalPhone = trim($row['general_phone'] ?? '');
-            }
-            if (empty($generalEmail)) {
-                $generalEmail = trim($row['general_email'] ?? '');
-            }
-            if (empty($countryName)) {
-                $countryName = trim($row['country_name'] ?? $row['pais_cliente'] ?? '');
-            }
-            if (empty($cityName)) {
-                $cityName = trim($row['city_name'] ?? $row['ciudad_cliente'] ?? '');
-            }
-            if (empty($address)) {
-                $address = trim($row['address'] ?? $row['direccion_cliente'] ?? '');
-            }
-
-            $grouped[$agencia][] = [
-                'business_name' => $businessName,
-                'tax_code'      => $taxCode,
-                'general_phone' => $generalPhone,
-                'general_email' => $generalEmail,
-                'country_name'  => $countryName,
-                'city_name'     => $cityName,
-                'address'       => $address,
-                'row' => $row
+            // Fila sin contacto (ej. nombre de agencia sin datos de contacto) se omite del detalle
+            // pero igual permite crear el cliente si es la única fila del grupo
+            $grouped[$currentAgencia] ??= [
+                'pais'     => $currentPais,
+                'telefono' => $currentTelefono,
+                'contactos' => [],
             ];
+
+            if ($contacto !== '') {
+                $grouped[$currentAgencia]['contactos'][] = [
+                    'nombre'   => $contacto,
+                    'email'    => $mail !== '' ? $mail : null,
+                    'telefono' => $currentTelefono,
+                ];
+            }
         }
 
-        foreach ($grouped as $agencia => $filas) {
+        foreach ($grouped as $agencia => $data) {
             try {
-                $primera = $filas[0];
+                $countryName = $data['pais'] ?: null;
 
-                // Buscar o crear cliente con TODOS los campos
                 $client = Client::firstOrCreate(
                     ['name_client' => $agencia],
                     [
-                        'business_name' => $primera['business_name'] ?: null,
-                        'tax_code'      => $primera['tax_code'] ?: null,
-                        'general_phone' => $primera['general_phone'] ?: null,
-                        'general_email' => $primera['general_email'] ?: null,
-                        'country_name'  => $primera['country_name'] ?: null,
-                        'city_name'     => $primera['city_name'] ?: null,
-                        'address'       => $primera['address'] ?: null,
+                        'business_name' => null,
+                        'tax_code'      => null,
+                        'general_phone' => $this->firstPhone($data['telefono']),
+                        'general_email' => $data['contactos'][0]['email'] ?? null,
+                        'country_name'  => $countryName,
+                        'city_name'     => null,
+                        'address'       => null,
                     ]
                 );
 
-                // Si el cliente ya existía, actualizar campos vacíos
+                // Si el cliente ya existía, completar campos vacíos sin pisar datos existentes
                 $clientUpdates = [];
-                foreach (['business_name', 'tax_code', 'general_phone', 'general_email', 'country_name', 'city_name', 'address'] as $field) {
-                    if (empty($client->$field) && !empty($primera[$field])) {
-                        $clientUpdates[$field] = $primera[$field];
-                    }
+                if (empty($client->country_name) && !empty($countryName)) {
+                    $clientUpdates['country_name'] = $countryName;
+                }
+                if (empty($client->general_phone) && !empty($data['telefono'])) {
+                    $clientUpdates['general_phone'] = $this->firstPhone($data['telefono']);
+                }
+                if (empty($client->general_email) && !empty($data['contactos'][0]['email'] ?? null)) {
+                    $clientUpdates['general_email'] = $data['contactos'][0]['email'];
                 }
                 if (!empty($clientUpdates)) {
                     $client->update($clientUpdates);
                 }
 
-                // Procesar contactos
-                foreach ($filas as $fila) {
-                    $row = $fila['row'];
+                foreach ($data['contactos'] as $i => $contactoData) {
+                    $email = $contactoData['email'];
 
-                    $slots = [
-                        1 => [
-                            'nombre' => trim($row['contacto_1'] ?? ''),
-                            'last_names' => trim($row['apellidos_1'] ?? ''),
-                            'cargo'  => trim($row['cargo_1'] ?? ''),
-                            'email'  => trim($row['email_1'] ?? ''),
-                            'tel1'   => trim($row['telefono_1'] ?? ''),
-                            'tel2'   => trim($row['telefono_2_1'] ?? ''),
-                        ],
-                        2 => [
-                            'nombre' => trim($row['contacto_2'] ?? ''),
-                            'last_names' => trim($row['apellidos_2'] ?? ''),
-                            'cargo'  => trim($row['cargo_2'] ?? ''),
-                            'email'  => trim($row['email_2'] ?? ''),
-                            'tel1'   => trim($row['telefono_1_2'] ?? ''),
-                            'tel2'   => trim($row['telefono_2_2'] ?? ''),
-                        ],
-                        3 => [
-                            'nombre' => trim($row['contacto_3'] ?? ''),
-                            'last_names' => trim($row['apellidos_3'] ?? ''),
-                            'cargo'  => trim($row['cargo_3'] ?? ''),
-                            'email'  => trim($row['email_3'] ?? ''),
-                            'tel1'   => trim($row['telefono_1_3'] ?? ''),
-                            'tel2'   => trim($row['telefono_2_3'] ?? ''),
-                        ],
-                    ];
-
-                    foreach ($slots as $n => $data) {
-                        if (empty($data['nombre'])) continue;
-
-                        $email = $data['email'] ?: null;
-
-                        if ($email && $client->contacts()->where('email', $email)->exists()) {
-                            $this->skipped++;
-                            continue;
-                        }
-
-                        $esPrincipal = ($n === 1) && $client->contacts()->count() === 0;
-
-                        $client->contacts()->create([
-                            'name'          => $data['nombre'],
-                            'last_names'    => $data['last_names'] ?: null,
-                            'qualification' => $data['cargo'] ?: null,
-                            'email'         => $email,
-                            'first_phone'   => $data['tel1'] ?: null,
-                            'second_phone'  => $data['tel2'] ?: null,
-                            'es_principal'  => $esPrincipal,
-                        ]);
+                    if ($email && $client->contacts()->where('email', $email)->exists()) {
+                        $this->skipped++;
+                        continue;
                     }
+
+                    // El teléfono general se reparte solo al primer contacto del grupo
+                    $tel1 = null;
+                    $tel2 = null;
+                    if ($i === 0 && !empty($contactoData['telefono'])) {
+                        [$tel1, $tel2] = $this->splitPhones($contactoData['telefono']);
+                    }
+
+                    $esPrincipal = ($i === 0) && $client->contacts()->count() === 0;
+
+                    $client->contacts()->create([
+                        'name'          => $contactoData['nombre'],
+                        'last_names'    => null,
+                        'qualification' => null,
+                        'email'         => $email,
+                        'first_phone'   => $tel1,
+                        'second_phone'  => $tel2,
+                        'es_principal'  => $esPrincipal,
+                    ]);
                 }
 
                 $this->imported++;
@@ -175,5 +136,37 @@ class ClientsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 $this->errors[] = "Error en '{$agencia}': " . $e->getMessage();
             }
         }
+    }
+
+    /**
+     * Divide un string de teléfono(s) separado por "/" en dos valores.
+     * Ej: "55 51 3408 2198 / 55 51 98299 2137" -> ["55 51 3408 2198", "55 51 98299 2137"]
+     */
+    private function splitPhones(?string $telefono): array
+    {
+        if (empty($telefono)) {
+            return [null, null];
+        }
+
+        // Normaliza espacios no separables (\xa0) que vienen del Excel
+        $telefono = str_replace("\xc2\xa0", ' ', $telefono);
+        $telefono = trim($telefono);
+
+        if (str_contains($telefono, '/')) {
+            $parts = array_map('trim', explode('/', $telefono, 2));
+            return [$parts[0] ?: null, $parts[1] ?: null];
+        }
+
+        return [$telefono, null];
+    }
+
+    /**
+     * Obtiene solo el primer teléfono de un string que puede traer varios separados por "/".
+     * Usado para el campo general_phone del cliente.
+     */
+    private function firstPhone(?string $telefono): ?string
+    {
+        [$tel1, ] = $this->splitPhones($telefono);
+        return $tel1;
     }
 }

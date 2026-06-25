@@ -17,4 +17,11 @@ class Client extends Model
     {
         return $this->hasMany(Contact::class, 'id_client', 'id_client');
     }
+
+    // Mutator para convertir país a mayúsculas automáticamente
+    public function setCountryNameAttribute($value)
+    {
+        // Usar mb_strtoupper() para manejar correctamente caracteres UTF-8
+        $this->attributes['country_name'] = $value ? mb_strtoupper($value) : null;
+    }
 }

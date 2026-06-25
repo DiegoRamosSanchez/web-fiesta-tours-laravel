@@ -95,6 +95,26 @@
     }
     .btn-danger:hover { background: #fee2e2; }
 
+    .table-footer {
+        padding: .8rem 1rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    #footer-count {
+        font-size: 13px;
+        color: #64748b;
+    }
+    #footer-count span {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
     .pagination-controls {
         display: flex;
         align-items: center;
@@ -131,10 +151,21 @@
         color: #94a3b8;
         padding: 0 .2rem;
     }
+
+    #footer-filter {
+        color: #6366f1;
+        font-size: 12px;
+        font-weight: 500;
+    }
 </style>
 @endpush
 
 @section('content')
+
+@php
+    $hayFiltros = request()->anyFilled(['search','client','principal','date'])
+        || (request('sort') && request('sort') !== 'newest');
+@endphp
 
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem">
     <div>
@@ -160,6 +191,7 @@
     <div style="position:relative;flex:1;min-width:200px">
         <i class="ti ti-search" style="position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px"></i>
         <input type="text" id="f-search" class="filter-input"
+               value="{{ request('search') }}"
                placeholder="Buscar por nombre, email, teléfono, cargo..."
                style="width:100%;padding-left:2.2rem">
     </div>
@@ -169,41 +201,44 @@
     <select id="f-client" class="filter-input" style="min-width:160px">
         <option value="">Todos los clientes</option>
         @foreach($clients as $client)
-            <option value="{{ $client->id_client }}">{{ $client->name_client }}</option>
+            <option value="{{ $client->id_client }}" {{ request('client') == $client->id_client ? 'selected' : '' }}>
+                {{ $client->name_client }}
+            </option>
         @endforeach
     </select>
 
     <select id="f-principal" class="filter-input" style="min-width:130px">
         <option value="">Todos</option>
-        <option value="1">Solo principales</option>
-        <option value="0">Solo secundarios</option>
+        <option value="1" {{ request('principal') == '1' ? 'selected' : '' }}>Solo principales</option>
+        <option value="0" {{ request('principal') == '0' ? 'selected' : '' }}>Solo secundarios</option>
     </select>
 
     <select id="f-date" class="filter-input" style="min-width:150px">
         <option value="">Cualquier fecha</option>
-        <option value="today">Hoy</option>
-        <option value="week">Esta semana</option>
-        <option value="month">Este mes</option>
-        <option value="year">Este año</option>
+        <option value="today" {{ request('date') == 'today' ? 'selected' : '' }}>Hoy</option>
+        <option value="week"  {{ request('date') == 'week'  ? 'selected' : '' }}>Esta semana</option>
+        <option value="month" {{ request('date') == 'month' ? 'selected' : '' }}>Este mes</option>
+        <option value="year"  {{ request('date') == 'year'  ? 'selected' : '' }}>Este año</option>
     </select>
 
     <select id="f-sort" class="filter-input" style="min-width:170px">
-        <option value="newest">Más recientes</option>
-        <option value="oldest">Más antiguos</option>
-        <option value="az">Nombre A → Z</option>
-        <option value="za">Nombre Z → A</option>
+        <option value="newest" {{ request('sort', 'newest') == 'newest' ? 'selected' : '' }}>Más recientes</option>
+        <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Más antiguos</option>
+        <option value="az"     {{ request('sort') == 'az'     ? 'selected' : '' }}>Nombre A → Z</option>
+        <option value="za"     {{ request('sort') == 'za'     ? 'selected' : '' }}>Nombre Z → A</option>
     </select>
 
     <div class="filter-sep"></div>
 
-    <button onclick="clearFilters()"
-            style="padding:.5rem .9rem;background:none;border:1px solid #e2e8f0;
-                   border-radius:8px;font-size:12px;color:#64748b;cursor:pointer;
-                   display:flex;align-items:center;gap:5px;white-space:nowrap">
+    <a href="{{ route('admin.contacts.index') }}"
+       style="padding:.5rem .9rem;background:none;border:1px solid #e2e8f0;
+              border-radius:8px;font-size:12px;color:#64748b;cursor:pointer;
+              display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+              text-decoration:none">
         <i class="ti ti-filter-off" style="font-size:14px"></i> Limpiar
-    </button>
+    </a>
 
-    <span class="results-count" id="results-count"></span>
+    <span class="results-count">{{ $contacts->total() }} resultado(s)</span>
 </div>
 
 {{-- BARRA DE ACCIONES MASIVAS --}}
@@ -238,14 +273,22 @@
 </form>
 
 @if($contacts->isEmpty())
-    <div style="text-align:center;padding:4rem;background:#fff;border-radius:14px;border:1px solid #e2e8f0">
-        <i class="ti ti-address-book-off" style="font-size:48px;color:#cbd5e1;display:block;margin-bottom:1rem"></i>
-        <p style="font-size:15px;font-weight:600;color:#0f172a;margin-bottom:.4rem">No hay contactos aún</p>
-        <p style="font-size:13px;color:#94a3b8;margin-bottom:1.2rem">Comienza creando tu primer contacto</p>
-        <a href="{{ route('admin.contacts.create') }}" class="btn btn-primary btn-sm" style="text-decoration:none">
-            <i class="ti ti-plus"></i> Crear primer contacto
-        </a>
-    </div>
+    @if($hayFiltros)
+        <div style="text-align:center;padding:3rem;background:#fff;border-radius:14px;border:1px solid #e2e8f0">
+            <i class="ti ti-search-off" style="font-size:40px;color:#cbd5e1;display:block;margin-bottom:.7rem"></i>
+            <p style="font-size:14px;font-weight:600;color:#475569">Sin resultados para tu búsqueda</p>
+            <p style="font-size:12px;color:#94a3b8;margin-top:.3rem">Prueba con otros filtros</p>
+        </div>
+    @else
+        <div style="text-align:center;padding:4rem;background:#fff;border-radius:14px;border:1px solid #e2e8f0">
+            <i class="ti ti-address-book-off" style="font-size:48px;color:#cbd5e1;display:block;margin-bottom:1rem"></i>
+            <p style="font-size:15px;font-weight:600;color:#0f172a;margin-bottom:.4rem">No hay contactos aún</p>
+            <p style="font-size:13px;color:#94a3b8;margin-bottom:1.2rem">Comienza creando tu primer contacto</p>
+            <a href="{{ route('admin.contacts.create') }}" class="btn btn-primary btn-sm" style="text-decoration:none">
+                <i class="ti ti-plus"></i> Crear primer contacto
+            </a>
+        </div>
+    @endif
 @else
     <div class="table-wrap" id="table-container">
         <table>
@@ -267,16 +310,7 @@
             </thead>
             <tbody id="tabla-body">
                 @foreach($contacts as $c)
-                    <tr class="contact-row"
-                        data-id="{{ $c->id_contacts }}"
-                        data-name="{{ strtolower($c->name . ' ' . ($c->last_names ?? '')) }}"
-                        data-email="{{ strtolower($c->email ?? '') }}"
-                        data-phone="{{ $c->first_phone ?? '' }}"
-                        data-client="{{ $c->id_client ?? '' }}"
-                        data-principal="{{ $c->es_principal ? '1' : '0' }}"
-                        data-date="{{ $c->created_at->format('Y-m-d') }}"
-                        data-ts="{{ $c->created_at->timestamp }}">
-
+                    <tr class="contact-row" data-id="{{ $c->id_contacts }}">
                         <td class="cb-wrap">
                             <input type="checkbox" class="row-check"
                                 value="{{ $c->id_contacts }}"
@@ -341,7 +375,7 @@
                 @endforeach
             </tbody>
         </table>
-        <div class="table-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;padding-top:.75rem">
+        <div class="table-footer">
             <span id="footer-count">
                 Mostrando {{ $contacts->firstItem() }}–{{ $contacts->lastItem() }}
                 de {{ $contacts->total() }} contacto(s)
@@ -369,7 +403,7 @@
                     <span class="disabled"><i class="ti ti-chevron-right"></i></span>
                 @endif
             </div>
-            <span id="footer-filter" style="color:#6366f1;font-size:12px;display:none">
+            <span id="footer-filter" style="color:#6366f1;font-size:12px;{{ $hayFiltros ? '' : 'display:none' }}">
                 Mostrando resultados filtrados
             </span>
         </div>
@@ -385,113 +419,6 @@
 
 @push('scripts')
 <script>
-    // ============================================================
-    // FILTROS
-    // ============================================================
-    function applyFilters() {
-        const search = document.getElementById('f-search').value.toLowerCase().trim();
-        const client = document.getElementById('f-client').value;
-        const principal = document.getElementById('f-principal').value;
-        const date = document.getElementById('f-date').value;
-        const sort = document.getElementById('f-sort').value;
-
-        const now = new Date();
-        const today = now.toISOString().split('T')[0];
-        const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() - now.getDay());
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const yearStart = new Date(now.getFullYear(), 0, 1);
-
-        const rows = Array.from(document.querySelectorAll('.contact-row'));
-
-        let visible = rows.filter(row => {
-            const name = row.dataset.name || '';
-            const email = row.dataset.email || '';
-            const phone = row.dataset.phone || '';
-            const rowClient = row.dataset.client || '';
-            const rowPrincipal = row.dataset.principal || '0';
-            const rowDate = new Date(row.dataset.date);
-
-            if (search) {
-                const searchable = `${name} ${email} ${phone}`.toLowerCase();
-                if (!searchable.includes(search)) return false;
-            }
-
-            if (client && rowClient !== client) return false;
-            if (principal !== '' && rowPrincipal !== principal) return false;
-
-            if (date === 'today' && row.dataset.date !== today) return false;
-            if (date === 'week' && rowDate < weekStart) return false;
-            if (date === 'month' && rowDate < monthStart) return false;
-            if (date === 'year' && rowDate < yearStart) return false;
-
-            return true;
-        });
-
-        visible.sort((a, b) => {
-            switch (sort) {
-                case 'oldest':
-                    return parseInt(a.dataset.ts) - parseInt(b.dataset.ts);
-                case 'az':
-                    return (a.dataset.name || '').localeCompare(b.dataset.name || '');
-                case 'za':
-                    return (b.dataset.name || '').localeCompare(a.dataset.name || '');
-                default:
-                    return parseInt(b.dataset.ts) - parseInt(a.dataset.ts);
-            }
-        });
-
-        const tbody = document.getElementById('tabla-body');
-        rows.forEach(r => r.style.display = 'none');
-        visible.forEach(r => {
-            r.style.display = '';
-            tbody.appendChild(r);
-        });
-
-        const noResults = document.getElementById('no-results');
-        const tableContainer = document.getElementById('table-container');
-        if (visible.length === 0) {
-            noResults.style.display = 'block';
-            tableContainer.style.display = 'none';
-        } else {
-            noResults.style.display = 'none';
-            tableContainer.style.display = 'block';
-        }
-
-        const count = visible.length;
-        const resultsCount = document.getElementById('results-count');
-        if (resultsCount) resultsCount.textContent = count + ' resultado(s)';
-
-        const footerCount = document.getElementById('footer-count');
-        if (footerCount) {
-            if (count === rows.length) {
-                footerCount.textContent = window.originalPaginationText || footerCount.textContent;
-            } else {
-                footerCount.textContent = `Mostrando ${count} de ${count} contacto(s) filtrados`;
-            }
-        }
-
-        const footerFilter = document.getElementById('footer-filter');
-        const hasFilters = search || client || principal || date || sort !== 'newest';
-        if (footerFilter) footerFilter.style.display = hasFilters ? 'block' : 'none';
-
-        const paginationControls = document.getElementById('pagination-controls');
-        if (paginationControls) {
-            paginationControls.style.display = hasFilters ? 'none' : 'flex';
-        }
-
-        deselectAll();
-    }
-
-    function clearFilters() {
-        document.getElementById('f-search').value = '';
-        document.getElementById('f-client').value = '';
-        document.getElementById('f-principal').value = '';
-        document.getElementById('f-date').value = '';
-        document.getElementById('f-sort').value = 'newest';
-        applyFilters();
-    }
-
     // ============================================================
     // SELECCIÓN MÚLTIPLE
     // ============================================================
@@ -568,14 +495,39 @@
     }
 
     // ============================================================
+    // FILTROS CON RECARGA DE PÁGINA
+    // ============================================================
+    let searchDebounce;
+
+    function buildFilterURL() {
+        const params = new URLSearchParams(window.location.search);
+        const setOrDelete = (key, value, skipIf) => {
+            if (value && value !== skipIf) params.set(key, value);
+            else params.delete(key);
+        };
+
+        setOrDelete('search', document.getElementById('f-search').value.trim());
+        setOrDelete('client', document.getElementById('f-client').value);
+        setOrDelete('principal', document.getElementById('f-principal').value);
+        setOrDelete('date', document.getElementById('f-date').value);
+        setOrDelete('sort', document.getElementById('f-sort').value, 'newest');
+
+        params.delete('page');
+
+        return window.location.pathname + '?' + params.toString();
+    }
+
+    function applyFilters() {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            window.location.href = buildFilterURL();
+        }, 400);
+    }
+
+    // ============================================================
     // INICIALIZACIÓN
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
-        const footerCount = document.getElementById('footer-count');
-        if (footerCount) {
-            window.originalPaginationText = footerCount.textContent;
-        }
-
         // Eventos de filtros
         document.getElementById('f-search').addEventListener('input', applyFilters);
         document.getElementById('f-client').addEventListener('change', applyFilters);
