@@ -240,13 +240,24 @@
             <div class="pc-inner">
                 <div class="pc-eyebrow">Vista previa del perfil</div>
 
-                <div class="pc-avatar" id="pcAvatarWrap">
-                    @if(Auth::user()->avatar)
+              <div class="pc-avatar" id="pcAvatarWrap">
+                    @php
+                        $user = auth()->user();
+                    @endphp
+                    
+                    @if($user->avatar)
+                        @php
+                            $filename = basename($user->avatar);
+                        @endphp
                         <img class="pc-avatar_feature" id="pcAvatarImg"
-                             src="{{ asset('storage/' . Auth::user()->avatar) }}"
-                             style="cursor:zoom-in">
+                            src="{{ route('avatar.show', $filename) }}"
+                            alt="Avatar de {{ $user->name }}"
+                            style="cursor:zoom-in"
+                            onerror="this.style.display='none'; document.getElementById('pcAvatarInitials').style.display='flex';">
                     @else
-                        <span id="pcAvatarInitials">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
+                        <span id="pcAvatarInitials" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-weight:600; font-size:1.1rem; color:#fff; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:50%;">
+                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                        </span>
                     @endif
                 </div>
 
@@ -310,10 +321,21 @@
 
                     <div class="avatar-preview">
                         <div class="ap-circle" id="apCircleWrap">
-                            @if(Auth::user()->avatar)
-                                <img id="apAvatarImg" src="{{ asset('storage/' . Auth::user()->avatar) }}" style="cursor:zoom-in">
+                            @php
+                                $user = auth()->user();
+                            @endphp
+                            
+                            @if($user->avatar)
+                                @php
+                                    $filename = basename($user->avatar);
+                                @endphp
+                                <img id="apAvatarImg" 
+                                    src="{{ route('avatar.show', $filename) }}" 
+                                    alt="Avatar de {{ $user->name }}"
+                                    style="cursor:zoom-in"
+                                    onerror="this.style.display='none'; document.getElementById('apAvatarInitials').style.display='flex';">
                             @else
-                                <span id="apAvatarInitials">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
+                                <span id="apAvatarInitials">{{ strtoupper(substr($user->name, 0, 2)) }}</span>
                             @endif
                         </div>
 

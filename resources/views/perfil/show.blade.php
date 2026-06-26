@@ -216,15 +216,31 @@
             <div class="ph-accent2"></div>
             <div class="ph-bg-letter">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
 
-            <div class="ph-inner">
+           <div class="ph-inner">
                 <div class="ph-eyebrow">Fiesta Tours · Mi cuenta</div>
-               
-                @if(Auth::user()->avatar)
-                    <div class="ph-avatar"><img class="ph-avatar_image" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
+                
+                @php
+                    $user = auth()->user();
+                    $hasAvatar = !empty($user->avatar);
+                    $initials = strtoupper(substr($user->name, 0, 2));
+                    $filename = $hasAvatar ? basename($user->avatar) : null;
+                @endphp
+                
+                @if($hasAvatar)
+                    <div class="ph-avatar">
+                        <img class="ph-avatar_image" 
+                            src="{{ route('avatar.show', $filename) }}" 
+                            alt="Avatar de {{ $user->name }}"
+                            onerror="this.style.display='none'; this.parentElement.textContent='{{ $initials }}'; this.parentElement.style.display='flex'; this.parentElement.style.alignItems='center'; this.parentElement.style.justifyContent='center'; this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.parentElement.style.color='#fff'; this.parentElement.style.fontWeight='600'; this.parentElement.style.fontSize='1.2rem';">
+                    </div>
                 @else
-                    <div class="ph-avatar">{{ strtoupper(substr($user->name, 0, 2)) }}</div>
+                    <div class="ph-avatar" style="display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; font-weight:600; font-size:1.2rem; border-radius:50%; width:50px; height:50px;">
+                        {{ $initials }}
+                    </div>
                 @endif
+                
                 <div class="ph-name">{{ $user->name }}</div>
+                
                 <span class="ph-role" style="{{ $user->isAdmin() ? 'background:rgba(109,40,217,.3);color:#c4b5fd' : 'background:rgba(22,101,52,.3);color:#86efac' }}">
                     <i class="ti {{ $user->isAdmin() ? 'ti-shield-check' : 'ti-user' }}" style="font-size:10px"></i>
                     {{ ucfirst($user->role) }}

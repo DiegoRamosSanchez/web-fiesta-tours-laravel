@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\DestinationController;
 use App\Http\Controllers\Admin\CategorySupplierController;
 use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\AvatarController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -23,15 +24,17 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 });
 
-// ── GEONAMES (paises, departamentos, ciudades) ──
-// Sin middleware 'auth' porque se usan en formularios públicos/registro.
 Route::prefix('api/geo')->group(function () {
     Route::get('/paises',        [GeoController::class, 'paises']);
     Route::get('/ciudades',      [GeoController::class, 'ciudades']);
 });
 
+Route::get('/avatar/{filename}', [AvatarController::class, 'show'])->name('avatar.show');
+
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout',   [AuthController::class, 'logout'])->name('logout');
 
     // Perfil (cualquier usuario autenticado)

@@ -31,7 +31,7 @@ class UserController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
             'role'     => 'required|in:admin,usuario',
-            'avatar'   => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:10240', // era required y sin image/mimes
+            'avatar'   => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:10240', 
         ]);
 
         $avatarPath = null;
@@ -53,7 +53,6 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        // Evita que alguien edite su propia cuenta desde aquí si quieres mantenerlo consistente
         if ($user->id === auth()->id()) {
             return redirect()->route('admin.usuarios')->withErrors(['error' => 'No puedes editar tu propia cuenta desde aquí.']);
         }
@@ -82,7 +81,6 @@ class UserController extends Controller
         }
 
         if ($request->hasFile('avatar')) {
-            // Borra el avatar anterior si existe
             if ($user->avatar) {
                 Storage::disk('public')->delete($user->avatar);
             }
@@ -100,7 +98,6 @@ class UserController extends Controller
             return back()->withErrors(['error' => 'No puedes eliminar tu propia cuenta.']);
         }
 
-        // Borra el avatar del storage antes de eliminar al usuario
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
         }

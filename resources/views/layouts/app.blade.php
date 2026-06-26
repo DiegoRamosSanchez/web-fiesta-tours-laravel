@@ -204,8 +204,14 @@
 
     <div class="sb-foot">
         <div class="sb-user">
-             @if(Auth::user()->avatar)
-                <div class="sb-av"><img class="sb-av" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
+             @php
+                $user = auth()->user();
+            @endphp
+             @if($user->avatar)
+              @php
+                    $filename = basename($user->avatar);
+            @endphp
+                <div class="sb-av"><img class="sb-av" src="{{ route('avatar.show', $filename) }}" /></div>
             @else
                 <div class="sb-av">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
             @endif
@@ -237,23 +243,30 @@
             {{-- DROPDOWN PERFIL --}}
             <div class="u-menu" id="userMenu">
                 <div class="u-trigger" onclick="toggleMenu()">
-                    @if(Auth::user()->avatar)
-                        <div class="u-av"><img class="u-av" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
-                    @else
-                        <div class="u-av">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
-                        
-                    @endif
+                    @php
+                        $user = auth()->user();
+                    @endphp
+                    <div class="u-av">
+                        @if($user->avatar)
+                            @php
+                                $filename = basename($user->avatar);
+                            @endphp
+                            <img class="u-av" src="{{ route('avatar.show', $filename) }}" alt="{{ $user->name }}" />
+                        @else
+                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                        @endif
+                    </div>
 
                     <div>
-                        <div class="u-name">{{ Str::limit(auth()->user()->name, 14) }}</div>
-                        <div class="u-role">{{ ucfirst(auth()->user()->role) }}</div>
+                        <div class="u-name">{{ Str::limit($user->name, 14) }}</div>
+                        <div class="u-role">{{ ucfirst($user->role) }}</div>
                     </div>
                     <i class="ti ti-chevron-down" style="font-size:13px;color:#94a3b8;margin-left:2px"></i>
                 </div>
                 <div class="u-dd">
                     <div class="dd-header">
-                        <div class="dd-fullname">{{ auth()->user()->name }}</div>
-                        <div class="dd-email">{{ auth()->user()->email }}</div>
+                        <div class="dd-fullname">{{ $user->name }}</div>
+                        <div class="dd-email">{{ $user->email }}</div>
                     </div>
                     <a href="{{ route('perfil') }}" class="dd-item">
                         <i class="ti ti-user"></i> Mi perfil
