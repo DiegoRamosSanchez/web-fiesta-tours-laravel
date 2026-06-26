@@ -31,7 +31,7 @@ class UserController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
             'role'     => 'required|in:admin,usuario',
-            'avatar'   => 'required|max:10240',
+            'avatar'   => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:10240', // era required y sin image/mimes
         ]);
 
         $avatarPath = null;
@@ -99,7 +99,14 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return back()->withErrors(['error' => 'No puedes eliminar tu propia cuenta.']);
         }
+
+        // Borra el avatar del storage antes de eliminar al usuario
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
         $user->delete();
+
         return back()->with('success', 'Usuario eliminado correctamente.');
     }
 }
