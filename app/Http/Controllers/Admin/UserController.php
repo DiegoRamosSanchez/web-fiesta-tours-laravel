@@ -12,7 +12,10 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->get();
+        $users = User::where('id', '!=', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('admin.usuarios', compact('users'));
     }
 
@@ -21,14 +24,14 @@ class UserController extends Controller
         return view('admin.usuarios-crear');
     }
 
-     public function store(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
             'role'     => 'required|in:admin,usuario',
-            'avatar'   => 'required|max:10240', 
+            'avatar'   => 'required|max:10240',
         ]);
 
         $avatarPath = null;
@@ -39,7 +42,7 @@ class UserController extends Controller
 
         User::create([
             'name'     => $request->name,
-            'avatar'   => $avatarPath, 
+            'avatar'   => $avatarPath,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'role'     => $request->role,
@@ -48,6 +51,48 @@ class UserController extends Controller
         return redirect()->route('admin.usuarios')->with('success', 'Usuario creado correctamente.');
     }
 
+    public function edit(User $user)
+    {
+        // Evita que alguien edite su propia cuenta desde aquí si quieres mantenerlo consistente
+        if ($user->id === auth()->id()) {
+            return redirect()->route('admin.usuarios')->withErrors(['error' => 'No puedes editar tu propia cuenta desde aquí.']);
+        }
+
+        return view('admin.usuarios-editar', compact('user'));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|min:8|confirmed',
+            'role'     => 'required|in:admin,usuario',
+            'avatar'   => 'nullable|max:10240',
+        ]);
+
+        $data = [
+            'name'  => $request->name,
+            'email' => $request->email,
+            'role'  => $request->role,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('avatar')) {
+            // Borra el avatar anterior si existe
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user->update($data);
+
+        return redirect()->route('admin.usuarios')->with('success', 'Usuario actualizado correctamente.');
+    }
 
     public function destroy(User $user)
     {

@@ -116,6 +116,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/usuarios',           [UserController::class, 'index'])->name('usuarios');
         Route::get('/usuarios/crear',     [UserController::class, 'create'])->name('usuarios.create');
         Route::post('/usuarios',          [UserController::class, 'store'])->name('usuarios.store');
+        Route::get('/usuarios/{user}/editar', [UserController::class, 'edit'])->name('usuarios.edit');
+        Route::put('/usuarios/{user}',    [UserController::class, 'update'])->name('usuarios.update');
         Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
     });
 

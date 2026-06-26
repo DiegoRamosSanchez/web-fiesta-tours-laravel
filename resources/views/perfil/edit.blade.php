@@ -45,11 +45,11 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 22px; color: #fff; font-weight: 700;
     margin-bottom: 1rem;
+    overflow: hidden;
 }
 .pc-avatar_feature {
-    width: 72px; height: 72px; border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border: 3px solid rgba(255,255,255,.25);
+    width: 100%; height: 100%; border-radius: 50%;
+    object-fit: cover;
     display: flex; align-items: center; justify-content: center;
     font-size: 22px; color: #fff; font-weight: 700;
 }
@@ -130,15 +130,20 @@
     border-radius: 12px;
     padding: 1rem 1.2rem;
     margin-bottom: 1.4rem;
+    flex-wrap: wrap;
 }
 .ap-circle {
     width: 48px; height: 48px; border-radius: 50%;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
     display: flex; align-items: center; justify-content: center;
     font-size: 16px; color: #fff; font-weight: 700; flex-shrink: 0;
+    overflow: hidden;
 }
+.ap-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .ap-name  { font-size: .88rem; font-weight: 700; color: #0f172a; }
 .ap-email { font-size: .73rem; color: #94a3b8; margin-top: 2px; }
+.ap-info  { flex: 1; min-width: 140px; }
+.ap-actions { font-size: .72rem; color: #94a3b8; margin-top: 4px; }
 
 /* Form grid */
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
@@ -234,12 +239,17 @@
 
             <div class="pc-inner">
                 <div class="pc-eyebrow">Vista previa del perfil</div>
-                
-                @if(Auth::user()->avatar)
-                    <div class="pc-avatar"><img class="pc-avatar_feature" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
-                @else
-                <div class="pc-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
-                @endif
+
+                <div class="pc-avatar" id="pcAvatarWrap">
+                    @if(Auth::user()->avatar)
+                        <img class="pc-avatar_feature" id="pcAvatarImg"
+                             src="{{ asset('storage/' . Auth::user()->avatar) }}"
+                             style="cursor:zoom-in">
+                    @else
+                        <span id="pcAvatarInitials">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
+                    @endif
+                </div>
+
                 <div class="pc-name">{{ auth()->user()->name }}</div>
                 <div class="pc-email">{{ auth()->user()->email }}</div>
                 <span class="pc-role" style="{{ auth()->user()->isAdmin() ? 'background:rgba(109,40,217,.3);color:#c4b5fd' : 'background:rgba(22,101,52,.3);color:#86efac' }}">
@@ -283,7 +293,7 @@
 
     {{-- ── COLUMNA DERECHA ── --}}
     <div>
-        <form action="{{ route('perfil.update') }}" method="POST">
+        <form action="{{ route('perfil.update') }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -292,22 +302,44 @@
                 <div class="ec-header">
                     <div>
                         <div class="ec-title">Información personal</div>
-                        <div class="ec-sub">Nombre y correo visibles en el sistema</div>
+                        <div class="ec-sub">Nombre, correo y foto visibles en el sistema</div>
                     </div>
                     <i class="ti ti-user-circle" style="font-size:22px;color:#e2e8f0"></i>
                 </div>
                 <div class="ec-body">
+
                     <div class="avatar-preview">
-                        @if(Auth::user()->avatar)
-                            <div class="ap-circle"><img class="ap-circle" src="{{ asset('storage/' . Auth::user()->avatar) }}" /></div>
-                        @else
-                            <div class="ap-circle">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
-                        @endif
-                        <div>
+                        <div class="ap-circle" id="apCircleWrap">
+                            @if(Auth::user()->avatar)
+                                <img id="apAvatarImg" src="{{ asset('storage/' . Auth::user()->avatar) }}" style="cursor:zoom-in">
+                            @else
+                                <span id="apAvatarInitials">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
+                            @endif
+                        </div>
+
+                        <div class="ap-info">
                             <div class="ap-name">{{ auth()->user()->name }}</div>
                             <div class="ap-email">{{ auth()->user()->email }}</div>
+                            <div class="ap-actions" id="avatarFileName">
+                                Foto de perfil — clic en la imagen para ampliarla
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="avatar" class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                                <i class="ti ti-upload" style="font-size:13px"></i>
+                                <span id="avatarBtnText">Cambiar foto</span>
+                            </label>
+                            <input type="file" name="avatar" id="avatar" accept="image/*" style="display:none">
                         </div>
                     </div>
+                    <div class="hint" style="margin:-1rem 0 1.4rem 2px">
+                        <i class="ti ti-info-circle" style="font-size:12px"></i>
+                        Es opcional. Déjalo así si no quieres cambiar tu foto. Máximo 10MB.
+                    </div>
+                    @error('avatar')
+                        <div style="color:#dc2626;font-size:.78rem;margin:-1rem 0 1.2rem 2px">{{ $message }}</div>
+                    @enderror
 
                     <div class="form-row">
                         <div class="ff">
@@ -393,4 +425,88 @@
 
 </div>
 
+<!-- ── MODAL / LIGHTBOX para ver la foto en grande ── -->
+<div id="avatarLightbox" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:1000;align-items:center;justify-content:center;cursor:zoom-out">
+    <button type="button" id="avatarLightboxClose"
+            style="position:absolute;top:24px;right:28px;background:rgba(255,255,255,.15);border:none;color:#fff;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        &times;
+    </button>
+    <img id="avatarLightboxImg" src="" alt="Foto de perfil"
+         style="max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const avatarInput   = document.getElementById('avatar');
+    const fileNameLabel = document.getElementById('avatarFileName');
+    const btnText       = document.getElementById('avatarBtnText');
+
+    const pcWrap   = document.getElementById('pcAvatarWrap');
+    const apWrap   = document.getElementById('apCircleWrap');
+
+    const lightbox      = document.getElementById('avatarLightbox');
+    const lightboxImg    = document.getElementById('avatarLightboxImg');
+    const lightboxClose = document.getElementById('avatarLightboxClose');
+
+    function openLightbox(src) {
+        if (!src) return;
+        lightboxImg.src = src;
+        lightbox.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        lightbox.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function bindZoom(img) {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', () => openLightbox(img.src));
+    }
+
+    // Si ya hay imágenes al cargar la página, las hacemos clickeables
+    document.querySelectorAll('#pcAvatarImg, #apAvatarImg').forEach(bindZoom);
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', function (e) {
+        if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeLightbox();
+    });
+
+    function setAvatarPreview(wrap, src) {
+        wrap.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = src;
+        wrap.appendChild(img);
+        bindZoom(img);
+    }
+
+    avatarInput.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert('La imagen supera el tamaño máximo de 10MB.');
+            e.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+            setAvatarPreview(pcWrap, ev.target.result);
+            setAvatarPreview(apWrap, ev.target.result);
+        };
+        reader.readAsDataURL(file);
+
+        fileNameLabel.textContent = file.name;
+        btnText.textContent = 'Cambiar foto';
+    });
+})();
+</script>
+@endpush
