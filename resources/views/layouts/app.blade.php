@@ -155,10 +155,7 @@
             class="sb-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}">
             <i class="ti ti-truck"></i> Proveedores
         </a>
-        <a href="{{ route('admin.destinations.index') }}"
-            class="sb-link {{ request()->routeIs('admin.destinations.*') ? 'active' : '' }}">
-            <i class="ti ti-map-pin"></i> Destinos
-        </a>
+      
         <a href="{{ route('admin.categories.index') }}"
             class="sb-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
             <i class="ti ti-tag"></i> Categorías
@@ -175,9 +172,7 @@
                class="sb-link {{ request()->routeIs('admin.usuarios.create') ? 'active' : '' }}">
                 <i class="ti ti-user-plus"></i> Crear usuario
             </a>
-            <a href="#" class="sb-link">
-                <i class="ti ti-calendar"></i> Reservas
-            </a>
+         
             <a href="#" class="sb-link">
                 <i class="ti ti-chart-bar"></i> Reportes
             </a>

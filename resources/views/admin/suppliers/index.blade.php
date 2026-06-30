@@ -730,7 +730,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// ── RUTAS PARA PDF ──
+// ── RUTAS ──
 const PDF_SINGLE_URL = '{{ route("admin.suppliers.pdf", ["supplier" => "__ID__"]) }}';
 const PDF_ALL_URL = '{{ route("admin.suppliers.export.pdf.all") }}';
 const EXCEL_ALL_URL = '{{ route("admin.suppliers.export.excel") }}';
@@ -813,6 +813,12 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         exportAllPDF();
     });
+
+    // ── BOTÓN EXCEL HEADER ──
+    document.getElementById('btn-export-excel-suppliers')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        openExportSuppliersModal();
+    });
 });
 
 // ── LIMPIAR FILTROS ──
@@ -822,6 +828,22 @@ function clearFilters() {
     document.getElementById('f-category').value = '';
     document.getElementById('f-sort').value = 'newest';
     document.getElementById('filter-form').submit();
+}
+
+// ── OBTENER FILTROS ACTUALES ──
+function getFilters() {
+    const params = new URLSearchParams();
+    const search = document.getElementById('f-search')?.value || '';
+    const country = document.getElementById('f-country')?.value || '';
+    const category = document.getElementById('f-category')?.value || '';
+    const sort = document.getElementById('f-sort')?.value || 'newest';
+    
+    if (search) params.append('search', search);
+    if (country) params.append('country', country);
+    if (category) params.append('category', category);
+    if (sort) params.append('sort', sort);
+    
+    return params;
 }
 
 // ══════════ DESCARGAR PDF ESPECÍFICO ══════════
@@ -903,7 +925,10 @@ function exportAllPDF() {
         progressText.textContent = Math.round(progress) + '%';
     }, 150);
     
-    fetch(PDF_ALL_URL, {
+    const params = getFilters();
+    const url = PDF_ALL_URL + '?' + params.toString();
+    
+    fetch(url, {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(response => {
@@ -917,6 +942,7 @@ function exportAllPDF() {
         
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
+        // El nombre lo determina el servidor, pero podemos poner uno genérico
         link.download = `proveedores_${new Date().toISOString().slice(0,10)}.pdf`;
         document.body.appendChild(link);
         link.click();
@@ -948,7 +974,9 @@ function exportAllPDF() {
 
 // ══════════ EXPORTAR TODOS A EXCEL ══════════
 function exportAllExcel() {
-    window.location.href = EXCEL_ALL_URL;
+    const params = getFilters();
+    const url = EXCEL_ALL_URL + '?' + params.toString();
+    window.location.href = url;
     closeExportSuppliersModal();
 }
 
@@ -1020,14 +1048,13 @@ function exportSelectedSupplier() {
         });
         return;
     }
-    window.location.href = EXCEL_SINGLE_URL + '?supplier_id=' + exportSupplierId;
+    
+    const params = getFilters();
+    params.append('supplier_id', exportSupplierId);
+    const url = EXCEL_SINGLE_URL + '?' + params.toString();
+    window.location.href = url;
     closeExportSuppliersModal();
 }
-
-document.getElementById('btn-export-excel-suppliers')?.addEventListener('click', function(e) {
-    e.preventDefault();
-    openExportSuppliersModal();
-});
 
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
