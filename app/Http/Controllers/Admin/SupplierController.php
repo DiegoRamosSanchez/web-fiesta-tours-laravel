@@ -111,10 +111,11 @@ class SupplierController extends Controller
             'bank_accounts.*.account_number' => 'nullable|string|max:100',
             'bank_accounts.*.cci' => 'nullable|string|max:100',
             'bank_accounts.*.currency' => 'nullable|string|max:40',
-            'new_bank_name' => 'nullable|string|max:50',
-            'new_bank_account_number' => 'nullable|string|max:100',
-            'new_bank_cci' => 'nullable|string|max:100',
-            'new_bank_currency' => 'nullable|string|max:40',
+            'new_banks' => 'nullable|array',
+            'new_banks.*.bank_name' => 'required_with:new_banks.*.account_number|nullable|string|max:50',
+            'new_banks.*.account_number' => 'required_with:new_banks.*.bank_name|nullable|string|max:100',
+            'new_banks.*.cci' => 'nullable|string|max:100',
+            'new_banks.*.currency' => 'nullable|string|max:40',
             'contacts' => 'nullable|array',
             'contacts.*.name' => 'required_with:contacts|string|max:100',
             'contacts.*.last_names' => 'nullable|string|max:100',
@@ -187,15 +188,23 @@ class SupplierController extends Controller
                 }
             }
 
-            if ($request->filled('new_bank_name') && $request->filled('new_bank_account_number')) {
-                $bank = Bank::create(['bank_name' => $request->new_bank_name]);
-                BankAccount::create([
-                    'id_supplier' => $supplier->id_supplier,
-                    'id_bank' => $bank->id_bank,
-                    'account_number' => $request->new_bank_account_number,
-                    'cci' => $request->new_bank_cci,
-                    'currency' => $request->new_bank_currency,
-                ]);
+            // Bancos nuevos (repetible): cada entrada crea su propio banco + cuenta.
+            if ($request->has('new_banks') && is_array($request->new_banks)) {
+                foreach ($request->new_banks as $newBank) {
+                    if (empty($newBank['bank_name']) || empty($newBank['account_number'])) {
+                        continue;
+                    }
+
+                    $bank = Bank::firstOrCreate(['bank_name' => trim($newBank['bank_name'])]);
+
+                    BankAccount::create([
+                        'id_supplier' => $supplier->id_supplier,
+                        'id_bank' => $bank->id_bank,
+                        'account_number' => $newBank['account_number'],
+                        'cci' => $newBank['cci'] ?? null,
+                        'currency' => $newBank['currency'] ?? null,
+                    ]);
+                }
             }
 
             DB::commit();
@@ -253,10 +262,11 @@ class SupplierController extends Controller
             'bank_accounts.*.account_number' => 'nullable|string|max:100',
             'bank_accounts.*.cci' => 'nullable|string|max:100',
             'bank_accounts.*.currency' => 'nullable|string|max:40',
-            'new_bank_name' => 'nullable|string|max:50',
-            'new_bank_account_number' => 'nullable|string|max:100',
-            'new_bank_cci' => 'nullable|string|max:100',
-            'new_bank_currency' => 'nullable|string|max:40',
+            'new_banks' => 'nullable|array',
+            'new_banks.*.bank_name' => 'required_with:new_banks.*.account_number|nullable|string|max:50',
+            'new_banks.*.account_number' => 'required_with:new_banks.*.bank_name|nullable|string|max:100',
+            'new_banks.*.cci' => 'nullable|string|max:100',
+            'new_banks.*.currency' => 'nullable|string|max:40',
             'delete_bank_accounts' => 'nullable|array',
             'delete_bank_accounts.*' => 'exists:bank_account,id_bank_account',
             'contacts' => 'nullable|array',
@@ -375,15 +385,23 @@ class SupplierController extends Controller
                 }
             }
 
-            if ($request->filled('new_bank_name') && $request->filled('new_bank_account_number')) {
-                $bank = Bank::create(['bank_name' => $request->new_bank_name]);
-                BankAccount::create([
-                    'id_supplier' => $supplier->id_supplier,
-                    'id_bank' => $bank->id_bank,
-                    'account_number' => $request->new_bank_account_number,
-                    'cci' => $request->new_bank_cci,
-                    'currency' => $request->new_bank_currency,
-                ]);
+            // Bancos nuevos (repetible): cada entrada crea su propio banco + cuenta.
+            if ($request->has('new_banks') && is_array($request->new_banks)) {
+                foreach ($request->new_banks as $newBank) {
+                    if (empty($newBank['bank_name']) || empty($newBank['account_number'])) {
+                        continue;
+                    }
+
+                    $bank = Bank::firstOrCreate(['bank_name' => trim($newBank['bank_name'])]);
+
+                    BankAccount::create([
+                        'id_supplier' => $supplier->id_supplier,
+                        'id_bank' => $bank->id_bank,
+                        'account_number' => $newBank['account_number'],
+                        'cci' => $newBank['cci'] ?? null,
+                        'currency' => $newBank['currency'] ?? null,
+                    ]);
+                }
             }
 
             $principales = Contact::where('id_supplier', $supplier->id_supplier)

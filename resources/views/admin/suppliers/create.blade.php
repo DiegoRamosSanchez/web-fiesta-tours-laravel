@@ -2,14 +2,19 @@
 @section('title', 'Nuevo Proveedor')
 @section('content')
 
-<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem">
+<div class="page-header">
     <div>
-        <div class="page-title" style="font-size:24px;font-weight:700;color:#0f172a">Nuevo Proveedor</div>
-        <div class="page-sub" style="color:#64748b;font-size:14px;margin-top:4px">Registra un nuevo proveedor en el sistema</div>
+        <div class="page-title">Nuevo Proveedor</div>
+        <div class="page-sub">Registra un nuevo proveedor en el sistema</div>
     </div>
-    <a href="{{ route('admin.suppliers.index') }}" class="btn btn-secondary btn-sm" style="padding:8px 20px;border-radius:8px">
-        <i class="ti ti-arrow-left" style="font-size:13px"></i> Volver
-    </a>
+    <div class="page-header-actions">
+        <a href="{{ route('admin.suppliers.index') }}" class="btn btn-secondary btn-sm">
+            <i class="ti ti-arrow-left" style="font-size:13px"></i> Volver
+        </a>
+        <button type="submit" form="form-supplier" class="btn-primary btn-sm">
+            <i class="ti ti-plus"></i> Guardar proveedor
+        </button>
+    </div>
 </div>
 
 @if($errors->any())
@@ -29,6 +34,38 @@
 @endif
 
 <style>
+    /* ── Header ── */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.4rem;
+    }
+    .page-header .page-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .page-header .page-sub {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 3px;
+    }
+    .page-header-actions {
+        display:flex;
+        align-items:center;
+        gap:0.75rem;
+        flex-shrink:0;
+    }
+    .page-header-actions .btn-sm {
+        padding:8px 18px !important;
+        font-size:13px !important;
+        border-radius:8px !important;
+    }
+    .page-header-actions .btn-primary.btn-sm:hover {
+        transform:translateY(-1px);
+    }
+
     .edit-supplier-layout{
         display:grid;
         grid-template-columns: 560px 1fr;
@@ -236,18 +273,7 @@
         gap:5px;
     }
 
-    /* ── Botones de acción ── */
-    .btn-actions {
-
-        position:absolute;
-        display:flex;
-        top:107px;
-        right:150px;
-        justify-content: end;
-        align-items:center;
-        gap:1rem;
-        border-top:2px solid #f1f5f9;
-    }
+    /* ── Botones ── */
     .btn-primary {
         background:#6366f1;
         color:#fff;
@@ -378,14 +404,11 @@
         border-top:1.5px dashed #e2e8f0;
     }
     .new-bank-form {
-        display:none;
         margin-top:0.8rem;
         background:#ede9fe;
         border-radius:12px;
         padding:1rem;
-    }
-    .new-bank-form.active {
-        display:block;
+        position:relative;
     }
     .new-bank-form .form-grid {
         display:grid;
@@ -439,6 +462,19 @@
     .new-bank-form .btn-close-bank:hover {
         background:#ede9fe;
     }
+    .new-bank-form .new-bank-badge {
+        position:absolute;
+        top:-9px;
+        left:14px;
+        background:#7c3aed;
+        color:#fff;
+        font-size:10px;
+        font-weight:700;
+        padding:2px 10px;
+        border-radius:10px;
+        letter-spacing:.4px;
+        text-transform:uppercase;
+    }
 
     .btn-toggle-bank {
         padding:0.5rem 1rem;
@@ -490,6 +526,17 @@
         }
         .inline-create-block .inline-row .field-group {
             flex:1 1 100%;
+        }
+        .page-header {
+            flex-wrap:wrap;
+            gap:0.8rem;
+        }
+        .page-header-actions {
+            width:100%;
+        }
+        .page-header-actions .btn-sm {
+            flex:1;
+            justify-content:center;
         }
     }
 
@@ -863,11 +910,6 @@
 
 <form action="{{ route('admin.suppliers.store') }}" method="POST" id="form-supplier">
     @csrf
-            <div class="btn-actions">
-                <button type="submit" class="btn-primary">
-                    <i class="ti ti-plus"></i> Guardar proveedor
-                </button>
-            </div>
     <div class="edit-supplier-layout">
 
         {{-- ══════════ COLUMNA IZQUIERDA ══════════ --}}
@@ -925,7 +967,7 @@
                 </div>
             </div>
 
-            {{-- ══════════ UBICACIÓN (NUEVO) ══════════ --}}
+            {{-- ══════════ UBICACIÓN ══════════ --}}
             <div class="card-modern">
                 <div class="card-header-custom">
                     <div>
@@ -1033,11 +1075,17 @@
                     </div>
                 </div>
 
+                <div class="card-sub-custom" style="margin-bottom:0.8rem">
+                    Usa <strong>"Banco"</strong> si el banco ya existe en el sistema. Si es un banco nuevo,
+                    usa <strong>"Registrar nuevo banco"</strong> abajo: puedes agregar todos los que necesites
+                    antes de guardar, sin tener que guardar y volver a editar.
+                </div>
+
                 <div id="bank-accounts-container">
-                    {{-- Primera cuenta por defecto --}}
+                    {{-- Primera cuenta por defecto (banco ya existente) --}}
                     <div class="bank-account-row" data-index="0">
                         <div class="field-group">
-                            <label>Banco <span class="req">*</span></label>
+                            <label>Banco</label>
                             <select name="bank_accounts[0][id_bank]" class="bank-select">
                                 <option value="">Seleccionar banco</option>
                                 @foreach($banks as $b)
@@ -1048,7 +1096,7 @@
                             </select>
                         </div>
                         <div class="field-group">
-                            <label>Número de cuenta <span class="req">*</span></label>
+                            <label>Número de cuenta</label>
                             <input type="text" name="bank_accounts[0][account_number]"
                                    value="{{ old('bank_accounts.0.account_number') }}"
                                    placeholder="Número de cuenta" maxlength="100">
@@ -1075,53 +1123,60 @@
                 </div>
 
                 <button type="button" class="btn-add-bank" onclick="addBankAccount()">
-                    <i class="ti ti-plus"></i> Agregar cuenta bancaria
+                    <i class="ti ti-plus"></i> Agregar cuenta con banco existente
                 </button>
 
-                {{-- Nuevo banco --}}
+                {{-- Nuevos bancos (repetible) --}}
                 <div class="new-bank-container">
-                    <button type="button" class="btn-toggle-bank" onclick="toggleNewBank()">
+                    <button type="button" class="btn-toggle-bank" onclick="addNewBankEntry()">
                         <i class="ti ti-plus"></i> Registrar nuevo banco
                     </button>
 
-                    <div class="new-bank-form" id="new-bank-form">
-                        <div class="form-grid">
-                            <div class="field-group">
-                                <label>Nombre del banco <span class="req">*</span></label>
-                                <input type="text" name="new_bank_name"
-                                       value="{{ old('new_bank_name') }}"
-                                       placeholder="Ej: BBVA, Interbank...">
-                            </div>
-                            <div class="field-group">
-                                <label>Número de cuenta <span class="req">*</span></label>
-                                <input type="text" name="new_bank_account_number"
-                                       value="{{ old('new_bank_account_number') }}"
-                                       placeholder="Número de cuenta">
-                            </div>
-                            <div class="field-group">
-                                <label>CCI</label>
-                                <input type="text" name="new_bank_cci"
-                                       value="{{ old('new_bank_cci') }}"
-                                       placeholder="CCI">
-                            </div>
-                            <div class="field-group">
-                                <label>Moneda</label>
-                                <select name="new_bank_currency">
-                                    <option value="">—</option>
-                                    <option value="PEN" {{ old('new_bank_currency') == 'PEN' ? 'selected' : '' }}>PEN</option>
-                                    <option value="USD" {{ old('new_bank_currency') == 'USD' ? 'selected' : '' }}>USD</option>
-                                    <option value="EUR" {{ old('new_bank_currency') == 'EUR' ? 'selected' : '' }}>EUR</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <span style="font-size:12px;color:#7c3aed;flex:1;display:flex;align-items:center;gap:6px">
-                                <i class="ti ti-info-circle"></i> Banco y cuenta se crearán automáticamente
-                            </span>
-                            <button type="button" class="btn-close-bank" onclick="toggleNewBank()">
-                                <i class="ti ti-x"></i> Cerrar
-                            </button>
-                        </div>
+                    <div id="new-banks-list">
+                        @if(old('new_banks'))
+                            @foreach(old('new_banks') as $idx => $nb)
+                                <div class="new-bank-form" data-new-bank-index="{{ $idx }}">
+                                    <span class="new-bank-badge">Banco nuevo</span>
+                                    <div class="form-grid">
+                                        <div class="field-group">
+                                            <label>Nombre del banco <span class="req">*</span></label>
+                                            <input type="text" name="new_banks[{{ $idx }}][bank_name]"
+                                                   value="{{ $nb['bank_name'] ?? '' }}"
+                                                   placeholder="Ej: BBVA, Interbank...">
+                                        </div>
+                                        <div class="field-group">
+                                            <label>Número de cuenta <span class="req">*</span></label>
+                                            <input type="text" name="new_banks[{{ $idx }}][account_number]"
+                                                   value="{{ $nb['account_number'] ?? '' }}"
+                                                   placeholder="Número de cuenta">
+                                        </div>
+                                        <div class="field-group">
+                                            <label>CCI</label>
+                                            <input type="text" name="new_banks[{{ $idx }}][cci]"
+                                                   value="{{ $nb['cci'] ?? '' }}"
+                                                   placeholder="CCI">
+                                        </div>
+                                        <div class="field-group">
+                                            <label>Moneda</label>
+                                            <select name="new_banks[{{ $idx }}][currency]">
+                                                <option value="">—</option>
+                                                <option value="PEN" {{ ($nb['currency'] ?? '') == 'PEN' ? 'selected' : '' }}>PEN</option>
+                                                <option value="USD" {{ ($nb['currency'] ?? '') == 'USD' ? 'selected' : '' }}>USD</option>
+                                                <option value="EUR" {{ ($nb['currency'] ?? '') == 'EUR' ? 'selected' : '' }}>EUR</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <span style="font-size:12px;color:#7c3aed;flex:1;display:flex;align-items:center;gap:6px">
+                                            <i class="ti ti-info-circle"></i> Banco y cuenta se crearán automáticamente
+                                        </span>
+                                        <button type="button" class="btn-close-bank" onclick="removeNewBankEntry({{ $idx }})">
+                                            <i class="ti ti-x"></i> Quitar
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
             </div>
@@ -1406,7 +1461,7 @@ function cargarCiudades(countryCode) {
 
 cargarPaises();
 
-// ── Banco ──
+// ── Cuentas bancarias (banco ya existente) ──
 let accountIndex = 1;
 let contactos = [];
 let editandoId = null;
@@ -1418,7 +1473,7 @@ function addBankAccount() {
     row.dataset.index = accountIndex;
     row.innerHTML = `
         <div class="field-group">
-            <label>Banco <span class="req">*</span></label>
+            <label>Banco</label>
             <select name="bank_accounts[${accountIndex}][id_bank]" class="bank-select">
                 <option value="">Seleccionar banco</option>
                 @foreach($banks as $b)
@@ -1427,7 +1482,7 @@ function addBankAccount() {
             </select>
         </div>
         <div class="field-group">
-            <label>Número de cuenta <span class="req">*</span></label>
+            <label>Número de cuenta</label>
             <input type="text" name="bank_accounts[${accountIndex}][account_number]"
                    placeholder="Número de cuenta" maxlength="100">
         </div>
@@ -1460,19 +1515,73 @@ function removeBankAccount(button) {
         button.closest('.bank-account-row').remove();
         updateBankCounter();
     } else {
-        alert('Debe haber al menos una cuenta bancaria. Puedes usar "Registrar nuevo banco" para crear una cuenta con un banco nuevo.');
+        alert('Debe haber al menos una fila de cuenta bancaria. Puedes dejarla vacía si no aplica, o usar "Registrar nuevo banco" para un banco que no existe todavía.');
     }
 }
 
-function updateBankCounter() {
-    const container = document.getElementById('bank-accounts-container');
-    const count = container.children.length;
-    document.getElementById('bank-counter').textContent = count;
-    document.getElementById('bank-counter-label').textContent = count + ' cuenta(s) agregada(s)';
+// ── Bancos nuevos (repetible, sin necesidad de guardar y editar) ──
+let newBankIndex = {{ old('new_banks') ? count(old('new_banks')) : 0 }};
+
+function addNewBankEntry() {
+    const list = document.getElementById('new-banks-list');
+    const idx = newBankIndex;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'new-bank-form';
+    wrapper.dataset.newBankIndex = idx;
+    wrapper.innerHTML = `
+        <span class="new-bank-badge">Banco nuevo</span>
+        <div class="form-grid">
+            <div class="field-group">
+                <label>Nombre del banco <span class="req">*</span></label>
+                <input type="text" name="new_banks[${idx}][bank_name]" placeholder="Ej: BBVA, Interbank...">
+            </div>
+            <div class="field-group">
+                <label>Número de cuenta <span class="req">*</span></label>
+                <input type="text" name="new_banks[${idx}][account_number]" placeholder="Número de cuenta">
+            </div>
+            <div class="field-group">
+                <label>CCI</label>
+                <input type="text" name="new_banks[${idx}][cci]" placeholder="CCI">
+            </div>
+            <div class="field-group">
+                <label>Moneda</label>
+                <select name="new_banks[${idx}][currency]">
+                    <option value="">—</option>
+                    <option value="PEN">PEN</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-actions">
+            <span style="font-size:12px;color:#7c3aed;flex:1;display:flex;align-items:center;gap:6px">
+                <i class="ti ti-info-circle"></i> Banco y cuenta se crearán automáticamente
+            </span>
+            <button type="button" class="btn-close-bank" onclick="removeNewBankEntry(${idx})">
+                <i class="ti ti-x"></i> Quitar
+            </button>
+        </div>
+    `;
+    list.appendChild(wrapper);
+    newBankIndex++;
+    updateBankCounter();
+
+    const firstInput = wrapper.querySelector('input');
+    if (firstInput) firstInput.focus();
 }
 
-function toggleNewBank() {
-    document.getElementById('new-bank-form').classList.toggle('active');
+function removeNewBankEntry(idx) {
+    const el = document.querySelector(`#new-banks-list [data-new-bank-index="${idx}"]`);
+    if (el) el.remove();
+    updateBankCounter();
+}
+
+function updateBankCounter() {
+    const existing = document.getElementById('bank-accounts-container').children.length;
+    const nuevos = document.getElementById('new-banks-list').children.length;
+    const total = existing + nuevos;
+    document.getElementById('bank-counter').textContent = total;
+    document.getElementById('bank-counter-label').textContent = total + ' cuenta(s) agregada(s)';
 }
 
 function toggleNew(type) {
@@ -1706,7 +1815,7 @@ document.getElementById('form-supplier').addEventListener('submit', function(e) 
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Inicialización si es necesaria
+    updateBankCounter();
 });
 </script>
 @endpush
