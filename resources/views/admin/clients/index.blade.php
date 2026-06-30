@@ -2,7 +2,194 @@
 @section('title', 'Clientes')
 
 @push('styles')
-<link href="{{ asset('css/clients-index.css') }}" rel="stylesheet">
+<style>
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding: .9rem 1.1rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+.filter-input {
+    padding: .5rem .85rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #0f172a;
+    background: #f8fafc;
+    outline: none;
+    transition: border-color .15s;
+}
+.filter-input:focus { border-color: #6366f1; background: #fff; }
+.filter-sep { width: 1px; height: 24px; background: #e2e8f0; flex-shrink: 0; }
+
+/* Bulk bar */
+.bulk-bar {
+    display: none;
+    align-items: center;
+    gap: .8rem;
+    padding: .75rem 1.1rem;
+    background: #0f172a;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+.bulk-bar.visible { display: flex; }
+.bulk-count { font-size: 13px; font-weight: 600; color: #fff; }
+.bulk-sep { color: rgba(255,255,255,.2); }
+
+/* Checkbox */
+.cb-wrap { display: flex; align-items: center; justify-content: center; }
+input[type="checkbox"] {
+    width: 15px; height: 15px;
+    accent-color: #e63232;
+    cursor: pointer;
+}
+tr.selected td { background: #fef2f2 !important; }
+
+/* Contador de resultados */
+.results-count {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-left: auto;
+}
+
+#modal-export {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+#modal-export.show { display: flex; }
+
+.modal-box {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    animation: modalFadeIn .2s ease-out;
+}
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #94a3b8;
+    transition: color .15s;
+}
+.modal-close:hover { color: #0f172a; }
+
+.export-option {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: .8rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.export-option:hover {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+.export-option .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.export-option .icon.green { background: #f0fdf4; color: #16a34a; }
+.export-option .icon.blue { background: #eff6ff; color: #3b82f6; }
+.export-option .title { font-size: 14px; font-weight: 600; color: #0f172a; }
+.export-option .sub { font-size: 12px; color: #94a3b8; }
+.export-option .arrow { color: #94a3b8; font-size: 18px; margin-left: auto; }
+
+.export-by-id-wrapper {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    transition: all .2s;
+    margin-bottom: .8rem;
+}
+.export-by-id-wrapper:hover { border-color: #6366f1; }
+.export-by-id-wrapper .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-cancel-export {
+    width: 100%;
+    padding: .6rem;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: background .15s;
+    margin-top: .4rem;
+}
+.btn-cancel-export:hover { background: #e2e8f0; }
+
+/* MODAL VER CLIENTE */
+@keyframes modalFadeInClient {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+.custom-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+.custom-modal-content {
+    background: #fff;
+    width: 100%;
+    max-width: 800px;
+    border-radius: 14px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    animation: modalFadeInClient 0.2s ease-out;
+}
+.btn-open-view {
+    display:flex;align-items:center;justify-content:center;
+    width:30px;height:30px;background:#eef2ff;border:none;
+    border-radius:7px;color:#6366f1;cursor:pointer;font-size:15px;
+}
+.btn-open-view:hover { background:#e0e7ff; }
+</style>
 @endpush
 
 @section('content')
@@ -481,6 +668,417 @@
     window.exportExcelUrl = '{{ route("admin.clients.export.excel") }}';
     window.exportPdfUrl = '{{ route("admin.clients.export.pdf") }}';
 </script>
-<script src="{{ asset('js/clients-index.js') }}"></script>
+
+<script>
+let exportType = 'excel';
+let exportClientId = null;
+const clientsData = window.clientsData || [];
+
+// ============================================================
+// FILTROS Y PAGINACIÓN
+// ============================================================
+let searchDebounce;
+
+function buildFilterURL() {
+    const params = new URLSearchParams(window.location.search);
+    const setOrDelete = (key, value, skipIf) => {
+        if (value && value !== skipIf) params.set(key, value);
+        else params.delete(key);
+    };
+
+    setOrDelete('search', document.getElementById('f-search').value.trim());
+    setOrDelete('country', document.getElementById('f-country').value);
+    setOrDelete('city', document.getElementById('f-city').value);
+    setOrDelete('date', document.getElementById('f-date').value);
+    setOrDelete('sort', document.getElementById('f-sort').value, 'newest');
+
+    params.delete('page'); // al cambiar un filtro, volvemos a la página 1
+
+    return window.location.pathname + '?' + params.toString();
+}
+
+function applyFilters() {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+        window.location.href = buildFilterURL();
+    }, 400); // debounce para no recargar en cada tecla
+}
+
+function clearFilters() {
+    window.location.href = window.location.pathname;
+}
+
+// ============================================================
+// SELECCIÓN MÚLTIPLE
+// ============================================================
+function toggleAll(checked) {
+    document.querySelectorAll('.row-check').forEach(cb => {
+        if (cb.closest('tr').style.display !== 'none') {
+            cb.checked = checked;
+            cb.closest('tr').classList.toggle('selected', checked);
+        }
+    });
+    updateBulk();
+}
+
+function selectAll(val) {
+    toggleAll(val);
+}
+
+function deselectAll() {
+    document.querySelectorAll('.row-check').forEach(cb => {
+        cb.checked = false;
+        cb.closest('tr').classList.remove('selected');
+    });
+    document.getElementById('check-all').checked = false;
+    updateBulk();
+}
+
+function updateBulk() {
+    const checked = document.querySelectorAll('.row-check:checked');
+    const bar = document.getElementById('bulk-bar');
+    document.getElementById('bulk-count').textContent = checked.length;
+
+    if (checked.length > 0) {
+        bar.classList.add('visible');
+    } else {
+        bar.classList.remove('visible');
+        document.getElementById('check-all').checked = false;
+    }
+
+    document.querySelectorAll('.row-check').forEach(cb => {
+        cb.closest('tr').classList.toggle('selected', cb.checked);
+    });
+
+    const all = document.querySelectorAll('.row-check');
+    const allVisible = [...all].filter(cb => cb.closest('tr').style.display !== 'none');
+    const ca = document.getElementById('check-all');
+    if (checked.length === 0) {
+        ca.checked = false;
+        ca.indeterminate = false;
+    } else if (checked.length === allVisible.length) {
+        ca.checked = true;
+        ca.indeterminate = false;
+    } else {
+        ca.indeterminate = true;
+    }
+}
+
+function bulkDelete() {
+    const checked = document.querySelectorAll('.row-check:checked');
+    if (checked.length === 0) return;
+
+    if (!confirm(`¿Eliminar ${checked.length} cliente(s) seleccionado(s)? Esta acción también eliminará sus contactos.`)) return;
+
+    const container = document.getElementById('bulk-ids-container');
+    container.innerHTML = '';
+    checked.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids[]';
+        input.value = cb.value;
+        container.appendChild(input);
+    });
+
+    document.getElementById('bulk-delete-form').submit();
+}
+
+// ============================================================
+// MODAL EXPORTAR
+// ============================================================
+function exportSelectedClient() {
+    if (!exportClientId) return;
+    const url = exportType === 'excel'
+        ? window.exportExcelUrl + '?client_id=' + exportClientId
+        : window.exportPdfUrl + '?client_id=' + exportClientId;
+    window.location.href = url;
+    closeExportModal();
+}
+
+function openExportModal(type) {
+    exportType = type;
+    document.getElementById('modal-export').classList.add('show');
+
+    const label = document.getElementById('export-type-label');
+    const icon = document.getElementById('export-modal-icon');
+
+    if (type === 'excel') {
+        label.textContent = 'Excel';
+        label.style.color = '#16a34a';
+        icon.style.color = '#16a34a';
+    } else {
+        label.textContent = 'PDF';
+        label.style.color = '#ef4444';
+        icon.style.color = '#ef4444';
+    }
+
+    const input = document.getElementById('export-client-search');
+    const clear = document.getElementById('export-client-clear');
+    const list = document.getElementById('export-client-list');
+    const btn = document.getElementById('export-client-btn');
+    input.value = '';
+    input.style.borderColor = '#e2e8f0';
+    clear.style.display = 'none';
+    list.style.display = 'none';
+    btn.disabled = true;
+    btn.style.opacity = '.45';
+    btn.style.cursor = 'default';
+    exportClientId = null;
+}
+
+function closeExportModal() {
+    document.getElementById('modal-export').classList.remove('show');
+}
+
+function exportAll() {
+    const url = exportType === 'excel'
+        ? window.exportExcelUrl
+        : window.exportPdfUrl;
+    window.location.href = url;
+    closeExportModal();
+}
+
+// ============================================================
+// COMBO DE EXPORTACIÓN (buscador de clientes)
+// ============================================================
+(function initExportCombo() {
+    const input = document.getElementById('export-client-search');
+    const list = document.getElementById('export-client-list');
+    const clear = document.getElementById('export-client-clear');
+    const btn = document.getElementById('export-client-btn');
+    let activeIdx = -1;
+    let filtered = [];
+
+    function normalizeStr(str) {
+        return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function renderList(term) {
+        const q = normalizeStr(term);
+        filtered = q
+            ? clientsData.filter(c => normalizeStr(c.name).includes(q))
+            : clientsData.slice(0, 50);
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div style="padding:.6rem .8rem;font-size:12.5px;color:#94a3b8">Sin resultados</div>';
+        } else {
+            list.innerHTML = filtered.map((c, i) =>
+                `<div data-idx="${i}"
+                      style="padding:.55rem .8rem;font-size:13px;color:#0f172a;cursor:pointer;
+                             transition:background .1s">
+                    <span style="color:#94a3b8;font-size:11px;margin-right:6px">#${c.id}</span>${c.name}
+                </div>`
+            ).join('');
+        }
+        activeIdx = -1;
+        list.style.display = 'block';
+    }
+
+    function selectClient(c) {
+        input.value = c.name;
+        exportClientId = c.id;
+        clear.style.display = 'block';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        list.style.display = 'none';
+        input.style.borderColor = '#6366f1';
+    }
+
+    function clearSelection() {
+        input.value = '';
+        exportClientId = null;
+        clear.style.display = 'none';
+        btn.disabled = true;
+        btn.style.opacity = '.45';
+        btn.style.cursor = 'default';
+        list.style.display = 'none';
+        input.style.borderColor = '#e2e8f0';
+        input.focus();
+    }
+
+    function updateActive() {
+        list.querySelectorAll('[data-idx]').forEach(el => {
+            el.style.background = '';
+            el.style.color = '#0f172a';
+        });
+        const el = list.querySelector(`[data-idx="${activeIdx}"]`);
+        if (el) {
+            el.style.background = '#eef2ff';
+            el.style.color = '#4338ca';
+            el.scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    input.addEventListener('focus', () => renderList(input.value));
+
+    input.addEventListener('input', () => {
+        exportClientId = null;
+        btn.disabled = true;
+        btn.style.opacity = '.45';
+        btn.style.cursor = 'default';
+        input.style.borderColor = '#e2e8f0';
+        clear.style.display = input.value ? 'block' : 'none';
+        renderList(input.value);
+    });
+
+    input.addEventListener('keydown', e => {
+        if (list.style.display === 'none') return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIdx = Math.min(activeIdx + 1, filtered.length - 1);
+            updateActive();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIdx = Math.max(activeIdx - 1, 0);
+            updateActive();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeIdx >= 0 && filtered[activeIdx]) selectClient(filtered[activeIdx]);
+        } else if (e.key === 'Escape') {
+            list.style.display = 'none';
+        }
+    });
+
+    list.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const item = e.target.closest('[data-idx]');
+        if (!item) return;
+        selectClient(filtered[parseInt(item.dataset.idx)]);
+    });
+
+    list.addEventListener('mouseover', e => {
+        const item = e.target.closest('[data-idx]');
+        if (!item) return;
+        list.querySelectorAll('[data-idx]').forEach(el => {
+            el.style.background = '';
+            el.style.color = '#0f172a';
+        });
+        item.style.background = '#eef2ff';
+        item.style.color = '#4338ca';
+        activeIdx = parseInt(item.dataset.idx);
+    });
+
+    clear.addEventListener('click', clearSelection);
+
+    document.addEventListener('click', e => {
+        if (!input.contains(e.target) && !list.contains(e.target)) {
+            list.style.display = 'none';
+        }
+    });
+})();
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Guardar texto de paginación original
+    const footerCount = document.getElementById('footer-count');
+    if (footerCount) {
+        window.originalPaginationText = footerCount.textContent;
+    }
+
+    // --- Eventos de filtros ---
+    const searchInput = document.getElementById('f-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+
+    ['f-country', 'f-city', 'f-date', 'f-sort'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', applyFilters);
+        }
+    });
+
+    // --- Botones de exportación ---
+    document.getElementById('btn-export-pdf').addEventListener('click', function(e) {
+        e.preventDefault();
+        openExportModal('pdf');
+    });
+
+    document.getElementById('btn-export-excel').addEventListener('click', function(e) {
+        e.preventDefault();
+        openExportModal('excel');
+    });
+
+    // --- Cerrar modal export al hacer clic fuera ---
+    document.getElementById('modal-export').addEventListener('click', function(e) {
+        if (e.target === this) closeExportModal();
+    });
+
+    // --- Modales ver cliente ---
+    document.querySelectorAll('.btn-open-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modalId = this.getAttribute('data-target');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-close-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modalId = this.getAttribute('data-close');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+    });
+
+    document.querySelectorAll('.custom-modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+    });
+
+    // --- Tabs en modales ---
+    document.querySelectorAll('.custom-tabs .tab-trigger').forEach(tabBtn => {
+        tabBtn.addEventListener('click', function() {
+            const parentTabs = this.closest('.custom-tabs');
+            const clientId = parentTabs.getAttribute('data-client');
+            const targetPanelName = this.getAttribute('data-tab');
+
+            parentTabs.querySelectorAll('.tab-trigger').forEach(b => {
+                b.style.background = '#f1f5f9';
+                b.style.color = '#475569';
+            });
+
+            this.style.background = '#4338ca';
+            this.style.color = '#fff';
+
+            const contentsContainer = document.querySelector(`.custom-tab-contents[data-client="${clientId}"]`);
+            contentsContainer.querySelectorAll('.tab-content-panel').forEach(panel => {
+                panel.style.display = 'none';
+            });
+
+            const activePanel = contentsContainer.querySelector(`.panel-${targetPanelName}`);
+            if (activePanel) {
+                activePanel.style.display = 'block';
+            }
+        });
+    });
+
+    // --- Cerrar modales con ESC ---
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.custom-modal-overlay').forEach(overlay => {
+                if (overlay.style.display === 'flex') {
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+            closeExportModal();
+        }
+    });
+});
+</script>
 @endpush
 @endsection
