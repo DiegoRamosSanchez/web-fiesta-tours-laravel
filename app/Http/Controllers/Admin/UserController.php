@@ -10,14 +10,15 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
-    {
-        $users = User::where('id', '!=', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->get();
+   public function index()
+{
+    $users = User::where('id', '!=', auth()->id())
+        ->orderByRaw("CASE WHEN role = 'admin' THEN 0 ELSE 1 END ASC")
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        return view('admin.usuarios', compact('users'));
-    }
+    return view('admin.usuarios', compact('users'));
+}
 
     public function create()
     {

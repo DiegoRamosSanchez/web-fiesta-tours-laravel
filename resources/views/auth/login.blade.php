@@ -233,11 +233,34 @@
             font-size: 15px; font-weight: 600;
             cursor: pointer; letter-spacing: .2px;
             transition: background .15s, transform .1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         .btn-login:hover  { background: #c42a2a; }
         .btn-login:active { transform: scale(.98); }
 
-        /* Ajuste responsive */
+        .btn-login.btn-loading {
+            opacity: 0.85;
+            cursor: not-allowed;
+            background: #c42a2a;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             .wrapper {
                 flex-direction: column;
@@ -256,13 +279,11 @@
 </head>
 <body>
 
-    {{-- FONDO: imagen completa --}}
     <div class="bg-image">
         <img src="https://www.machupicchuexploringperu.com/wp-content/uploads/2023/07/header-slider-machu-picchu-one-day-tour-1920x1080-1-2.jpg"
              alt="">
     </div>
 
-    {{-- FONDO: máscara diagonal blanca desde la derecha --}}
     <div class="bg-diagonal">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <polygon points="62,0 100,0 100,100 52,100" fill="white"/>
@@ -272,7 +293,6 @@
     {{-- TARJETA --}}
     <div class="wrapper">
 
-        {{-- Panel izquierdo --}}
         <div class="left">
             <img class="left-img"
                  src="https://www.machupicchuexploringperu.com/wp-content/uploads/2023/07/banner-camino-inca.jpg"
@@ -296,7 +316,6 @@
             </div>
         </div>
 
-        {{-- Panel derecho --}}
         <div class="right">
             <div class="right-top">
                 <span class="brand">FIESTA TOURS</span>
@@ -309,7 +328,7 @@
                 <div class="error-box">{{ $errors->first() }}</div>
             @endif
 
-            <form action="{{ route('login.post') }}" method="POST">
+            <form action="{{ route('login.post') }}" id='login-form' method="POST">
                 @csrf
 
                 <label for="email">Correo electrónico</label>
@@ -320,12 +339,10 @@
 
                 <label for="password">Contraseña</label>
 
-                {{-- Contenedor con el ojo --}}
                 <div class="password-wrapper">
                     <input type="password" id="password" name="password"
                            placeholder="••••••••" required>
                     <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar u ocultar contraseña">
-                        <!-- Icono Ojo (SVG) -->
                         <svg viewBox="0 0 24 24">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
@@ -335,35 +352,45 @@
 
                 <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
 
-                <button type="submit" class="btn-login">Iniciar Sesión</button>
+                <button type="submit" class="btn-login" id='btn-submit'>
+                    <span id="btn-text">Iniciar Sesión</span>
+                </button>
             </form>
         </div>
 
     </div>
 
-    {{-- JavaScript para el toggle del ojo --}}
     <script>
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            const btn = document.getElementById('btn-submit');
+
+            if (btn.classList.contains('btn-loading')) {
+                e.preventDefault();
+                return;
+            }
+
+            btn.innerHTML = `<span class="spinner"></span><span>Iniciando...</span>`;
+            btn.disabled = true;
+            btn.classList.add('btn-loading');
+        });
+
         (function() {
             const toggleBtn = document.getElementById('togglePassword');
             const passwordInput = document.getElementById('password');
 
             if (toggleBtn && passwordInput) {
                 toggleBtn.addEventListener('click', function() {
-                    // Alternar tipo de input
                     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordInput.setAttribute('type', type);
 
-                    // Cambiar el ícono del ojo (opcional)
                     const svg = this.querySelector('svg');
                     if (svg) {
                         if (type === 'text') {
-                            // Ojo tachado (ocultar contraseña)
                             svg.innerHTML = `
                                 <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                                 <line x1="1" y1="1" x2="23" y2="23"/>
                             `;
                         } else {
-                            // Ojo abierto (mostrar contraseña)
                             svg.innerHTML = `
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                 <circle cx="12" cy="12" r="3"/>
