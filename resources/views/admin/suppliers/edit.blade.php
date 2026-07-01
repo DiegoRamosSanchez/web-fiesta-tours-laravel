@@ -146,41 +146,32 @@
     }
     .btn-add-bank:hover{ border-color:#6366f1;color:#6366f1;background:#f8fafc; }
 
-    .new-bank-container{ margin-top:.8rem;padding-top:.8rem;border-top:1px dashed #e2e8f0; }
-    .new-bank-form{ margin-top:.6rem;background:#ede9fe;border-radius:8px;padding:.8rem;position:relative; }
-    .new-bank-form .form-grid{ display:grid;grid-template-columns:1fr 1fr;gap:.6rem; }
-    .new-bank-form .form-field{ margin:0; }
-    .new-bank-form .form-field label{
-        font-size:10px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.3px;
-        display:block;margin-bottom:2px;
+    .bank-actions-row {
+        display:flex;
+        gap:0.6rem;
+        margin-top:.6rem;
     }
-    .new-bank-form .form-field input,
-    .new-bank-form .form-field select{
-        width:100%;padding:.45rem .7rem;border:1px solid #c4b5fd;border-radius:6px;
-        font-size:13px;background:#fff;transition:all .2s;
-    }
-    .new-bank-form .form-field input:focus,
-    .new-bank-form .form-field select:focus{
-        border-color:#7c3aed;outline:none;box-shadow:0 0 0 3px rgba(124,58,237,.1);
-    }
-    .new-bank-form .form-actions{ margin-top:.5rem;display:flex;gap:.5rem;align-items:center; }
-    .new-bank-form .btn-close-bank{
-        padding:.2rem .6rem;background:none;border:1px solid #c4b5fd;border-radius:6px;
-        color:#6d28d9;cursor:pointer;font-size:11px;transition:all .2s;
-    }
-    .new-bank-form .btn-close-bank:hover{ background:#ede9fe; }
-    .new-bank-form .new-bank-badge {
-        position:absolute;
-        top:-8px;
-        left:12px;
-        background:#7c3aed;
-        color:#fff;
-        font-size:9px;
-        font-weight:700;
-        padding:2px 8px;
+    .bank-actions-row .btn-add-bank { margin-top:0; }
+    .btn-new-bank {
+        padding:.5rem 1rem;
+        background:#ede9fe;
+        border:1px solid #c4b5fd;
         border-radius:8px;
-        letter-spacing:.4px;
-        text-transform:uppercase;
+        color:#6d28d9;
+        cursor:pointer;
+        font-size:13px;
+        white-space:nowrap;
+        transition:all .2s;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:6px;
+        font-weight:600;
+        flex-shrink:0;
+    }
+    .btn-new-bank:hover {
+        background:#ddd6fe;
+        border-color:#a78bfa;
     }
 
     .btn-toggle-bank{
@@ -385,14 +376,167 @@
         color:#cbd5e1;
     }
 
+    /* ── Modal "Añadir Banco" (igual que crear.blade.php) ── */
+    .modal-overlay {
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background:rgba(15,23,42,0.6);
+        display:none;
+        justify-content:center;
+        align-items:center;
+        z-index:9999;
+        backdrop-filter:blur(6px);
+    }
+    .modal-overlay.active {
+        display:flex;
+    }
+    .modal-box {
+        background:#fff;
+        border-radius:20px;
+        padding:2rem 2.5rem;
+        max-width:580px;
+        width:92%;
+        max-height:90vh;
+        overflow-y:auto;
+        box-shadow:0 24px 64px rgba(0,0,0,0.25);
+        animation:modalFade .3s ease;
+    }
+    .modal-box.modal-box-sm {
+        max-width:420px;
+    }
+    @keyframes modalFade {
+        from { opacity:0; transform:scale(0.96) translateY(12px); }
+        to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .modal-header {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:1.5rem;
+        padding-bottom:1rem;
+        border-bottom:2px solid #f1f5f9;
+    }
+    .modal-title {
+        font-size:20px;
+        font-weight:700;
+        color:#0f172a;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    }
+    .modal-title i {
+        color:#6366f1;
+        font-size:22px;
+    }
+    .modal-close {
+        background:#f1f5f9;
+        border:none;
+        border-radius:50%;
+        width:40px;
+        height:40px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        font-size:20px;
+        color:#475569;
+        transition:all .2s;
+    }
+    .modal-close:hover {
+        background:#e2e8f0;
+        color:#0f172a;
+        transform:rotate(90deg);
+    }
+    .modal-body .field-group {
+        margin-bottom:1.2rem;
+    }
+    .modal-body .field-group label {
+        font-size:12px;
+        font-weight:700;
+        color:#475569;
+        display:block;
+        margin-bottom:5px;
+    }
+    .modal-body .field-group label .req {
+        color:#ef4444;
+    }
+    .modal-body .field-group input,
+    .modal-body .field-group select {
+        width:100%;
+        padding:0.7rem 0.9rem;
+        border:1.5px solid #e2e8f0;
+        border-radius:10px;
+        font-size:14px;
+        transition:all .2s;
+    }
+    .modal-body .field-group input:focus,
+    .modal-body .field-group select:focus {
+        border-color:#6366f1;
+        outline:none;
+        box-shadow:0 0 0 4px rgba(99,102,241,0.08);
+    }
+    .modal-body .field-error {
+        color:#ef4444;
+        font-size:12px;
+        margin-top:5px;
+        display:none;
+    }
+    .modal-body .field-error.show {
+        display:block;
+    }
+    .modal-footer {
+        display:flex;
+        justify-content:flex-end;
+        gap:1rem;
+        margin-top:1.5rem;
+        padding-top:1.2rem;
+        border-top:2px solid #f1f5f9;
+    }
+    .modal-footer .btn {
+        padding:0.7rem 2rem;
+        border-radius:10px;
+        font-weight:600;
+        font-size:13px;
+        cursor:pointer;
+        border:none;
+        transition:all .2s;
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+    }
+    .modal-footer .btn:disabled {
+        opacity:.6;
+        cursor:not-allowed;
+    }
+    .modal-footer .btn-secondary {
+        background:#f1f5f9;
+        color:#475569;
+    }
+    .modal-footer .btn-secondary:hover {
+        background:#e2e8f0;
+        color:#0f172a;
+    }
+    .modal-footer .btn-primary {
+        background:#6366f1;
+        color:#fff;
+    }
+    .modal-footer .btn-primary:hover {
+        background:#4f46e5;
+        transform:translateY(-2px);
+        box-shadow:0 4px 16px rgba(99,102,241,0.3);
+    }
+
     @media (max-width: 640px){
         .bank-account-row{ flex-wrap:wrap; }
         .bank-account-row .form-field{ flex:1 1 100%;min-width:100%; }
         .bank-account-row .btn-remove{ flex:1;height:38px; }
-        .new-bank-form .form-grid{ grid-template-columns:1fr; }
         .contacts-table thead th,
         .contacts-table tbody td { padding:.2rem .3rem; font-size:11px; }
         .contacts-table tbody td input { font-size:11px; padding:.3rem .4rem; min-width:60px; }
+        .bank-actions-row { flex-direction:column; }
         .page-header {
             flex-wrap:wrap;
             gap:0.8rem;
@@ -404,6 +548,7 @@
             flex:1;
             justify-content:center;
         }
+        .modal-box { padding:1.5rem; }
     }
 </style>
 
@@ -562,14 +707,12 @@
                             <span class="bank-counter" id="bank-counter">{{ $supplier->bankAccounts->count() }}</span>
                         </div>
                     </div>
-                    <button type="button" class="btn-add-bank" style="width:auto;border:none;background:#10b981;color:#fff" onclick="addBankAccount()">
-                        <i class="ti ti-plus" style="font-size:14px"></i> Agregar cuenta
-                    </button>
                 </div>
 
                 <div class="card-sub" style="font-size:12px;color:#94a3b8;margin-bottom:.7rem">
-                    Usa <strong>"Banco"</strong> si ya existe en el sistema. Si es un banco nuevo, usa
-                    <strong>"Registrar nuevo banco"</strong> abajo: puedes agregar todos los que necesites de una vez.
+                    Selecciona el banco en la lista para registrar la cuenta. Si el banco todavía no existe,
+                    primero usa <strong>"Añadir Banco"</strong> para registrarlo: quedará disponible al instante
+                    en todos los selectores de esta página.
                 </div>
 
                 <div id="bank-accounts-container">
@@ -620,66 +763,16 @@
 
                 <p class="table-empty-note" id="no-banks-note"
                    style="{{ $supplier->bankAccounts->isEmpty() ? '' : 'display:none' }};color:#94a3b8;font-size:12.5px;text-align:center;padding:1rem 0">
-                    Este proveedor no tiene cuentas bancarias aún. Usa "Agregar cuenta" para crear una.
+                    Este proveedor no tiene cuentas bancarias aún. Usa "Agregar cuenta bancaria" para crear una.
                 </p>
 
-                <button type="button" class="btn-add-bank" onclick="addBankAccount()" style="margin-top:.6rem">
-                    <i class="ti ti-plus" style="font-size:13px"></i> Agregar otra cuenta con banco existente
-                </button>
-
-                {{-- Nuevos bancos (repetible) --}}
-                <div class="new-bank-container">
-                    <button type="button" class="btn-toggle-bank" onclick="addNewBankEntry()">
-                        <i class="ti ti-plus"></i> Registrar nuevo banco
+                <div class="bank-actions-row">
+                    <button type="button" class="btn-add-bank" onclick="addBankAccount()">
+                        <i class="ti ti-plus"></i> Agregar cuenta bancaria
                     </button>
-
-                    <div id="new-banks-list">
-                        @if(old('new_banks'))
-                            @foreach(old('new_banks') as $idx => $nb)
-                                <div class="new-bank-form" data-new-bank-index="{{ $idx }}">
-                                    <span class="new-bank-badge">Banco nuevo</span>
-                                    <div class="form-grid">
-                                        <div class="form-field">
-                                            <label>Nombre del banco *</label>
-                                            <input type="text" name="new_banks[{{ $idx }}][bank_name]"
-                                                   value="{{ $nb['bank_name'] ?? '' }}"
-                                                   placeholder="Ej: BBVA, Interbank...">
-                                        </div>
-                                        <div class="form-field">
-                                            <label>Número de cuenta *</label>
-                                            <input type="text" name="new_banks[{{ $idx }}][account_number]"
-                                                   value="{{ $nb['account_number'] ?? '' }}"
-                                                   placeholder="Número de cuenta">
-                                        </div>
-                                        <div class="form-field">
-                                            <label>CCI</label>
-                                            <input type="text" name="new_banks[{{ $idx }}][cci]"
-                                                   value="{{ $nb['cci'] ?? '' }}"
-                                                   placeholder="CCI">
-                                        </div>
-                                        <div class="form-field">
-                                            <label>Moneda</label>
-                                            <select name="new_banks[{{ $idx }}][currency]">
-                                                <option value="">—</option>
-                                                <option value="PEN" {{ ($nb['currency'] ?? '') == 'PEN' ? 'selected' : '' }}>PEN</option>
-                                                <option value="USD" {{ ($nb['currency'] ?? '') == 'USD' ? 'selected' : '' }}>USD</option>
-                                                <option value="EUR" {{ ($nb['currency'] ?? '') == 'EUR' ? 'selected' : '' }}>EUR</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-actions">
-                                        <p style="font-size:11px;color:#7c3aed;margin:0;flex:1">
-                                            <i class="ti ti-info-circle" style="font-size:12px"></i>
-                                            Banco y cuenta se crearán automáticamente
-                                        </p>
-                                        <button type="button" class="btn-close-bank" onclick="removeNewBankEntry({{ $idx }})">
-                                            <i class="ti ti-x"></i> Quitar
-                                        </button>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @endif
-                    </div>
+                    <button type="button" class="btn-new-bank" onclick="abrirModalBanco()">
+                        <i class="ti ti-building-bank"></i> Añadir Banco
+                    </button>
                 </div>
             </div>
 
@@ -777,6 +870,40 @@
 
     </div>
 </form>
+
+{{-- ══════════ MODAL PARA AÑADIR BANCO ══════════ --}}
+<div class="modal-overlay" id="modal-banco">
+    <div class="modal-box modal-box-sm">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="ti ti-building-bank"></i>
+                Añadir Banco
+            </div>
+            <button type="button" class="modal-close" onclick="cerrarModalBanco()">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="field-group">
+                <label>Nombre del banco <span class="req">*</span></label>
+                <input type="text" id="modal-bank-name" placeholder="Ej: BBVA, Interbank, BCP..." maxlength="50">
+                <div class="field-error" id="modal-bank-error"></div>
+            </div>
+            <div class="card-sub" style="margin-top:-.4rem;font-size:12px;color:#94a3b8">
+                Se registrará como un banco disponible para todo el sistema. Luego podrás elegirlo
+                en el selector de "Banco" de las cuentas bancarias.
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="cerrarModalBanco()">
+                <i class="ti ti-x"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" id="modal-bank-save-btn" onclick="guardarBancoModal()">
+                <i class="ti ti-check"></i> Registrar banco
+            </button>
+        </div>
+    </div>
+</div>
 
 @push('scripts')
 <script>
@@ -983,9 +1110,25 @@ function cargarCiudades(countryCode) {
 
 cargarPaises();
 
-// ── Banco ──
+// ── LISTA GLOBAL DE BANCOS DISPONIBLES ──
+// Esta lista mantiene todos los bancos disponibles, incluyendo los creados dinámicamente
+let bancosDisponibles = [];
+
+// Función para inicializar la lista de bancos desde los selectores existentes
+function inicializarBancosDisponibles() {
+    const selectors = document.querySelectorAll('.bank-select');
+    if (selectors.length > 0) {
+        const firstSelect = selectors[0];
+        bancosDisponibles = Array.from(firstSelect.options)
+            .filter(opt => opt.value !== '')
+            .map(opt => ({ id: opt.value.toString(), name: opt.textContent }));
+    }
+}
+
+// ── Cuentas bancarias ──
 let accountIndex = {{ $supplier->bankAccounts->count() }};
 const toDeleteBanks = new Set();
+let ultimoBankSelectFocado = null;
 
 function addBankAccount() {
     document.getElementById('no-banks-note').style.display = 'none';
@@ -993,14 +1136,18 @@ function addBankAccount() {
     const row = document.createElement('div');
     row.className = 'bank-account-row';
     row.dataset.index = accountIndex;
+
+    // Construir opciones de bancos desde la lista global
+    let optionsHtml = '<option value="">Seleccionar banco</option>';
+    bancosDisponibles.forEach(b => {
+        optionsHtml += `<option value="${b.id}">${b.name}</option>`;
+    });
+
     row.innerHTML = `
         <div class="form-field">
             <label>Banco *</label>
             <select name="bank_accounts[${accountIndex}][id_bank]" class="bank-select">
-                <option value="">Seleccionar banco</option>
-                @foreach($banks as $b)
-                    <option value="{{ $b->id_bank }}">{{ $b->bank_name }}</option>
-                @endforeach
+                ${optionsHtml}
             </select>
         </div>
         <div class="form-field">
@@ -1084,68 +1231,120 @@ function updateBankCounter() {
         const id = row.dataset.accountId;
         return !id || !toDeleteBanks.has(parseInt(id));
     }).length;
-    const newBanksCount = document.getElementById('new-banks-list').children.length;
-    const total = activeCount + newBanksCount;
-    document.getElementById('bank-counter').textContent = total;
-    document.getElementById('bank-counter-label').textContent = total + ' cuenta(s) registrada(s)';
+    document.getElementById('bank-counter').textContent = activeCount;
+    document.getElementById('bank-counter-label').textContent = activeCount + ' cuenta(s) registrada(s)';
 }
 
-// ── Bancos nuevos (repetible, sin necesidad de guardar y volver a editar) ──
-let newBankIndex = {{ old('new_banks') ? count(old('new_banks')) : 0 }};
+// ── Recordar el último <select> de banco que el usuario tocó,
+//    para poder auto-seleccionar ahí el banco recién creado ──
+document.addEventListener('focusin', function (e) {
+    if (e.target && e.target.classList && e.target.classList.contains('bank-select')) {
+        ultimoBankSelectFocado = e.target;
+    }
+});
 
-function addNewBankEntry() {
-    const list = document.getElementById('new-banks-list');
-    const idx = newBankIndex;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'new-bank-form';
-    wrapper.dataset.newBankIndex = idx;
-    wrapper.innerHTML = `
-        <span class="new-bank-badge">Banco nuevo</span>
-        <div class="form-grid">
-            <div class="form-field">
-                <label>Nombre del banco *</label>
-                <input type="text" name="new_banks[${idx}][bank_name]" placeholder="Ej: BBVA, Interbank...">
-            </div>
-            <div class="form-field">
-                <label>Número de cuenta *</label>
-                <input type="text" name="new_banks[${idx}][account_number]" placeholder="Número de cuenta">
-            </div>
-            <div class="form-field">
-                <label>CCI</label>
-                <input type="text" name="new_banks[${idx}][cci]" placeholder="CCI">
-            </div>
-            <div class="form-field">
-                <label>Moneda</label>
-                <select name="new_banks[${idx}][currency]">
-                    <option value="">—</option>
-                    <option value="PEN">PEN</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-actions">
-            <p style="font-size:11px;color:#7c3aed;margin:0;flex:1">
-                <i class="ti ti-info-circle" style="font-size:12px"></i>
-                Banco y cuenta se crearán automáticamente
-            </p>
-            <button type="button" class="btn-close-bank" onclick="removeNewBankEntry(${idx})">
-                <i class="ti ti-x"></i> Quitar
-            </button>
-        </div>
-    `;
-    list.appendChild(wrapper);
-    newBankIndex++;
-    updateBankCounter();
-
-    const firstInput = wrapper.querySelector('input');
-    if (firstInput) firstInput.focus();
+// ── Modal "Añadir Banco" ──
+function abrirModalBanco() {
+    document.getElementById('modal-bank-name').value = '';
+    document.getElementById('modal-bank-error').classList.remove('show');
+    document.getElementById('modal-bank-error').textContent = '';
+    document.getElementById('modal-banco').classList.add('active');
+    setTimeout(() => document.getElementById('modal-bank-name').focus(), 150);
 }
 
-function removeNewBankEntry(idx) {
-    const el = document.querySelector(`#new-banks-list [data-new-bank-index="${idx}"]`);
-    if (el) el.remove();
-    updateBankCounter();
+function cerrarModalBanco() {
+    document.getElementById('modal-banco').classList.remove('active');
+}
+
+function guardarBancoModal() {
+    const input = document.getElementById('modal-bank-name');
+    const errorBox = document.getElementById('modal-bank-error');
+    const saveBtn = document.getElementById('modal-bank-save-btn');
+    const nombre = input.value.trim();
+
+    errorBox.classList.remove('show');
+    errorBox.textContent = '';
+
+    if (!nombre) {
+        errorBox.textContent = 'El nombre del banco es obligatorio.';
+        errorBox.classList.add('show');
+        input.focus();
+        return;
+    }
+
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfMeta) {
+        errorBox.textContent = 'Error de configuración: falta el token CSRF en la página.';
+        errorBox.classList.add('show');
+        return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="ti ti-loader-2"></i> Guardando...';
+
+    fetch(`{{ route('admin.suppliers.banks.store') }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfMeta.getAttribute('content'),
+        },
+        body: JSON.stringify({ bank_name: nombre })
+    })
+    .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+            const msg = (data.errors && data.errors.bank_name && data.errors.bank_name[0])
+                || data.message
+                || 'No se pudo registrar el banco.';
+            throw new Error(msg);
+        }
+        return data;
+    })
+    .then((data) => {
+        agregarBancoATodosLosSelect(data.bank.id, data.bank.name);
+        cerrarModalBanco();
+    })
+    .catch((err) => {
+        errorBox.textContent = err.message;
+        errorBox.classList.add('show');
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="ti ti-check"></i> Registrar banco';
+    });
+}
+
+function agregarBancoATodosLosSelect(id, nombre) {
+    // Agregar a la lista global de bancos disponibles
+    const idStr = id.toString();
+    const existe = bancosDisponibles.some(b => b.id === idStr);
+    if (!existe) {
+        bancosDisponibles.push({ id: idStr, name: nombre });
+    }
+
+    // Actualizar todos los selectores existentes
+    const selects = document.querySelectorAll('.bank-select');
+    selects.forEach((select) => {
+        const yaExiste = Array.from(select.options).some(opt => opt.value == id);
+        if (!yaExiste) {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = nombre;
+            select.appendChild(option);
+        }
+    });
+
+    // Seleccionar automáticamente el banco recién creado en el último
+    // selector de banco donde el usuario estaba trabajando (si lo hubiera).
+    if (ultimoBankSelectFocado) {
+        ultimoBankSelectFocado.value = id;
+    } else {
+        const primerSelect = document.querySelector('.bank-select');
+        if (primerSelect && !primerSelect.value) {
+            primerSelect.value = id;
+        }
+    }
 }
 
 function toggleNew(type) {
@@ -1290,8 +1489,33 @@ document.addEventListener('change', function(e) {
     }
 });
 
-// Inicializar contador
+// ── Cerrar modal con ESC ──
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalBanco();
+    }
+});
+
+// ── Cerrar modal haciendo clic fuera ──
+document.getElementById('modal-banco').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModalBanco();
+    }
+});
+
+// ── Enter para confirmar dentro del modal de banco ──
+document.getElementById('modal-bank-name').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        guardarBancoModal();
+    }
+});
+
+// ── INICIALIZACIÓN ──
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar la lista global de bancos disponibles
+    inicializarBancosDisponibles();
+
     // Asegurar que solo un principal esté marcado
     const checkedPrincipals = document.querySelectorAll('.principal-checkbox:checked');
     if (checkedPrincipals.length > 1) {

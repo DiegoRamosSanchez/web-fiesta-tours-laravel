@@ -106,16 +106,14 @@ class SupplierController extends Controller
             'id_categories_suppliers' => 'nullable|exists:categories_suppliers,id_categories_suppliers',
             'new_destination_name' => 'nullable|string|max:100',
             'new_category_name' => 'nullable|string|max:100',
+            'country_name' => 'nullable|string|max:100',
+            'city_name' => 'nullable|string|max:150',
+            'address' => 'nullable|string|max:255',
             'bank_accounts' => 'nullable|array',
-            'bank_accounts.*.id_bank' => 'nullable|exists:bank,id_bank',
-            'bank_accounts.*.account_number' => 'nullable|string|max:100',
+            'bank_accounts.*.id_bank' => 'required_with:bank_accounts.*.account_number|exists:bank,id_bank',
+            'bank_accounts.*.account_number' => 'required_with:bank_accounts.*.id_bank|string|max:100',
             'bank_accounts.*.cci' => 'nullable|string|max:100',
             'bank_accounts.*.currency' => 'nullable|string|max:40',
-            'new_banks' => 'nullable|array',
-            'new_banks.*.bank_name' => 'required_with:new_banks.*.account_number|nullable|string|max:50',
-            'new_banks.*.account_number' => 'required_with:new_banks.*.bank_name|nullable|string|max:100',
-            'new_banks.*.cci' => 'nullable|string|max:100',
-            'new_banks.*.currency' => 'nullable|string|max:40',
             'contacts' => 'nullable|array',
             'contacts.*.name' => 'required_with:contacts|string|max:100',
             'contacts.*.last_names' => 'nullable|string|max:100',
@@ -174,7 +172,8 @@ class SupplierController extends Controller
                 }
             }
 
-            if ($request->has('bank_accounts')) {
+            // ── Guardar cuentas bancarias ──
+            if ($request->has('bank_accounts') && is_array($request->bank_accounts)) {
                 foreach ($request->bank_accounts as $account) {
                     if (!empty($account['id_bank']) && !empty($account['account_number'])) {
                         BankAccount::create([
@@ -188,25 +187,6 @@ class SupplierController extends Controller
                 }
             }
 
-            // Bancos nuevos (repetible): cada entrada crea su propio banco + cuenta.
-            if ($request->has('new_banks') && is_array($request->new_banks)) {
-                foreach ($request->new_banks as $newBank) {
-                    if (empty($newBank['bank_name']) || empty($newBank['account_number'])) {
-                        continue;
-                    }
-
-                    $bank = Bank::firstOrCreate(['bank_name' => trim($newBank['bank_name'])]);
-
-                    BankAccount::create([
-                        'id_supplier' => $supplier->id_supplier,
-                        'id_bank' => $bank->id_bank,
-                        'account_number' => $newBank['account_number'],
-                        'cci' => $newBank['cci'] ?? null,
-                        'currency' => $newBank['currency'] ?? null,
-                    ]);
-                }
-            }
-
             DB::commit();
 
             return redirect()->route('admin.suppliers.index')
@@ -214,7 +194,7 @@ class SupplierController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error al crear el proveedor: '.$e->getMessage())
+            return back()->with('error', 'Error al crear el proveedor: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -226,20 +206,7 @@ class SupplierController extends Controller
         $banks = Bank::orderBy('bank_name')->get();
         $supplier->load('bankAccounts.bank');
 
-        $contactsData = $supplier->contacts->map(function ($c) {
-            return [
-                'id' => $c->id_contacts,
-                'name' => $c->name,
-                'lastnames' => $c->last_names,
-                'email' => $c->email,
-                'qualification' => $c->qualification,
-                'phone1' => $c->first_phone,
-                'phone2' => $c->second_phone,
-                'principal' => (bool) $c->es_principal,
-            ];
-        })->values();
-
-        return view('admin.suppliers.edit', compact('supplier', 'destinations', 'categories', 'banks', 'contactsData'));
+        return view('admin.suppliers.edit', compact('supplier', 'destinations', 'categories', 'banks'));
     }
 
     public function update(Request $request, Supplier $supplier)
@@ -258,15 +225,10 @@ class SupplierController extends Controller
             'new_destination_name' => 'nullable|string|max:100',
             'new_category_name' => 'nullable|string|max:100',
             'bank_accounts' => 'nullable|array',
-            'bank_accounts.*.id_bank' => 'nullable|exists:bank,id_bank',
-            'bank_accounts.*.account_number' => 'nullable|string|max:100',
+            'bank_accounts.*.id_bank' => 'required_with:bank_accounts.*.account_number|exists:bank,id_bank',
+            'bank_accounts.*.account_number' => 'required_with:bank_accounts.*.id_bank|string|max:100',
             'bank_accounts.*.cci' => 'nullable|string|max:100',
             'bank_accounts.*.currency' => 'nullable|string|max:40',
-            'new_banks' => 'nullable|array',
-            'new_banks.*.bank_name' => 'required_with:new_banks.*.account_number|nullable|string|max:50',
-            'new_banks.*.account_number' => 'required_with:new_banks.*.bank_name|nullable|string|max:100',
-            'new_banks.*.cci' => 'nullable|string|max:100',
-            'new_banks.*.currency' => 'nullable|string|max:40',
             'delete_bank_accounts' => 'nullable|array',
             'delete_bank_accounts.*' => 'exists:bank_account,id_bank_account',
             'contacts' => 'nullable|array',
@@ -315,7 +277,8 @@ class SupplierController extends Controller
                     ->delete();
             }
 
-            if ($request->has('contacts')) {
+            // ── Guardar/actualizar contactos ──
+            if ($request->has('contacts') && is_array($request->contacts)) {
                 $deleteIds = $request->input('delete_contacts', []);
                 foreach ($request->contacts as $contactData) {
                     if (empty($contactData['name'])) continue;
@@ -355,11 +318,13 @@ class SupplierController extends Controller
                 }
             }
 
-            if ($request->has('delete_bank_accounts')) {
+            // ── Eliminar cuentas bancarias marcadas ──
+            if ($request->has('delete_bank_accounts') && !empty($request->delete_bank_accounts)) {
                 BankAccount::whereIn('id_bank_account', $request->delete_bank_accounts)->delete();
             }
 
-            if ($request->has('bank_accounts')) {
+            // ── Guardar/actualizar cuentas bancarias ──
+            if ($request->has('bank_accounts') && is_array($request->bank_accounts)) {
                 foreach ($request->bank_accounts as $account) {
                     if (empty($account['id_bank']) || empty($account['account_number'])) continue;
 
@@ -374,6 +339,7 @@ class SupplierController extends Controller
                             ]);
                         }
                     } else {
+                        // Crear nueva cuenta
                         BankAccount::create([
                             'id_supplier' => $supplier->id_supplier,
                             'id_bank' => $account['id_bank'],
@@ -385,25 +351,7 @@ class SupplierController extends Controller
                 }
             }
 
-            // Bancos nuevos (repetible): cada entrada crea su propio banco + cuenta.
-            if ($request->has('new_banks') && is_array($request->new_banks)) {
-                foreach ($request->new_banks as $newBank) {
-                    if (empty($newBank['bank_name']) || empty($newBank['account_number'])) {
-                        continue;
-                    }
-
-                    $bank = Bank::firstOrCreate(['bank_name' => trim($newBank['bank_name'])]);
-
-                    BankAccount::create([
-                        'id_supplier' => $supplier->id_supplier,
-                        'id_bank' => $bank->id_bank,
-                        'account_number' => $newBank['account_number'],
-                        'cci' => $newBank['cci'] ?? null,
-                        'currency' => $newBank['currency'] ?? null,
-                    ]);
-                }
-            }
-
+            // ── Asegurar que solo un contacto sea principal ──
             $principales = Contact::where('id_supplier', $supplier->id_supplier)
                 ->where('es_principal', true)
                 ->get();
@@ -421,7 +369,7 @@ class SupplierController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error al actualizar el proveedor: '.$e->getMessage())
+            return back()->with('error', 'Error al actualizar el proveedor: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -435,8 +383,33 @@ class SupplierController extends Controller
             return back()->with('success', 'Proveedor eliminado correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error al eliminar el proveedor: '.$e->getMessage());
+            return back()->with('error', 'Error al eliminar el proveedor: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Registrar un banco nuevo vía AJAX desde el modal "Añadir Banco"
+     */
+    public function storeBank(Request $request)
+    {
+        $request->validate([
+            'bank_name' => 'required|string|max:50|unique:bank,bank_name',
+        ], [
+            'bank_name.required' => 'El nombre del banco es obligatorio.',
+            'bank_name.unique' => 'Ya existe un banco registrado con ese nombre.',
+        ]);
+
+        $bank = Bank::create([
+            'bank_name' => trim($request->bank_name),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'bank' => [
+                'id' => $bank->id_bank,
+                'name' => $bank->bank_name,
+            ],
+        ]);
     }
 
     /**

@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [SupplierController::class, 'index'])->name('index');
         Route::get('/crear', [SupplierController::class, 'create'])->name('create');
         Route::post('/', [SupplierController::class, 'store'])->name('store');
+        Route::post('/bancos', [SupplierController::class, 'storeBank'])->name('banks.store');
 
         Route::get('/exportar/pdf', [SupplierController::class, 'exportPdfAll'])->name('export.pdf.all');
         Route::get('/exportar/excel', [SupplierController::class, 'exportExcel'])->name('export.excel');
