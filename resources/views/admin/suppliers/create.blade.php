@@ -859,6 +859,11 @@
 
 <form action="{{ route('admin.suppliers.store') }}" method="POST" id="form-supplier">
     @csrf
+
+    {{-- Campos ocultos para destinos (se envían como null) --}}
+    <input type="hidden" name="id_destinations" value="">
+    <input type="hidden" name="new_destination_name" value="">
+
     <div class="edit-supplier-layout">
 
         {{-- ══════════ COLUMNA IZQUIERDA ══════════ --}}
@@ -1395,6 +1400,19 @@ function cargarCiudades(countryCode) {
 
 cargarPaises();
 
+// ── LISTA GLOBAL DE BANCOS DISPONIBLES ──
+let bancosDisponibles = [];
+
+function inicializarBancosDisponibles() {
+    const selectors = document.querySelectorAll('.bank-select');
+    if (selectors.length > 0) {
+        const firstSelect = selectors[0];
+        bancosDisponibles = Array.from(firstSelect.options)
+            .filter(opt => opt.value !== '')
+            .map(opt => ({ id: opt.value.toString(), name: opt.textContent }));
+    }
+}
+
 // ── Cuentas bancarias (banco ya existente) ──
 let accountIndex = 1;
 let contactos = [];
@@ -1403,17 +1421,25 @@ let ultimoBankSelectFocado = null;
 
 function addBankAccount() {
     const container = document.getElementById('bank-accounts-container');
+
+    if (bancosDisponibles.length === 0) {
+        inicializarBancosDisponibles();
+    }
+
     const row = document.createElement('div');
     row.className = 'bank-account-row';
     row.dataset.index = accountIndex;
+
+    let optionsHtml = '<option value="">Seleccionar banco</option>';
+    bancosDisponibles.forEach(b => {
+        optionsHtml += `<option value="${b.id}">${b.name}</option>`;
+    });
+
     row.innerHTML = `
         <div class="field-group">
             <label>Banco</label>
             <select name="bank_accounts[${accountIndex}][id_bank]" class="bank-select">
-                <option value="">Seleccionar banco</option>
-                @foreach($banks as $b)
-                    <option value="{{ $b->id_bank }}">{{ $b->bank_name }}</option>
-                @endforeach
+                ${optionsHtml}
             </select>
         </div>
         <div class="field-group">
@@ -1534,6 +1560,13 @@ function guardarBancoModal() {
 }
 
 function agregarBancoATodosLosSelect(id, nombre) {
+    const idStr = id.toString();
+
+    const existe = bancosDisponibles.some(b => b.id === idStr);
+    if (!existe) {
+        bancosDisponibles.push({ id: idStr, name: nombre });
+    }
+
     const selects = document.querySelectorAll('.bank-select');
     selects.forEach((select) => {
         const yaExiste = Array.from(select.options).some(opt => opt.value == id);
@@ -1545,8 +1578,6 @@ function agregarBancoATodosLosSelect(id, nombre) {
         }
     });
 
-    // Selecciona automáticamente el banco recién creado en el último
-    // selector de banco donde el usuario estaba trabajando (si lo hubiera).
     if (ultimoBankSelectFocado) {
         ultimoBankSelectFocado.value = id;
     } else {
@@ -1779,18 +1810,18 @@ document.getElementById('form-supplier').addEventListener('submit', function(e) 
     document.querySelectorAll('input[name^="contacts"]').forEach(el => el.remove());
 
     contactos.forEach((contacto, index) => {
-        // Mapeo de campos: el nombre en el objeto → nombre esperado por el controlador
         const fields = [
             { key: 'name', value: contacto.name },
             { key: 'last_names', value: contacto.lastnames },
             { key: 'email', value: contacto.email },
             { key: 'qualification', value: contacto.qualification },
             { key: 'first_phone', value: contacto.phone1 },
-            { key: 'second_phone', value: contacto.phone2 }
+            { key: 'second_phone', value: contacto.phone2 },
+            { key: 'es_principal', value: contacto.principal ? '1' : '0' }
         ];
 
         fields.forEach(field => {
-            if (field.value) {
+            if (field.value !== undefined && field.value !== null && field.value !== '') {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = `contacts[${index}][${field.key}]`;
@@ -1802,6 +1833,7 @@ document.getElementById('form-supplier').addEventListener('submit', function(e) 
 });
 
 document.addEventListener('DOMContentLoaded', function () {
+    inicializarBancosDisponibles();
     updateBankCounter();
 });
 </script>
