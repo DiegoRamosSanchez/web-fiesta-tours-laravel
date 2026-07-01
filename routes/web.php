@@ -86,17 +86,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [SupplierController::class, 'index'])->name('index');
         Route::get('/crear', [SupplierController::class, 'create'])->name('create');
         Route::post('/', [SupplierController::class, 'store'])->name('store');
+
+        Route::get('/exportar/pdf', [SupplierController::class, 'exportPdfAll'])->name('export.pdf.all');
+        Route::get('/exportar/excel', [SupplierController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/importar', [SupplierController::class, 'importView'])->name('import.view');
+        Route::post('/importar', [SupplierController::class, 'import'])->name('import');
+        Route::get('/plantilla', [SupplierController::class, 'downloadTemplate'])->name('template');
+
         Route::get('/{supplier}/editar', [SupplierController::class, 'edit'])->name('edit');
         Route::put('/{supplier}', [SupplierController::class, 'update'])->name('update');
         Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('destroy');
         Route::get('/{supplier}/pdf', [SupplierController::class, 'exportPdf'])->name('pdf');
-
-        Route::get('/exportar/pdf', [SupplierController::class, 'exportPdfAll'])->name('export.pdf.all');
-        Route::get('/exportar/excel', [SupplierController::class, 'exportExcel'])->name('export.excel');
-
-        Route::get('/importar', [SupplierController::class, 'importView'])->name('import.view');
-        Route::post('/importar', [SupplierController::class, 'import'])->name('import');
-        Route::get('/plantilla', [SupplierController::class, 'downloadTemplate'])->name('template');
     });
 
     // ── SOLO ADMIN: gestión de usuarios del sistema ──
@@ -108,9 +108,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('usuarios.update');
         Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
     });
-
-    Route::get('suppliers/{supplier}/pdf', [SupplierController::class, 'exportPdf'])
-        ->name('admin.suppliers.pdf');
 
     Route::get('/testmail', function () {
         Mail::to('luistasayco3030@gmail.com')->send(new NotificationUserCreate);

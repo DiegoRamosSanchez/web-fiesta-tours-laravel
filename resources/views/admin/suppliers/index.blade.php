@@ -2,7 +2,6 @@
 @section('title', 'Proveedores')
 @section('content')
 
-{{-- ══════════ MODAL DE CARGA PARA PDF ══════════ --}}
 <div id="modal-pdf-loading" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:10000; justify-content:center; align-items:center; padding:1rem;">
     <div style="background:#fff; border-radius:16px; padding:2.5rem; max-width:400px; width:100%; text-align:center; animation: modalFadeIn .2s ease-out;">
         <div style="margin-bottom:1.5rem;">
