@@ -94,16 +94,25 @@
             border-radius: 999px;
         }
 
-        .left-bottom { display: flex; align-items: center; gap: 10px; }
-        .avatar {
-            width: 38px; height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 13px; color: #fff; font-weight: 600; flex-shrink: 0;
+        .left-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
         }
-        .author-name { font-size: 13px; color: #fff; font-weight: 500; }
-        .author-role { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
+        .logo-large {
+            width: 180px;
+            height: auto;
+            display: block;
+        }
+        .logo-large img {
+            width: 100%;
+            height: auto;
+            max-height: 80px;
+            object-fit: contain;
+            display: block;
+            filter: brightness(0) invert(1);
+        }
         .nav-btns { display: flex; gap: 6px; margin-left: auto; }
         .nav-btn {
             width: 30px; height: 30px;
@@ -125,11 +134,21 @@
         }
         .right-top {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-bottom: 2.4rem;
         }
-        .brand { font-size: 14px; font-weight: 700; color: #0f172a; letter-spacing: .8px; }
+        .brand-logo {
+            width: 200px;
+            height: auto;
+            display: block;
+        }
+        .brand-logo img {
+            width: 100%;
+            height: auto;
+            max-height: 70px;
+            object-fit: contain;
+        }
 
         h1 { font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 6px; letter-spacing: -.5px; }
         .subtitle { font-size: 13px; color: #64748b; margin-bottom: 2rem; }
@@ -154,7 +173,7 @@
 
         input[type="email"],
         input[type="password"],
-        input[type="text"] {  /* Para cuando se muestra la contraseña */
+        input[type="text"] {
             width: 100%;
             padding: 10px 13px;
             border: 1px solid #e2e8f0;
@@ -166,7 +185,6 @@
             transition: border-color .15s, background .15s;
         }
 
-        /* El input de password con padding a la derecha para el ojo */
         .password-wrapper input {
             padding-right: 42px;
             margin-bottom: 0;
@@ -204,7 +222,6 @@
             outline: none;
         }
 
-        /* SVG del ojo - tamaño y color */
         .toggle-password svg {
             width: 20px;
             height: 20px;
@@ -274,6 +291,9 @@
                 width: 100%;
                 padding: 2rem 1.5rem;
             }
+            .brand-logo {
+                width: 160px;
+            }
         }
     </style>
 </head>
@@ -304,10 +324,8 @@
             </div>
 
             <div class="left-bottom">
-                <div class="avatar">FT</div>
-                <div>
-                    <div class="author-name">Fiesta Tours</div>
-                    <div class="author-role">Viajes &amp; Experiencias</div>
+                <div class="logo-large">
+                    <img src="https://res.cloudinary.com/dlgeap8h0/image/upload/v1782924689/log-png_r4ezpy.png" alt="Fiesta Tours">
                 </div>
                 <div class="nav-btns">
                     <button class="nav-btn">&#8592;</button>
@@ -318,7 +336,9 @@
 
         <div class="right">
             <div class="right-top">
-                <span class="brand">FIESTA TOURS</span>
+                <div class="brand-logo">
+                    <img src="https://res.cloudinary.com/dlgeap8h0/image/upload/v1782924689/log-png_r4ezpy.png" alt="Fiesta Tours">
+                </div>
             </div>
 
             <h1>Bienvenido</h1>
