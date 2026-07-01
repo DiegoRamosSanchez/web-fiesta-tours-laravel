@@ -458,7 +458,7 @@ class SupplierController extends Controller
             })
             ->get();
 
-        $pdf = Pdf::loadView('admin.suppliers.pdf', compact('suppliers'))
+        $pdf = Pdf::loadView('admin.suppliers.pdfAll', compact('suppliers'))
             ->setPaper('a4', 'portrait')
             ->setOptions([
                 'defaultFont' => 'Arial',
@@ -559,9 +559,6 @@ class SupplierController extends Controller
         return Excel::download(new SuppliersExport($suppliers), $filename);
     }
 
-    /**
-     * Exportar PDF de un proveedor específico o todos con filtros
-     */
     public function exportPdf(Request $request, ?Supplier $supplier = null)
     {
         if ($request->has('supplier_id') && !empty($request->supplier_id)) {
@@ -579,7 +576,6 @@ class SupplierController extends Controller
             $suppliers = collect([$supplier]);
             $filename = 'proveedor_' . str($supplier->supplier_name)->slug() . '.pdf';
         } else {
-            // Usar filtros
             $search = $request->input('search');
             $country = $request->input('country');
             $category = $request->input('category');

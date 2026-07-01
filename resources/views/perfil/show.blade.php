@@ -419,7 +419,7 @@
             <div class="ip-row">
                 <div class="ip-ico" style="background:#dbeafe"><i class="ti ti-device-desktop" style="color:#1d4ed8"></i></div>
                 <span class="ip-key">Versión del sistema</span>
-                <span class="ip-val">v2.4.1</span>
+                <span class="ip-val">v1.0.0</span>
             </div>
         </div>
 
