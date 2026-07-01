@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GeoController;
@@ -110,9 +111,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
     });
 
-    Route::get('/testmail', function () {
-        Mail::to('luistasayco3030@gmail.com')->send(new NotificationUserCreate);
-
-    });
+    Route::post('/support/send', [SupportController::class, 'sendMessage'])->name('support.send');
 
 });

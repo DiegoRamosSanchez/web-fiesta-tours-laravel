@@ -177,7 +177,170 @@
         .badge-admin   { background: #ede9fe; color: #6d28d9; }
         .badge-usuario { background: #dcfce7; color: #166534; }
         .table-footer { padding: .7rem 1.1rem; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; }
-    </style>
+        
+        .btn-support {
+            width: 100%;
+            border: none;
+            border-radius: 9px;
+            padding: 12px 15px;
+            display: flex;
+            gap:10px;
+            align-items:center;
+            color: rgba(255,255,255,.55);
+            font-weight: 600;
+            background-color:transparent;
+            cursor: pointer;
+        }
+        .btn-support:hover {
+            background: #111a30d2;
+        }
+
+        #supportModal {
+            display: none;
+            position: fixed;
+            width: 100%;
+            height: 100vh;
+            background: rgba(17, 17, 17, 0.64);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            top: 0;
+            left: 0;
+        }
+        #supportModal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .modal-close:hover {
+            color: #0f172a;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            color: #6366F1;
+            margin-bottom: 6px;
+        }
+        .modal-subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.2s;
+            background: #f8fafc;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #6366F1;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(48, 83, 60, 0.1);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .form-group .char-count {
+            font-size: 11px;
+            color: #94a3b8;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: #6366F1;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-submit:hover {
+            background: #5254ce;
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+        .alert.success {
+            display: block;
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
+        .alert.error {
+            display: block;
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+   
+   </style>
     @stack('styles')
 </head>
 <body>
@@ -246,9 +409,9 @@
             <a href="{{ route('perfil') }}" class="sb-link {{ request()->routeIs('perfil*') ? 'active' : '' }}" title="Configuración">
                 <i class="ti ti-settings"></i> <span class="sb-text">Configuración</span>
             </a>
-            <a href="#" class="sb-link" title="Ayuda">
+            <button href="#" class="btn-support" title="Ayuda" onclick="openModal()">
                 <i class="ti ti-help"></i> <span class="sb-text">Ayuda</span>
-            </a>
+            </button>
             <form action="{{ route('logout') }}" method="POST" style="margin:1px 0">
                 @csrf
                 <button type="submit" class="sb-link" title="Cerrar sesión"
@@ -361,19 +524,105 @@
     </main>
 </div>
 
+<div id="supportModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        
+        <h2 class="modal-title"><i class="ti ti-help-circle"></i>Esto es grave</h2>
+        <p class="modal-subtitle">Descripción del Problema</p>
+
+        <form id="supportForm" action="{{ route('support.send') }}" method="POST">
+            @csrf
+            <input type="hidden" id="email" name="email" value="{{ auth()->user()->email }}">
+
+            <div class="form-group">
+                <textarea id="mensaje" name="mensaje" placeholder="Describe tu problema aquí..." required minlength="10" maxlength="1000"></textarea>
+            </div>
+
+
+            <button type="submit" class="btn-submit" id="btnSubmit">
+                Enviar Mensaje
+            </button>
+
+            <div id="alertMessage" class="alert" style="display: none;"></div>
+        </form>
+    </div>
+</div>
+
+
 <script>
+
+
+document.getElementById('supportForm').addEventListener('submit', async function(e) {
+    e.preventDefault(); 
+    const form = this;
+    const btnSubmit = document.getElementById('btnSubmit');
+    const alertMessage = document.getElementById('alertMessage');
+    const originalBtnText = btnSubmit.innerHTML;
+
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = 'Enviando...';
+
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        alertMessage.style.display = 'block';
+        
+        if (response.ok && data.success) {
+            alertMessage.className = 'alert alert-success';
+            alertMessage.textContent = data.message;
+            form.reset();
+            setTimeout(() => {
+                if (typeof closeModal === 'function') closeModal();
+                alertMessage.style.display = 'none';
+            }, 2000);
+
+        } else {
+            alertMessage.className = 'alert alert-danger';
+            alertMessage.textContent = data.message || 'Ocurrió un error al procesar la solicitud.';
+        }
+
+    } catch (error) {
+        alertMessage.style.display = 'block';
+        alertMessage.className = 'alert alert-danger';
+        alertMessage.textContent = 'Error de conexión. Inténtalo de nuevo más tarde.';
+    } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = originalBtnText;
+    }
+});
+function openModal() {
+            document.getElementById('supportModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('supportModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+            const alert = document.getElementById('alertMessage');
+            alert.className = 'alert';
+            alert.style.display = 'none';
+        }
     (function() {
         const html      = document.documentElement;
         const sidebar   = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebar-toggle');
 
-        // Ya venía marcado desde el <head> (anti-flash); lo pasamos a las clases reales
         const savedCollapsed = localStorage.getItem('sidebarCollapsed') === '1';
         if (savedCollapsed) {
             sidebar.classList.add('collapsed');
             toggleBtn.classList.add('is-collapsed');
         }
-        // Quitamos la clase temporal del <html> ahora que el estado real ya está aplicado
         html.classList.remove('sidebar-collapsed-init');
 
         toggleBtn.addEventListener('click', function() {
@@ -392,6 +641,6 @@
         }
     });
 </script>
-@stack('scripts')
+    @stack('scripts')
 </body>
 </html>
