@@ -5,36 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Fiesta Tours')</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+    {{-- Anti-flash: aplica el estado guardado ANTES del primer paint --}}
+    <script>
+        (function() {
+            if (localStorage.getItem('sidebarCollapsed') === '1') {
+                document.documentElement.classList.add('sidebar-collapsed-init');
+            }
+        })();
+    </script>
+
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; color: #0f172a; }
 
         /* ══ SIDEBAR ══ */
-        .sidebar { width: 220px; background: #0f172a; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sb-head { padding: 1.3rem 1.2rem 1rem; border-bottom: 1px solid rgba(255,255,255,.07); }
+        .sidebar {
+            width: 210px;
+            background: #0f172a;
+            flex-shrink: 0;
+            overflow: hidden;
+            transition: width .28s cubic-bezier(.4,0,.2,1);
+        }
+        .sidebar.collapsed { width: 64px; }
+
+        .sidebar-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+        }
+
+        .sb-head { padding: 1.3rem 1.2rem 1rem; border-bottom: 1px solid rgba(255,255,255,.07); overflow: hidden; }
         .sb-brand { display: flex; align-items: center; gap: 10px; }
         .sb-icon { width: 34px; height: 34px; background: #e63232; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
-        .sb-name { font-size: 13px; font-weight: 700; color: #fff; }
-        .sb-tagline { font-size: 10px; color: rgba(255,255,255,.35); margin-top: 1px; }
-        .sb-nav { flex: 1; padding: .8rem .8rem 0; overflow-y: auto; }
-        .sb-group { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.3); letter-spacing: .8px; text-transform: uppercase; padding: .8rem .6rem .3rem; }
-        .sb-link { display: flex; align-items: center; gap: 10px; padding: .56rem .8rem; border-radius: 8px; font-size: 13px; color: rgba(255,255,255,.55); cursor: pointer; text-decoration: none; transition: all .15s; margin-bottom: 1px; }
+        .sb-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; }
+        .sb-tagline { font-size: 10px; color: rgba(255,255,255,.35); margin-top: 1px; white-space: nowrap; }
+
+        .sb-nav { flex: 1; padding: .8rem .8rem 0; overflow-y: auto; overflow-x: hidden; }
+
+        .sb-group { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.3); letter-spacing: .8px; text-transform: uppercase; padding: .8rem .6rem .3rem; white-space: nowrap; }
+        .sb-link { display: flex; align-items: center; gap: 10px; padding: .56rem .8rem; border-radius: 8px; font-size: 13px; color: rgba(255,255,255,.55); cursor: pointer; text-decoration: none; transition: all .15s; margin-bottom: 1px; white-space: nowrap; }
         .sb-link i { font-size: 16px; flex-shrink: 0; }
         .sb-link:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.85); }
         .sb-link.active { background: #e63232; color: #fff; }
-        .sb-foot { padding: .8rem; border-top: 1px solid rgba(255,255,255,.07); }
-        .sb-user { display: flex; align-items: center; gap: 9px; padding: .7rem .8rem; background: rgba(255,255,255,.05); border-radius: 10px; border: 1px solid rgba(255,255,255,.07); }
+        .sb-text { transition: opacity .15s; }
+
+        .sb-foot { padding: .8rem; border-top: 1px solid rgba(255,255,255,.07); overflow: hidden; }
+        .sb-user { display: flex; align-items: center; gap: 9px; padding: .7rem .8rem; background: rgba(255,255,255,.05); border-radius: 10px; border: 1px solid rgba(255,255,255,.07); white-space: nowrap; }
         .sb-av { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; font-weight: 700; flex-shrink: 0; }
-        .sb-uname { font-size: 12px; font-weight: 600; color: #fff; }
-        .sb-urole { font-size: 10px; color: rgba(255,255,255,.35); }
+        .sb-uname { font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; }
+        .sb-urole { font-size: 10px; color: rgba(255,255,255,.35); white-space: nowrap; }
+
+        /* ══ ESTADO COLAPSADO (íconos centrados, sin texto) ══ */
+        .sidebar.collapsed .sb-group,
+        .sidebar.collapsed .sb-name,
+        .sidebar.collapsed .sb-tagline,
+        .sidebar.collapsed .sb-text,
+        .sidebar.collapsed .sb-uname,
+        .sidebar.collapsed .sb-urole {
+            display: none;
+        }
+        .sidebar.collapsed .sb-brand { justify-content: center; }
+        .sidebar.collapsed .sb-link { justify-content: center; padding: .6rem; gap: 0; }
+        .sidebar.collapsed .sb-user { justify-content: center; padding: .7rem; }
+        .sidebar.collapsed .sb-head { padding: 1.3rem .6rem 1rem; }
+        .sidebar.collapsed .sb-nav { padding: .8rem .5rem 0; }
+        .sidebar.collapsed .sb-foot { padding: .8rem .5rem; }
+
+        /* Estado inicial (aplicado antes del primer paint, sin transición) */
+        html.sidebar-collapsed-init .sidebar { width: 64px; transition: none; }
+        html.sidebar-collapsed-init .sidebar .sb-group,
+        html.sidebar-collapsed-init .sidebar .sb-name,
+        html.sidebar-collapsed-init .sidebar .sb-tagline,
+        html.sidebar-collapsed-init .sidebar .sb-text,
+        html.sidebar-collapsed-init .sidebar .sb-uname,
+        html.sidebar-collapsed-init .sidebar .sb-urole { display: none; }
+        html.sidebar-collapsed-init .sidebar .sb-brand,
+        html.sidebar-collapsed-init .sidebar .sb-link,
+        html.sidebar-collapsed-init .sidebar .sb-user { justify-content: center; }
+        html.sidebar-collapsed-init .sidebar .sb-link { padding: .6rem; gap: 0; }
+        html.sidebar-collapsed-init .search-box i { transform: rotate(180deg); }
 
         /* ══ MAIN ══ */
         .main-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
         /* ══ TOPBAR ══ */
-        .topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: .8rem 1.6rem; display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
-        .search-box { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9px; padding: 7px 13px; width: 240px; }
-        .search-box i { font-size: 15px; color: #94a3b8; }
+        .topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: .8rem  1.6rem .8rem 0rem; display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
+        .search-box { border: none; outline: none; display: flex; align-items: center; gap: 8px; background: #0F172A; border-radius: 0px 9px 9px 0px; padding: 10px 10px 10px 5px; cursor: pointer; }
+        .search-box i { font-size: 25px; color: #ffffff; transition: transform .28s cubic-bezier(.4,0,.2,1); }
+        .search-box.is-collapsed i { transform: rotate(180deg); }
         .search-box input { border: none; background: transparent; font-size: 13px; color: #0f172a; outline: none; width: 100%; }
         .tb-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
         .ib { width: 36px; height: 36px; border-radius: 9px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; font-size: 17px; position: relative; text-decoration: none; }
@@ -119,100 +180,101 @@
 </head>
 <body>
 
-{{-- ══ SIDEBAR ══ --}}
-<aside class="sidebar">
-    <div class="sb-head">
-        <div class="sb-brand">
-            <div class="sb-icon">FT</div>
-            <div>
-                <div class="sb-name">Fiesta Tours</div>
-                <div class="sb-tagline">Panel de control</div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+        <div class="sb-head">
+            <div class="sb-brand">
+                <div class="sb-icon">FT</div>
+                <div>
+                    <div class="sb-name">Fiesta Tours</div>
+                    <div class="sb-tagline">Panel de control</div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <nav class="sb-nav">
+        <nav class="sb-nav">
 
-        {{-- MENÚ PRINCIPAL --}}
-        <div class="sb-group">Menú</div>
-        <a href="{{ route('dashboard') }}"
-           class="sb-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <i class="ti ti-layout-dashboard"></i> Dashboard
-        </a>
-
-        {{-- GESTIÓN: visible para TODOS (admin y usuario) --}}
-        <div class="sb-group">Gestión</div>
-        <a href="{{ route('admin.clients.index') }}"
-            class="sb-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
-            <i class="ti ti-building"></i> Clientes
-        </a>
-        <a href="{{ route('admin.contacts.index') }}"
-            class="sb-link {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}">
-            <i class="ti ti-address-book"></i> Contactos
-        </a>
-
-        <a href="{{ route('admin.suppliers.index') }}"
-            class="sb-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}">
-            <i class="ti ti-truck"></i> Proveedores
-        </a>
-      
-        <a href="{{ route('admin.categories.index') }}"
-            class="sb-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
-            <i class="ti ti-tag"></i> Categorías
-        </a>
-
-        {{-- ADMINISTRACIÓN: solo admin --}}
-        @if(auth()->user()->isAdmin())
-            <div class="sb-group">Administración</div>
-            <a href="{{ route('admin.usuarios') }}"
-               class="sb-link {{ request()->routeIs('admin.usuarios') ? 'active' : '' }}">
-                <i class="ti ti-users"></i> Usuarios
+            {{-- MENÚ PRINCIPAL --}}
+            <div class="sb-group">Menú</div>
+            <a href="{{ route('dashboard') }}"
+               class="sb-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">
+                <i class="ti ti-layout-dashboard"></i> <span class="sb-text">Dashboard</span>
             </a>
-            <a href="{{ route('admin.usuarios.create') }}"
-               class="sb-link {{ request()->routeIs('admin.usuarios.create') ? 'active' : '' }}">
-                <i class="ti ti-user-plus"></i> Crear usuario
+
+            {{-- GESTIÓN: visible para TODOS (admin y usuario) --}}
+            <div class="sb-group">Gestión</div>
+            <a href="{{ route('admin.clients.index') }}"
+                class="sb-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}" title="Clientes">
+                <i class="ti ti-building"></i> <span class="sb-text">Clientes</span>
             </a>
-         
-            <a href="#" class="sb-link">
-                <i class="ti ti-chart-bar"></i> Reportes
+            <a href="{{ route('admin.contacts.index') }}"
+                class="sb-link {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}" title="Contactos">
+                <i class="ti ti-address-book"></i> <span class="sb-text">Contactos</span>
             </a>
-        @endif
 
-        {{-- GENERAL --}}
-        <div class="sb-group">General</div>
-        <a href="{{ route('perfil') }}" class="sb-link {{ request()->routeIs('perfil*') ? 'active' : '' }}">
-            <i class="ti ti-settings"></i> Configuración
-        </a>
-        <a href="#" class="sb-link">
-            <i class="ti ti-help"></i> Ayuda
-        </a>
-        <form action="{{ route('logout') }}" method="POST" style="margin:1px 0">
-            @csrf
-            <button type="submit" class="sb-link"
-                style="width:100%;border:none;background:none;text-align:left;
-                    cursor:pointer;color:rgba(255,255,255,.55)">
-                <i class="ti ti-logout"></i> Cerrar sesión
-            </button>
-        </form>
+            <a href="{{ route('admin.suppliers.index') }}"
+                class="sb-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}" title="Proveedores">
+                <i class="ti ti-truck"></i> <span class="sb-text">Proveedores</span>
+            </a>
 
-    </nav>
+            <a href="{{ route('admin.categories.index') }}"
+                class="sb-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" title="Categorías">
+                <i class="ti ti-tag"></i> <span class="sb-text">Categorías</span>
+            </a>
 
-    <div class="sb-foot">
-        <div class="sb-user">
-             @php
-                $user = auth()->user();
-            @endphp
-             @if($user->avatar)
-              @php
-                    $filename = basename($user->avatar);
-            @endphp
-                <div class="sb-av"><img class="sb-av" src="{{ route('avatar.show', $filename) }}" /></div>
-            @else
-                <div class="sb-av">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+            {{-- ADMINISTRACIÓN: solo admin --}}
+            @if(auth()->user()->isAdmin())
+                <div class="sb-group">Administración</div>
+                <a href="{{ route('admin.usuarios') }}"
+                   class="sb-link {{ request()->routeIs('admin.usuarios') ? 'active' : '' }}" title="Usuarios">
+                    <i class="ti ti-users"></i> <span class="sb-text">Usuarios</span>
+                </a>
+                <a href="{{ route('admin.usuarios.create') }}"
+                   class="sb-link {{ request()->routeIs('admin.usuarios.create') ? 'active' : '' }}" title="Crear usuario">
+                    <i class="ti ti-user-plus"></i> <span class="sb-text">Crear usuario</span>
+                </a>
+
+                <a href="#" class="sb-link" title="Reportes">
+                    <i class="ti ti-chart-bar"></i> <span class="sb-text">Reportes</span>
+                </a>
             @endif
-                        <div>
-                <div class="sb-uname">{{ Str::limit(auth()->user()->name, 16) }}</div>
-                <div class="sb-urole">{{ ucfirst(auth()->user()->role) }}</div>
+
+            {{-- GENERAL --}}
+            <div class="sb-group">General</div>
+            <a href="{{ route('perfil') }}" class="sb-link {{ request()->routeIs('perfil*') ? 'active' : '' }}" title="Configuración">
+                <i class="ti ti-settings"></i> <span class="sb-text">Configuración</span>
+            </a>
+            <a href="#" class="sb-link" title="Ayuda">
+                <i class="ti ti-help"></i> <span class="sb-text">Ayuda</span>
+            </a>
+            <form action="{{ route('logout') }}" method="POST" style="margin:1px 0">
+                @csrf
+                <button type="submit" class="sb-link" title="Cerrar sesión"
+                    style="width:100%;border:none;background:none;text-align:left;
+                        cursor:pointer;color:rgba(255,255,255,.55)">
+                    <i class="ti ti-logout"></i> <span class="sb-text">Cerrar sesión</span>
+                </button>
+            </form>
+
+        </nav>
+
+        <div class="sb-foot">
+            <div class="sb-user">
+                 @php
+                    $user = auth()->user();
+                @endphp
+                 @if($user->avatar)
+                  @php
+                        $filename = basename($user->avatar);
+                @endphp
+                    <div class="sb-av"><img class="sb-av" src="{{ route('avatar.show', $filename) }}" /></div>
+                @else
+                    <div class="sb-av">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+                @endif
+                            <div>
+                    <div class="sb-uname">{{ Str::limit(auth()->user()->name, 16) }}</div>
+                    <div class="sb-urole">{{ ucfirst(auth()->user()->role) }}</div>
+                </div>
             </div>
         </div>
     </div>
@@ -221,12 +283,10 @@
 {{-- ══ MAIN ══ --}}
 <div class="main-wrap">
 
-    {{-- TOPBAR --}}
-    <header class="topbar">
-        <div class="search-box">
-            <i class="ti ti-search"></i>
-            <input type="text" placeholder="Buscar...">
-        </div>
+    <header  class="topbar">
+        <button class="search-box" id="sidebar-toggle" title="Colapsar/Expandir menú">
+           <i class="ti ti-layout-sidebar-right-expand"></i>
+        </button>
 
         <div class="tb-right">
             <a href="#" class="ib" title="Mensajes"><i class="ti ti-mail"></i></a>
@@ -300,14 +360,35 @@
 </div>
 
 <script>
-function toggleMenu() {
-    document.getElementById('userMenu').classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('#userMenu')) {
-        document.getElementById('userMenu').classList.remove('open');
+    (function() {
+        const html      = document.documentElement;
+        const sidebar   = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+
+        // Ya venía marcado desde el <head> (anti-flash); lo pasamos a las clases reales
+        const savedCollapsed = localStorage.getItem('sidebarCollapsed') === '1';
+        if (savedCollapsed) {
+            sidebar.classList.add('collapsed');
+            toggleBtn.classList.add('is-collapsed');
+        }
+        // Quitamos la clase temporal del <html> ahora que el estado real ya está aplicado
+        html.classList.remove('sidebar-collapsed-init');
+
+        toggleBtn.addEventListener('click', function() {
+            const collapsed = sidebar.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('is-collapsed', collapsed);
+            localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+        });
+    })();
+
+    function toggleMenu() {
+        document.getElementById('userMenu').classList.toggle('open');
     }
-});
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#userMenu')) {
+            document.getElementById('userMenu').classList.remove('open');
+        }
+    });
 </script>
 @stack('scripts')
 </body>
