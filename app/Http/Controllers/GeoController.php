@@ -2,74 +2,62 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
 class GeoController extends Controller
 {
-    private function username(): string
+    public function paises()
     {
-        return config('services.geonames.username');
-    }
-
-    public function paises(Request $request)
-    {
-        $paises = Cache::remember('geo:paises:todos', now()->addHours(24), function () {
-            $response = Http::withoutVerifying()->get('https://secure.geonames.org/countryInfoJSON', [
-                'username' => $this->username(),
-                'lang'     => 'es',
-            ]);
-
-            if ($response->failed()) {
-                return [];
-            }
-
-            return collect($response->json('geonames', []))
-                ->map(fn($p) => [
-                    'codigo'     => $p['countryCode'] ?? null,
-                    'nombre'     => $p['countryName'] ?? null,
-                    'continente' => $p['continent'] ?? null,
-                ])
-                ->sortBy('nombre')
-                ->values()
-                ->all();
+        $paises = Cache::remember('geo:paises:todos', now()->addDay(), function () {
+            // Obtenemos los datos y los convertimos explícitamente a un array plano
+            return Country::where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'iso2'])
+                ->map(function ($country) {
+                    return [
+                        'id' => $country->id,
+                        'nombre' => $country->name,
+                        'codigo' => $country->iso2
+                    ];
+                })->toArray();
         });
 
         return response()->json($paises);
     }
 
+
+    public function estados(Request $request)
+    {
+        $request->validate(['country_id' => 'required|integer|exists:countries,id']);
+
+        $estados = State::where('country_id', $request->country_id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+
+        return response()->json($estados);
+    }
+
     public function ciudades(Request $request)
     {
-        $pais = strtoupper($request->query('country', 'PE'));
+        $request->validate([
+            'country_id' => 'required|integer|exists:countries,id',
+            'state_id'   => 'nullable|integer|exists:states,id',
+        ]);
 
-        $cacheKey = "geo:ciudades:{$pais}:all";
+        $query = City::where('country_id', $request->country_id)
+            ->where('is_active', true);
 
-        $ciudades = Cache::remember($cacheKey, now()->addHours(24), function () use ($pais) {
-            $response = Http::withoutVerifying()->get('https://secure.geonames.org/searchJSON', [
-                'country'      => $pais,
-                'featureClass' => 'P',
-                'maxRows'      => 1000,
-                'username'     => $this->username(),
-                'lang'         => 'es',
-                'orderby'      => 'population',
-            ]);
+        if ($request->filled('state_id')) {
+            $query->where('state_id', $request->state_id);
+        }
 
-            if ($response->failed()) {
-                return [];
-            }
-
-            return collect($response->json('geonames', []))
-                ->map(fn($c) => [
-                    'nombre'    => $c['name'] ?? null,
-                    'geoNameId' => $c['geonameId'] ?? null,
-                ])
-                ->unique('nombre')
-                ->sortBy('nombre')
-                ->values()
-                ->all();
-        });
-
-        return response()->json($ciudades);
+        return response()->json(
+            $query->orderBy('name')->get(['id', 'name', 'state_id'])
+        );
     }
 }

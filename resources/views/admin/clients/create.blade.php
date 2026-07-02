@@ -807,8 +807,10 @@
                             </button>
                             <div class="combo-list" id="create-pais-list"></div>
                         </div>
+                        {{-- Este es el valor que realmente recibe el ClientController (texto) --}}
                         <input type="hidden" name="country_name" id="create-country-name" value="{{ old('country_name') }}">
-                        <input type="hidden" id="create-country-code">
+                        {{-- Solo se usa en el front para saber qué país está seleccionado y pedir sus ciudades --}}
+                        <input type="hidden" id="create-country-id">
                     </div>
 
                     <div class="field-group">
@@ -1279,22 +1281,32 @@ function crearCombo({ inputId, listId, clearId, onSelect, onClear }) {
 // INICIALIZACIÓN - COMBOS DE PAÍS Y CIUDAD
 // ============================================================
 const comboPais = crearCombo({
+
     inputId: 'create-pais-input',
     listId: 'create-pais-list',
     clearId: 'create-pais-clear',
+
     onSelect: (opt) => {
+
+        document.getElementById('create-country-id').value = opt.value;
         document.getElementById('create-country-name').value = opt.label;
-        document.getElementById('create-country-code').value = opt.value;
+
+        console.log("País seleccionado:", opt);
+
         cargarCiudades(opt.value);
     },
+
     onClear: (full) => {
+
+        document.getElementById('create-country-id').value = '';
         document.getElementById('create-country-name').value = '';
-        document.getElementById('create-country-code').value = '';
+
         if (full) {
             comboCiudad.disable('Seleccione país primero');
             document.getElementById('create-ciudad-name').value = '';
         }
     }
+
 });
 
 const comboCiudad = crearCombo({
@@ -1302,6 +1314,7 @@ const comboCiudad = crearCombo({
     listId: 'create-ciudad-list',
     clearId: 'create-ciudad-clear',
     onSelect: (opt) => {
+        // Guardamos el NOMBRE de la ciudad (texto), igual que antes
         document.getElementById('create-ciudad-name').value = opt.label;
     },
     onClear: () => {
@@ -1312,20 +1325,64 @@ const comboCiudad = crearCombo({
 function cargarPaises() {
     fetch(window.geoPaisesUrl)
         .then(r => r.json())
-        .then(paises => comboPais.setOptions(paises.map(p => ({ value: p.codigo, label: p.nombre })), 'Escribe para buscar país...'))
+        .then(paises => comboPais.setOptions(
+            paises.map(p => ({
+                // Cambia 'p.codigo' por 'p.id'
+                value: p.id,
+                label: p.nombre
+            })),
+            'Escribe para buscar país...'
+        ))
         .catch(() => comboPais.setOptions([], 'No se pudo cargar'));
 }
 
-function cargarCiudades(countryCode) {
-    comboCiudad.disable('Cargando...');
-    if (!countryCode) {
+
+function cargarCiudades(countryId) {
+
+    console.log("ID enviado:", countryId);
+
+    comboCiudad.disable('Cargando ciudades...');
+
+    if (!countryId) {
         comboCiudad.disable('Seleccione país primero');
         return;
     }
-    fetch(`${window.geoCiudadesUrl}?country=${countryCode}`)
-        .then(r => r.json())
-        .then(ciudades => comboCiudad.setOptions(ciudades.map(c => ({ value: c.nombre, label: c.nombre, geoNameId: c.geoNameId })), 'Escribe para buscar ciudad...'))
-        .catch(() => comboCiudad.setOptions([], 'No se pudo cargar'));
+
+    fetch(`${window.geoCiudadesUrl}?country_id=${countryId}`, {
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(async response => {
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        return response.json();
+
+    })
+    .then(data => {
+
+        console.log("Ciudades:", data);
+
+        comboCiudad.setOptions(
+            data.map(item => ({
+                value: item.id,
+                label: item.name
+            })),
+            'Escribe para buscar ciudad...'
+        );
+
+    })
+    .catch(error => {
+
+        console.error(error);
+
+        comboCiudad.setOptions([], 'No se pudo cargar');
+
+    });
+
 }
 
 // ============================================================

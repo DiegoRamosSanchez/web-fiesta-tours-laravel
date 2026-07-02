@@ -112,5 +112,4 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::post('/support/send', [SupportController::class, 'sendMessage'])->name('support.send');
-
 });
