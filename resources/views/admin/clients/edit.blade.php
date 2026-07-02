@@ -594,16 +594,15 @@ table.contacts-table tbody tr.is-deleted input {
                     <div class="field-group">
                         <label>País</label>
                         <div class="combo-wrap" id="combo-pais">
-                            <input type="text" class="combo-input" id="edit-pais-input"
-                                   placeholder="Cargando países..." autocomplete="off" disabled>
+                            <input type="text" class="combo-input" id="edit-pais-input" placeholder="Cargando..." disabled>
                             <button type="button" class="combo-clear" id="edit-pais-clear" tabindex="-1">
                                 <i class="ti ti-x"></i>
                             </button>
                             <div class="combo-list" id="edit-pais-list"></div>
                         </div>
-                        <input type="hidden" name="country_name" id="edit-country-name"
-                            value="{{ old('country_name', $client->country_name) }}">
-                        <input type="hidden" id="edit-country-code">
+                        <input type="hidden" name="country_name" id="edit-country-name" value="{{ old('country_name', $client->country_name) }}">
+                        <!-- Este input enviará el ID numérico al controlador si lo necesitas -->
+                        <input type="hidden" name="country_id" id="edit-country-code" value="{{ old('country_id', $client->country_id) }}">
                     </div>
 
                     <div class="field-group">
@@ -1018,61 +1017,59 @@ table.contacts-table tbody tr.is-deleted input {
         }
     });
 
+    // ============================================================
+    // INICIALIZACIÓN - COMBOS DE PAÍS Y CIUDAD (EDICIÓN)
+    // ============================================================
+
     function cargarPaisesEdit() {
         fetch(window.geoPaisesUrl)
             .then(r => r.json())
             .then(paises => {
-                const opciones = paises.map(p => ({ value: p.codigo, label: p.nombre }));
+                // Ahora 'p' tiene 'id' y 'nombre' (según el ajuste anterior)
+                const opciones = paises.map(p => ({ value: p.id, label: p.nombre }));
                 comboPais.setOptions(opciones, 'Escribe para buscar país...');
 
+                // Si ya hay un país seleccionado (por el backend), lo preseleccionamos
                 if (clientCountryName) {
-                    const match = opciones.find(o =>
-                        o.label.toUpperCase() === clientCountryName.toUpperCase()
-                    );
-
+                    const match = opciones.find(o => o.label.toUpperCase() === clientCountryName.toUpperCase());
                     if (match) {
                         document.getElementById('edit-pais-input').value = match.label;
-                        document.getElementById('edit-country-code').value = match.value;
+                        document.getElementById('edit-country-code').value = match.value; // Aquí va el ID numérico
                         document.getElementById('edit-pais-clear').classList.add('show');
                         cargarCiudadesEdit(match.value, clientCityName);
-                    } else {
-                        // Si no encuentra, mostrar el valor guardado
-                        document.getElementById('edit-pais-input').value = clientCountryName;
-                        document.getElementById('edit-pais-clear').classList.add('show');
                     }
                 }
             })
             .catch(() => comboPais.setOptions([], 'No se pudo cargar'));
     }
 
-    function cargarCiudadesEdit(countryCode, selectedCity) {
+    function cargarCiudadesEdit(countryId, selectedCity) {
         comboCiudad.disable('Cargando...');
 
-        if (!countryCode) {
+        if (!countryId) {
             comboCiudad.disable('Seleccione país primero');
             return;
         }
 
-        fetch(`${window.geoCiudadesUrl}?country=${countryCode}`)
+        // Usamos country_id (numérico) en lugar de country (código)
+        fetch(`${window.geoCiudadesUrl}?country_id=${countryId}`)
             .then(r => r.json())
             .then(ciudades => {
-                const opciones = ciudades.map(c => ({ value: c.nombre, label: c.nombre, geoNameId: c.geoNameId }));
+                // Ajustamos el mapeo a 'id' y 'name' como devuelve tu controlador
+                const opciones = ciudades.map(c => ({ value: c.id, label: c.name }));
                 comboCiudad.setOptions(opciones, 'Escribe para buscar ciudad...');
 
-                const cityToSelect = selectedCity || clientCityName;
-                if (cityToSelect) {
-                    const match = opciones.find(o => o.label === cityToSelect);
+                if (selectedCity) {
+                    const match = opciones.find(o => o.label === selectedCity);
                     if (match) {
                         document.getElementById('edit-ciudad-input').value = match.label;
-                        document.getElementById('edit-ciudad-clear').classList.add('show');
-                    } else {
-                        document.getElementById('edit-ciudad-input').value = cityToSelect;
                         document.getElementById('edit-ciudad-clear').classList.add('show');
                     }
                 }
             })
             .catch(() => comboCiudad.setOptions([], 'No se pudo cargar'));
     }
+
 
     // ============================================================
     // INICIALIZACIÓN DEL DOM
